@@ -188,17 +188,37 @@
     <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop flex items-center justify-between h-full">
       <div class="flex items-center gap-base">
         <span class="material-symbols-outlined text-primary-fixed">sports_soccer</span>
-        <span class="font-display-lg text-headline-md text-primary-fixed tracking-tighter uppercase">Gran Panpan Haiti Cup</span>
+        <span class="font-display-lg text-headline-md text-primary-fixed tracking-tighter uppercase">GRAN PANPAN HAITI CUP</span>
       </div>
       <nav class="hidden lg:flex items-center gap-gutter">
-        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="/">Home</a>
-        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="#groups">Groups</a>
-        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="#schedule">Schedule</a>
-        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="#bracket">Bracket</a>
+        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="#schedule">Match Schedule</a>
+        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="/#prizes" target="_top">Prizes</a>
+        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="/#rules" target="_top">Rules</a>
+        <button class="bg-primary-container text-on-primary font-headline-md text-label-md uppercase px-6 py-3 rounded-DEFAULT hover:scale-95 transition-all active:scale-95 duration-100">REGISTER NOW</button>
       </nav>
-      <a href="#bracket" class="bg-primary-container text-on-primary font-headline-md text-label-md uppercase px-6 py-3 rounded-DEFAULT hover:scale-95 transition-all active:scale-95 duration-100">View Bracket</a>
+      <button class="lg:hidden text-on-background" id="menuBtn">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
     </div>
   </header>
+  <div class="fixed inset-0 z-[60] bg-black/60 opacity-0 pointer-events-none transition-opacity duration-300" id="mobileDrawer">
+    <div class="h-full w-80 bg-surface-container-highest shadow-2xl flex flex-col py-base -translate-x-full transition-transform duration-300" id="drawerContent">
+      <div class="px-6 py-8">
+        <span class="font-headline-md text-headline-md text-primary-fixed uppercase">TOURNAMENT MENU</span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <a class="flex items-center gap-4 text-on-surface-variant hover:text-on-surface mx-2 px-4 py-3 transition-colors rounded-full font-label-md text-label-md uppercase" href="#schedule">
+          <span class="material-symbols-outlined">calendar_today</span> Match Schedule
+        </a>
+        <a class="flex items-center gap-4 text-on-surface-variant hover:text-on-surface mx-2 px-4 py-3 transition-colors rounded-full font-label-md text-label-md uppercase" href="/#prizes" target="_top">
+          <span class="material-symbols-outlined">confirmation_number</span> Prizes
+        </a>
+        <a class="flex items-center gap-4 text-on-surface-variant hover:text-on-surface mx-2 px-4 py-3 transition-colors rounded-full font-label-md text-label-md uppercase" href="/#rules" target="_top">
+          <span class="material-symbols-outlined">gavel</span> Rules
+        </a>
+      </div>
+    </div>
+  </div>
 
   <main class="pt-24">
     <section class="relative py-16 md:py-20 overflow-hidden">
@@ -237,10 +257,10 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr class="border-t border-white/5"><td class="px-5 py-3">Citadelle FC</td><td class="text-center font-bold text-primary-fixed">9</td><td class="text-center">3</td><td class="text-center">3</td><td class="text-center">0</td><td class="text-center">0</td></tr>
-                  <tr class="border-t border-white/5"><td class="px-5 py-3">Lakay United</td><td class="text-center font-bold text-primary-fixed">6</td><td class="text-center">3</td><td class="text-center">2</td><td class="text-center">0</td><td class="text-center">1</td></tr>
-                  <tr class="border-t border-white/5"><td class="px-5 py-3">Etoile Jacmel</td><td class="text-center">3</td><td class="text-center">3</td><td class="text-center">1</td><td class="text-center">0</td><td class="text-center">2</td></tr>
-                  <tr class="border-t border-white/5"><td class="px-5 py-3">Nord Stars</td><td class="text-center">0</td><td class="text-center">3</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">3</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">1st Team A</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">2nd Team A</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">3rd Team A</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">4th Team A</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
                 </tbody>
               </table>
             </div>
@@ -263,10 +283,10 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr class="border-t border-white/5"><td class="px-5 py-3">Port City FC</td><td class="text-center font-bold text-primary-fixed">7</td><td class="text-center">3</td><td class="text-center">2</td><td class="text-center">1</td><td class="text-center">0</td></tr>
-                  <tr class="border-t border-white/5"><td class="px-5 py-3">Artibonite SC</td><td class="text-center font-bold text-primary-fixed">5</td><td class="text-center">3</td><td class="text-center">1</td><td class="text-center">2</td><td class="text-center">0</td></tr>
-                  <tr class="border-t border-white/5"><td class="px-5 py-3">Cap Warriors</td><td class="text-center">3</td><td class="text-center">3</td><td class="text-center">1</td><td class="text-center">0</td><td class="text-center">2</td></tr>
-                  <tr class="border-t border-white/5"><td class="px-5 py-3">Soleil Club</td><td class="text-center">1</td><td class="text-center">3</td><td class="text-center">0</td><td class="text-center">1</td><td class="text-center">2</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">1st Team B</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">2nd Team B</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">3rd Team B</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">4th Team B</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">0</td></tr>
                 </tbody>
               </table>
             </div>
@@ -286,18 +306,18 @@
           <article class="bg-surface-container rounded-xl border border-white/10 p-6">
             <h3 class="font-label-md text-label-md uppercase text-primary-fixed mb-4">Poule A Fixtures</h3>
             <div class="space-y-3 text-sm">
-              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 1</p><p class="mt-1">Citadelle FC vs Lakay United</p><p>Etoile Jacmel vs Nord Stars</p></div>
-              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 2</p><p class="mt-1">Citadelle FC vs Etoile Jacmel</p><p>Lakay United vs Nord Stars</p></div>
-              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 3</p><p class="mt-1">Citadelle FC vs Nord Stars</p><p>Lakay United vs Etoile Jacmel</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 1</p><p class="mt-1">1st Team A 0 - 0 2nd Team A</p><p>3rd Team A 0 - 0 4th Team A</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 2</p><p class="mt-1">1st Team A 0 - 0 3rd Team A</p><p>2nd Team A 0 - 0 4th Team A</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 3</p><p class="mt-1">1st Team A 0 - 0 4th Team A</p><p>2nd Team A 0 - 0 3rd Team A</p></div>
             </div>
           </article>
 
           <article class="bg-surface-container rounded-xl border border-white/10 p-6">
             <h3 class="font-label-md text-label-md uppercase text-primary-fixed mb-4">Poule B Fixtures</h3>
             <div class="space-y-3 text-sm">
-              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 1</p><p class="mt-1">Port City FC vs Artibonite SC</p><p>Cap Warriors vs Soleil Club</p></div>
-              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 2</p><p class="mt-1">Port City FC vs Cap Warriors</p><p>Artibonite SC vs Soleil Club</p></div>
-              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 3</p><p class="mt-1">Port City FC vs Soleil Club</p><p>Artibonite SC vs Cap Warriors</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 1</p><p class="mt-1">1st Team B 0 - 0 2nd Team B</p><p>3rd Team B 0 - 0 4th Team B</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 2</p><p class="mt-1">1st Team B 0 - 0 3rd Team B</p><p>2nd Team B 0 - 0 4th Team B</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 3</p><p class="mt-1">1st Team B 0 - 0 4th Team B</p><p>2nd Team B 0 - 0 3rd Team B</p></div>
             </div>
           </article>
         </div>
@@ -343,39 +363,39 @@
             <span class="stage-label" style="left: 84%; top: 32.26%;">Quarterfinal 4</span>
 
             <article id="qf1" class="match-card" style="left: 2%; top: 11.29%;">
-              <div class="row"><span class="seed">A1</span><span>Citadelle FC</span><span class="score">-</span></div>
-              <div class="row"><span class="seed">B4</span><span>Soleil Club</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">1A</span><span>1st Group A</span><span class="score"></span></div>
+              <div class="row"><span class="seed">4B</span><span>4th Group B</span><span class="score"></span></div>
             </article>
 
             <article id="qf2" class="match-card" style="left: 2%; top: 40.32%;">
-              <div class="row"><span class="seed">B1</span><span>Port City FC</span><span class="score">-</span></div>
-              <div class="row"><span class="seed">A4</span><span>Nord Stars</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">1B</span><span>1st Group B</span><span class="score"></span></div>
+              <div class="row"><span class="seed">4A</span><span>4th Group A</span><span class="score"></span></div>
             </article>
 
             <article id="sf1" class="match-card semi-card" style="left: 22.5%; top: 25%;">
-              <div class="row"><span class="seed">SF1</span><span>Winner QF1</span><span class="score">-</span></div>
-              <div class="row"><span class="seed">SF1</span><span>Winner QF2</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">SF1</span><span>Winner QF1</span><span class="score"></span></div>
+              <div class="row"><span class="seed">SF1</span><span>Winner QF2</span><span class="score"></span></div>
             </article>
 
             <article id="qf3" class="match-card" style="left: 84%; top: 11.29%;">
-              <div class="row"><span class="seed">A2</span><span>Lakay United</span><span class="score">-</span></div>
-              <div class="row"><span class="seed">B3</span><span>Cap Warriors</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">2A</span><span>2nd Group A</span><span class="score"></span></div>
+              <div class="row"><span class="seed">3B</span><span>3rd Group B</span><span class="score"></span></div>
             </article>
 
             <article id="qf4" class="match-card" style="left: 84%; top: 40.32%;">
-              <div class="row"><span class="seed">B2</span><span>Artibonite SC</span><span class="score">-</span></div>
-              <div class="row"><span class="seed">A3</span><span>Etoile Jacmel</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">2B</span><span>2nd Group B</span><span class="score"></span></div>
+              <div class="row"><span class="seed">3A</span><span>3rd Group A</span><span class="score"></span></div>
             </article>
 
             <article id="sf2" class="match-card semi-card" style="left: 63.5%; top: 25%;">
-              <div class="row"><span class="seed">SF2</span><span>Winner QF3</span><span class="score">-</span></div>
-              <div class="row"><span class="seed">SF2</span><span>Winner QF4</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">SF2</span><span>Winner QF3</span><span class="score"></span></div>
+              <div class="row"><span class="seed">SF2</span><span>Winner QF4</span><span class="score"></span></div>
             </article>
 
             <article id="final" class="match-card final-card" style="left: 43%; top: 21.77%;">
-              <p class="final-title">Finale</p>
-              <div class="row"><span class="seed">F</span><span>Winner SF1</span><span class="score">-</span></div>
-              <div class="row"><span class="seed">F</span><span>Winner SF2</span><span class="score">-</span></div>
+              <p class="final-title">Final</p>
+              <div class="row"><span class="seed">F</span><span>Winner SF1</span><span class="score"></span></div>
+              <div class="row"><span class="seed">F</span><span>Winner SF2</span><span class="score"></span></div>
             </article>
           </div>
         </div>
@@ -383,13 +403,53 @@
     </section>
   </main>
 
-  <footer class="bg-surface-container-lowest w-full py-16 border-t border-white/5">
-    <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <span class="font-headline-md text-headline-md text-primary-fixed uppercase block">Gran Panpan Haiti Cup</span>
-        <p class="font-body-md text-body-md text-on-surface-variant">Match Schedule and Bracket Center</p>
+  <footer class="bg-surface-container-lowest w-full py-section-gap border-t border-white/5">
+    <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-3 gap-gutter">
+      <div class="space-y-6">
+        <span class="font-headline-md text-headline-md text-primary-fixed uppercase block">GRAN PANPAN HAITI CUP</span>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-xs">The ultimate destination for football excellence in the heart of our community.</p>
+        <div class="flex gap-4">
+          <a class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center hover:bg-primary-container hover:text-on-primary transition-colors" href="#">
+            <span class="material-symbols-outlined text-sm">social_leaderboard</span>
+          </a>
+          <a class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center hover:bg-primary-container hover:text-on-primary transition-colors" href="#">
+            <span class="material-symbols-outlined text-sm">share</span>
+          </a>
+        </div>
       </div>
-      <a href="/" class="font-label-md text-label-md uppercase text-on-surface-variant hover:text-primary-fixed transition-colors">Back to Home</a>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-3">
+          <span class="font-label-md text-label-md uppercase text-on-background/40">Navigation</span>
+          <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-fixed transition-colors" href="/" target="_top">Home</a>
+          <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-fixed transition-colors" href="/#prizes" target="_top">Prizes</a>
+          <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-fixed transition-colors" href="#schedule">Schedule</a>
+          <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-fixed transition-colors" href="/#rules" target="_top">Tournament Rules</a>
+        </div>
+        <div class="flex flex-col gap-3">
+          <span class="font-label-md text-label-md uppercase text-on-background/40">Support</span>
+          <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-fixed transition-colors" href="#">Contact Us</a>
+          <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-fixed transition-colors" href="#">Privacy Policy</a>
+          <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-fixed transition-colors" href="#">Terms of Service</a>
+          <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-fixed transition-colors" href="#">Media Kit</a>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <span class="font-label-md text-label-md uppercase text-on-background/40">Official Contact</span>
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary-fixed">call</span>
+          <span class="font-headline-md text-label-md">+1 (561) 704-4613</span>
+        </div>
+        <div class="bg-surface-variant p-6 rounded-lg mt-4">
+          <span class="block font-label-md text-label-md uppercase mb-2">Newsletter</span>
+          <div class="flex gap-2">
+            <input class="bg-surface-container text-on-surface border-none rounded-DEFAULT focus:ring-1 focus:ring-primary-fixed w-full" placeholder="Email" type="email" />
+            <button class="bg-primary-container text-on-primary px-4 py-2 rounded-DEFAULT"><span class="material-symbols-outlined">send</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop mt-20 pt-8 border-t border-white/5">
+      <p class="font-body-md text-body-md text-on-surface-variant text-center opacity-60">© 2024 GRAN PANPAN HAITI CUP. ALL RIGHTS RESERVED.</p>
     </div>
   </footer>
   <script>
@@ -447,9 +507,11 @@
         let bFinal = toLocalBox(finalCard);
         const finalHeight = bFinal.bottom - bFinal.top;
         const shellHeight = shell.clientHeight || 1;
-        const desiredFinalTopPercent = ((sharedSemiCenterY - finalHeight / 2) / shellHeight) * 100;
+        const finalAnchorRatio = 0.44;
+        const desiredFinalTopPercent = ((sharedSemiCenterY - finalHeight * finalAnchorRatio) / shellHeight) * 100;
         finalCard.style.top = `${Math.max(0, Math.min(100, desiredFinalTopPercent))}%`;
         bFinal = toLocalBox(finalCard);
+        const finalAnchorY = bFinal.top + finalHeight * finalAnchorRatio;
         const connectInset = 0;
         const leftJoinRatio = 0.68;
         const rightJoinRatio = 0.72;
@@ -467,26 +529,26 @@
         setPath("line-right-semi", pathH(rightJoinX, bSf2.centerY, bSf2.right - connectInset));
 
         const leftFinalJoinX = bSf1.right + (bFinal.left - bSf1.right) * 0.5;
-        const sf1ToFinalDelta = Math.abs(bSf1.centerY - bFinal.centerY);
+        const sf1ToFinalDelta = Math.abs(bSf1.centerY - finalAnchorY);
         if (sf1ToFinalDelta <= 2) {
           setPath("line-sf1-final-a", pathH(bSf1.right - connectInset, bSf1.centerY, bFinal.left + connectInset));
           setPath("line-sf1-final-b", "");
           setPath("line-sf1-final-c", "");
         } else {
           setPath("line-sf1-final-a", pathH(bSf1.right - connectInset, bSf1.centerY, leftFinalJoinX));
-          setPath("line-sf1-final-b", pathV(leftFinalJoinX, bSf1.centerY, bFinal.centerY));
-          setPath("line-sf1-final-c", pathH(leftFinalJoinX, bFinal.centerY, bFinal.left + connectInset));
+          setPath("line-sf1-final-b", pathV(leftFinalJoinX, bSf1.centerY, finalAnchorY));
+          setPath("line-sf1-final-c", pathH(leftFinalJoinX, finalAnchorY, bFinal.left + connectInset));
         }
 
         const rightFinalJoinX = bFinal.right + (bSf2.left - bFinal.right) * 0.5;
-        const finalToSf2Delta = Math.abs(bFinal.centerY - bSf2.centerY);
+        const finalToSf2Delta = Math.abs(finalAnchorY - bSf2.centerY);
         if (finalToSf2Delta <= 2) {
-          setPath("line-final-sf2-a", pathH(bFinal.right - connectInset, bFinal.centerY, bSf2.left + connectInset));
+          setPath("line-final-sf2-a", pathH(bFinal.right - connectInset, finalAnchorY, bSf2.left + connectInset));
           setPath("line-final-sf2-b", "");
           setPath("line-final-sf2-c", "");
         } else {
-          setPath("line-final-sf2-a", pathH(bFinal.right - connectInset, bFinal.centerY, rightFinalJoinX));
-          setPath("line-final-sf2-b", pathV(rightFinalJoinX, bFinal.centerY, bSf2.centerY));
+          setPath("line-final-sf2-a", pathH(bFinal.right - connectInset, finalAnchorY, rightFinalJoinX));
+          setPath("line-final-sf2-b", pathV(rightFinalJoinX, finalAnchorY, bSf2.centerY));
           setPath("line-final-sf2-c", pathH(rightFinalJoinX, bSf2.centerY, bSf2.left + connectInset));
         }
       };
@@ -498,6 +560,48 @@
         document.fonts.ready.then(scheduleDraw);
       }
       scheduleDraw();
+    })();
+  </script>
+  <script>
+    (() => {
+      const menuBtn = document.getElementById("menuBtn");
+      const mobileDrawer = document.getElementById("mobileDrawer");
+      const drawerContent = document.getElementById("drawerContent");
+
+      const toggleDrawer = () => {
+        if (!mobileDrawer || !drawerContent) return;
+        const isOpen = mobileDrawer.classList.contains("opacity-100");
+        if (isOpen) {
+          mobileDrawer.classList.replace("opacity-100", "opacity-0");
+          mobileDrawer.classList.add("pointer-events-none");
+          drawerContent.classList.add("-translate-x-full");
+        } else {
+          mobileDrawer.classList.replace("opacity-0", "opacity-100");
+          mobileDrawer.classList.remove("pointer-events-none");
+          drawerContent.classList.remove("-translate-x-full");
+        }
+      };
+
+      if (menuBtn) menuBtn.addEventListener("click", toggleDrawer);
+      if (mobileDrawer) {
+        mobileDrawer.addEventListener("click", (e) => {
+          if (e.target === mobileDrawer) toggleDrawer();
+        });
+      }
+
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          const href = this.getAttribute("href");
+          if (!href || href === "#") return;
+          const target = document.querySelector(href);
+          if (!target) return;
+          e.preventDefault();
+          target.scrollIntoView({ behavior: "smooth" });
+          if (mobileDrawer && !mobileDrawer.classList.contains("pointer-events-none")) {
+            toggleDrawer();
+          }
+        });
+      });
     })();
   </script>
 </body>
