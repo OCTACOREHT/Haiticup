@@ -101,6 +101,9 @@
     .bracket-lines path {
       stroke: #3f78ff;
       stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
       fill: none;
       opacity: 0.95;
       filter: drop-shadow(0 0 6px rgba(63, 120, 255, 0.35));
@@ -159,13 +162,11 @@
     }
 
     .semi-card {
-      width: 15%;
       border-color: rgba(63, 120, 255, 0.4);
       background: rgba(14, 25, 62, 0.75);
     }
 
     .final-card {
-      width: 16%;
       border-color: rgba(255, 215, 0, 0.6);
       background: rgba(34, 28, 10, 0.6);
       box-shadow: 0 0 22px rgba(255, 215, 0, 0.18);
@@ -315,58 +316,63 @@
         <div class="pb-2">
           <div class="bracket-shell">
             <svg class="bracket-lines" viewBox="0 0 1480 620" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M266 114 H330" />
-              <path d="M266 294 H330" />
-              <path d="M330 114 V294" />
-              <path d="M330 204 H355" />
+              <path id="line-left-top" />
+              <path id="line-left-bottom" />
+              <path id="line-left-trunk" />
+              <path id="line-left-semi" />
 
-              <path d="M1214 114 H1150" />
-              <path d="M1214 294 H1150" />
-              <path d="M1150 114 V294" />
-              <path d="M1150 204 H1125" />
+              <path id="line-right-top" />
+              <path id="line-right-bottom" />
+              <path id="line-right-trunk" />
+              <path id="line-right-semi" />
 
-              <path d="M577 204 H622" />
-              <path d="M858 204 H903" />
+              <path id="line-sf1-final-a" />
+              <path id="line-sf1-final-b" />
+              <path id="line-sf1-final-c" />
+
+              <path id="line-final-sf2-a" />
+              <path id="line-final-sf2-b" />
+              <path id="line-final-sf2-c" />
             </svg>
 
-            <span class="stage-label" style="left: 4%; top: 3.23%;">Quarterfinal 1</span>
-            <span class="stage-label" style="left: 4%; top: 32.26%;">Quarterfinal 2</span>
-            <span class="stage-label" style="left: 24%; top: 18.06%;">Semifinal 1</span>
-            <span class="stage-label" style="left: 61%; top: 18.06%;">Semifinal 2</span>
-            <span class="stage-label" style="left: 82%; top: 3.23%;">Quarterfinal 3</span>
-            <span class="stage-label" style="left: 82%; top: 32.26%;">Quarterfinal 4</span>
+            <span class="stage-label" style="left: 2%; top: 3.23%;">Quarterfinal 1</span>
+            <span class="stage-label" style="left: 2%; top: 32.26%;">Quarterfinal 2</span>
+            <span class="stage-label" style="left: 22.5%; top: 18.06%;">Semifinal 1</span>
+            <span class="stage-label" style="left: 63.5%; top: 18.06%;">Semifinal 2</span>
+            <span class="stage-label" style="left: 84%; top: 3.23%;">Quarterfinal 3</span>
+            <span class="stage-label" style="left: 84%; top: 32.26%;">Quarterfinal 4</span>
 
-            <article class="match-card" style="left: 4%; top: 11.29%;">
+            <article id="qf1" class="match-card" style="left: 2%; top: 11.29%;">
               <div class="row"><span class="seed">A1</span><span>Citadelle FC</span><span class="score">-</span></div>
               <div class="row"><span class="seed">B4</span><span>Soleil Club</span><span class="score">-</span></div>
             </article>
 
-            <article class="match-card" style="left: 4%; top: 40.32%;">
+            <article id="qf2" class="match-card" style="left: 2%; top: 40.32%;">
               <div class="row"><span class="seed">B1</span><span>Port City FC</span><span class="score">-</span></div>
               <div class="row"><span class="seed">A4</span><span>Nord Stars</span><span class="score">-</span></div>
             </article>
 
-            <article class="match-card semi-card" style="left: 24%; top: 25%;">
+            <article id="sf1" class="match-card semi-card" style="left: 22.5%; top: 25%;">
               <div class="row"><span class="seed">SF1</span><span>Winner QF1</span><span class="score">-</span></div>
               <div class="row"><span class="seed">SF1</span><span>Winner QF2</span><span class="score">-</span></div>
             </article>
 
-            <article class="match-card" style="left: 82%; top: 11.29%;">
+            <article id="qf3" class="match-card" style="left: 84%; top: 11.29%;">
               <div class="row"><span class="seed">A2</span><span>Lakay United</span><span class="score">-</span></div>
               <div class="row"><span class="seed">B3</span><span>Cap Warriors</span><span class="score">-</span></div>
             </article>
 
-            <article class="match-card" style="left: 82%; top: 40.32%;">
+            <article id="qf4" class="match-card" style="left: 84%; top: 40.32%;">
               <div class="row"><span class="seed">B2</span><span>Artibonite SC</span><span class="score">-</span></div>
               <div class="row"><span class="seed">A3</span><span>Etoile Jacmel</span><span class="score">-</span></div>
             </article>
 
-            <article class="match-card semi-card" style="left: 61%; top: 25%;">
+            <article id="sf2" class="match-card semi-card" style="left: 63.5%; top: 25%;">
               <div class="row"><span class="seed">SF2</span><span>Winner QF3</span><span class="score">-</span></div>
               <div class="row"><span class="seed">SF2</span><span>Winner QF4</span><span class="score">-</span></div>
             </article>
 
-            <article class="match-card final-card" style="left: 42%; top: 21.77%;">
+            <article id="final" class="match-card final-card" style="left: 43%; top: 21.77%;">
               <p class="final-title">Finale</p>
               <div class="row"><span class="seed">F</span><span>Winner SF1</span><span class="score">-</span></div>
               <div class="row"><span class="seed">F</span><span>Winner SF2</span><span class="score">-</span></div>
@@ -386,5 +392,113 @@
       <a href="/" class="font-label-md text-label-md uppercase text-on-surface-variant hover:text-primary-fixed transition-colors">Back to Home</a>
     </div>
   </footer>
+  <script>
+    (() => {
+      const shell = document.querySelector(".bracket-shell");
+      if (!shell) return;
+
+      const byId = (id) => document.getElementById(id);
+      const toLocalBox = (el) => {
+        const shellRect = shell.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        const left = rect.left - shellRect.left;
+        const top = rect.top - shellRect.top;
+        return {
+          left,
+          right: left + rect.width,
+          top,
+          bottom: top + rect.height,
+          centerY: top + rect.height / 2
+        };
+      };
+
+      const setPath = (id, d) => {
+        const path = byId(id);
+        if (path) path.setAttribute("d", d);
+      };
+
+      const VIEWBOX_W = 1480;
+      const VIEWBOX_H = 620;
+
+      const drawBracketLines = () => {
+        const qf1 = byId("qf1");
+        const qf2 = byId("qf2");
+        const sf1 = byId("sf1");
+        const finalCard = byId("final");
+        const sf2 = byId("sf2");
+        const qf3 = byId("qf3");
+        const qf4 = byId("qf4");
+        if (!qf1 || !qf2 || !sf1 || !finalCard || !sf2 || !qf3 || !qf4) return;
+
+        const scaleX = VIEWBOX_W / (shell.clientWidth || 1);
+        const scaleY = VIEWBOX_H / (shell.clientHeight || 1);
+        const tx = (x) => x * scaleX;
+        const ty = (y) => y * scaleY;
+        const pathH = (x1, y, x2) => `M${tx(x1)} ${ty(y)} H${tx(x2)}`;
+        const pathV = (x, y1, y2) => `M${tx(x)} ${ty(y1)} V${ty(y2)}`;
+
+        const bQf1 = toLocalBox(qf1);
+        const bQf2 = toLocalBox(qf2);
+        const bSf1 = toLocalBox(sf1);
+        const bSf2 = toLocalBox(sf2);
+        const bQf3 = toLocalBox(qf3);
+        const bQf4 = toLocalBox(qf4);
+        const sharedSemiCenterY = (bSf1.centerY + bSf2.centerY) / 2;
+        let bFinal = toLocalBox(finalCard);
+        const finalHeight = bFinal.bottom - bFinal.top;
+        const shellHeight = shell.clientHeight || 1;
+        const desiredFinalTopPercent = ((sharedSemiCenterY - finalHeight / 2) / shellHeight) * 100;
+        finalCard.style.top = `${Math.max(0, Math.min(100, desiredFinalTopPercent))}%`;
+        bFinal = toLocalBox(finalCard);
+        const connectInset = 0;
+        const leftJoinRatio = 0.68;
+        const rightJoinRatio = 0.72;
+        const leftJoinX = bQf1.right + (bSf1.left - bQf1.right) * leftJoinRatio;
+        const rightJoinX = bSf2.right + (bQf3.left - bSf2.right) * rightJoinRatio;
+
+        setPath("line-left-top", pathH(bQf1.right - connectInset, bQf1.centerY, leftJoinX));
+        setPath("line-left-bottom", pathH(bQf2.right - connectInset, bQf2.centerY, leftJoinX));
+        setPath("line-left-trunk", pathV(leftJoinX, bQf1.centerY, bQf2.centerY));
+        setPath("line-left-semi", pathH(leftJoinX, bSf1.centerY, bSf1.left + connectInset));
+
+        setPath("line-right-top", pathH(bQf3.left + connectInset, bQf3.centerY, rightJoinX));
+        setPath("line-right-bottom", pathH(bQf4.left + connectInset, bQf4.centerY, rightJoinX));
+        setPath("line-right-trunk", pathV(rightJoinX, bQf3.centerY, bQf4.centerY));
+        setPath("line-right-semi", pathH(rightJoinX, bSf2.centerY, bSf2.right - connectInset));
+
+        const leftFinalJoinX = bSf1.right + (bFinal.left - bSf1.right) * 0.5;
+        const sf1ToFinalDelta = Math.abs(bSf1.centerY - bFinal.centerY);
+        if (sf1ToFinalDelta <= 2) {
+          setPath("line-sf1-final-a", pathH(bSf1.right - connectInset, bSf1.centerY, bFinal.left + connectInset));
+          setPath("line-sf1-final-b", "");
+          setPath("line-sf1-final-c", "");
+        } else {
+          setPath("line-sf1-final-a", pathH(bSf1.right - connectInset, bSf1.centerY, leftFinalJoinX));
+          setPath("line-sf1-final-b", pathV(leftFinalJoinX, bSf1.centerY, bFinal.centerY));
+          setPath("line-sf1-final-c", pathH(leftFinalJoinX, bFinal.centerY, bFinal.left + connectInset));
+        }
+
+        const rightFinalJoinX = bFinal.right + (bSf2.left - bFinal.right) * 0.5;
+        const finalToSf2Delta = Math.abs(bFinal.centerY - bSf2.centerY);
+        if (finalToSf2Delta <= 2) {
+          setPath("line-final-sf2-a", pathH(bFinal.right - connectInset, bFinal.centerY, bSf2.left + connectInset));
+          setPath("line-final-sf2-b", "");
+          setPath("line-final-sf2-c", "");
+        } else {
+          setPath("line-final-sf2-a", pathH(bFinal.right - connectInset, bFinal.centerY, rightFinalJoinX));
+          setPath("line-final-sf2-b", pathV(rightFinalJoinX, bFinal.centerY, bSf2.centerY));
+          setPath("line-final-sf2-c", pathH(rightFinalJoinX, bSf2.centerY, bSf2.left + connectInset));
+        }
+      };
+
+      const scheduleDraw = () => window.requestAnimationFrame(drawBracketLines);
+      window.addEventListener("resize", scheduleDraw);
+      window.addEventListener("load", scheduleDraw);
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(scheduleDraw);
+      }
+      scheduleDraw();
+    })();
+  </script>
 </body>
 </html>
