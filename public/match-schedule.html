@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRAN PANPAN HAITI CUP | Match Schedule & Bracket</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-background": "#e5e2e1",
+            "primary-fixed": "#ffe16d",
+            "primary-container": "#ffd700",
+            "on-primary": "#3a3000",
+            "surface": "#131313",
+            "surface-container": "#201f1f",
+            "surface-container-high": "#2a2a2a",
+            "surface-container-low": "#1c1b1b",
+            "surface-container-highest": "#353534",
+            "surface-container-lowest": "#0e0e0e",
+            "surface-variant": "#353534",
+            "on-surface": "#e5e2e1",
+            "on-surface-variant": "#d0c6ab",
+            "outline": "#999077",
+            "secondary-container": "#2137b0",
+            "on-secondary-container": "#a4b0ff",
+            "error": "#ffb4ab"
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem"
+          },
+          spacing: {
+            "section-gap": "120px",
+            "margin-mobile": "16px",
+            "gutter": "24px",
+            "margin-desktop": "64px",
+            "base": "8px"
+          },
+          fontFamily: {
+            "body-md": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-lg": ["Montserrat"],
+            "headline-md": ["Montserrat"],
+            "display-lg": ["Montserrat"],
+            "headline-lg-mobile": ["Montserrat"],
+            "body-lg": ["Inter"]
+          },
+          fontSize: {
+            "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+            "label-md": ["14px", { lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600" }],
+            "headline-lg": ["48px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "800" }],
+            "headline-md": ["32px", { lineHeight: "1.3", fontWeight: "700" }],
+            "display-lg": ["72px", { lineHeight: "1.1", letterSpacing: "-0.04em", fontWeight: "900" }],
+            "headline-lg-mobile": ["32px", { lineHeight: "1.2", fontWeight: "800" }],
+            "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 450, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .hero-glow {
+      background: radial-gradient(circle at center, rgba(255, 215, 0, 0.12) 0%, transparent 70%);
+    }
+
+    .bracket-shell {
+      width: min(100%, 1560px);
+      max-width: 100%;
+      min-width: 0;
+      aspect-ratio: 1480 / 620;
+      height: auto;
+      margin-inline: auto;
+      position: relative;
+      border: 0;
+      background: transparent;
+      border-radius: 0;
+      overflow: visible;
+    }
+
+    .bracket-lines {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .bracket-lines path {
+      stroke: #3f78ff;
+      stroke-width: 2;
+      fill: none;
+      opacity: 0.95;
+      filter: drop-shadow(0 0 6px rgba(63, 120, 255, 0.35));
+    }
+
+    .stage-label {
+      position: absolute;
+      font-family: Inter, sans-serif;
+      font-size: clamp(7px, 0.7vw, 11px);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(229, 226, 225, 0.58);
+    }
+
+    .match-card {
+      position: absolute;
+      width: 14%;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(13, 22, 46, 0.7);
+      border-radius: 8px;
+      padding: 0.55% 0.7%;
+      backdrop-filter: blur(6px);
+      z-index: 2;
+    }
+
+    .match-card .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      color: #e5e2e1;
+      font-family: Inter, sans-serif;
+      font-size: clamp(7px, 0.72vw, 12px);
+      line-height: 1.3;
+      padding: 3px 0;
+    }
+
+    .match-card .row + .row {
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .seed {
+      font-size: clamp(7px, 0.64vw, 10px);
+      letter-spacing: 0.12em;
+      color: rgba(255, 225, 109, 0.86);
+      text-transform: uppercase;
+      min-width: 28px;
+    }
+
+    .score {
+      font-weight: 700;
+      color: #ffe16d;
+      font-size: clamp(8px, 0.82vw, 13px);
+      min-width: 12px;
+      text-align: right;
+    }
+
+    .semi-card {
+      width: 15%;
+      border-color: rgba(63, 120, 255, 0.4);
+      background: rgba(14, 25, 62, 0.75);
+    }
+
+    .final-card {
+      width: 16%;
+      border-color: rgba(255, 215, 0, 0.6);
+      background: rgba(34, 28, 10, 0.6);
+      box-shadow: 0 0 22px rgba(255, 215, 0, 0.18);
+    }
+
+    .final-title {
+      font-family: Montserrat, sans-serif;
+      font-size: clamp(7px, 0.8vw, 13px);
+      letter-spacing: 0.22em;
+      color: #ffe16d;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-background font-body-md overflow-x-hidden">
+  <header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl border-b border-white/10 h-20">
+    <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop flex items-center justify-between h-full">
+      <div class="flex items-center gap-base">
+        <span class="material-symbols-outlined text-primary-fixed">sports_soccer</span>
+        <span class="font-display-lg text-headline-md text-primary-fixed tracking-tighter uppercase">Gran Panpan Haiti Cup</span>
+      </div>
+      <nav class="hidden lg:flex items-center gap-gutter">
+        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="/">Home</a>
+        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="#groups">Groups</a>
+        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="#schedule">Schedule</a>
+        <a class="font-label-md text-label-md uppercase text-on-background/70 hover:text-on-background transition-colors" href="#bracket">Bracket</a>
+      </nav>
+      <a href="#bracket" class="bg-primary-container text-on-primary font-headline-md text-label-md uppercase px-6 py-3 rounded-DEFAULT hover:scale-95 transition-all active:scale-95 duration-100">View Bracket</a>
+    </div>
+  </header>
+
+  <main class="pt-24">
+    <section class="relative py-16 md:py-20 overflow-hidden">
+      <div class="hero-glow absolute inset-0"></div>
+      <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
+        <p class="font-label-md text-label-md uppercase tracking-widest text-primary-fixed">Official Match Center</p>
+        <h1 class="font-display-lg text-headline-lg-mobile md:text-headline-lg uppercase mt-4">Match Schedule, Poules And Professional Bracket</h1>
+        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mt-4">
+          8 teams are divided into 2 groups of 4 (Poule A and Poule B). After the group phase, teams enter the knockout bracket with quarterfinals, semifinals and final.
+        </p>
+      </div>
+    </section>
+
+    <section id="groups" class="py-14">
+      <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="material-symbols-outlined text-primary-fixed">groups</span>
+          <h2 class="font-headline-md text-headline-md uppercase">Poules (Group Stage)</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+          <article class="bg-surface-container rounded-xl border border-white/10 overflow-hidden">
+            <div class="px-6 py-4 border-b border-white/10 bg-surface-container-high">
+              <h3 class="font-headline-md text-label-md uppercase text-primary-fixed">Poule A</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-on-surface-variant uppercase text-[11px] tracking-wider">
+                  <tr>
+                    <th class="text-left px-5 py-3">Equipe</th>
+                    <th class="text-center px-3 py-3">Pts</th>
+                    <th class="text-center px-3 py-3">J</th>
+                    <th class="text-center px-3 py-3">G</th>
+                    <th class="text-center px-3 py-3">N</th>
+                    <th class="text-center px-3 py-3">P</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">Citadelle FC</td><td class="text-center font-bold text-primary-fixed">9</td><td class="text-center">3</td><td class="text-center">3</td><td class="text-center">0</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">Lakay United</td><td class="text-center font-bold text-primary-fixed">6</td><td class="text-center">3</td><td class="text-center">2</td><td class="text-center">0</td><td class="text-center">1</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">Etoile Jacmel</td><td class="text-center">3</td><td class="text-center">3</td><td class="text-center">1</td><td class="text-center">0</td><td class="text-center">2</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">Nord Stars</td><td class="text-center">0</td><td class="text-center">3</td><td class="text-center">0</td><td class="text-center">0</td><td class="text-center">3</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="bg-surface-container rounded-xl border border-white/10 overflow-hidden">
+            <div class="px-6 py-4 border-b border-white/10 bg-surface-container-high">
+              <h3 class="font-headline-md text-label-md uppercase text-primary-fixed">Poule B</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-on-surface-variant uppercase text-[11px] tracking-wider">
+                  <tr>
+                    <th class="text-left px-5 py-3">Equipe</th>
+                    <th class="text-center px-3 py-3">Pts</th>
+                    <th class="text-center px-3 py-3">J</th>
+                    <th class="text-center px-3 py-3">G</th>
+                    <th class="text-center px-3 py-3">N</th>
+                    <th class="text-center px-3 py-3">P</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">Port City FC</td><td class="text-center font-bold text-primary-fixed">7</td><td class="text-center">3</td><td class="text-center">2</td><td class="text-center">1</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">Artibonite SC</td><td class="text-center font-bold text-primary-fixed">5</td><td class="text-center">3</td><td class="text-center">1</td><td class="text-center">2</td><td class="text-center">0</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">Cap Warriors</td><td class="text-center">3</td><td class="text-center">3</td><td class="text-center">1</td><td class="text-center">0</td><td class="text-center">2</td></tr>
+                  <tr class="border-t border-white/5"><td class="px-5 py-3">Soleil Club</td><td class="text-center">1</td><td class="text-center">3</td><td class="text-center">0</td><td class="text-center">1</td><td class="text-center">2</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="schedule" class="py-14 bg-surface-container-low">
+      <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="material-symbols-outlined text-primary-fixed">calendar_month</span>
+          <h2 class="font-headline-md text-headline-md uppercase">Group Match Schedule</h2>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-gutter">
+          <article class="bg-surface-container rounded-xl border border-white/10 p-6">
+            <h3 class="font-label-md text-label-md uppercase text-primary-fixed mb-4">Poule A Fixtures</h3>
+            <div class="space-y-3 text-sm">
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 1</p><p class="mt-1">Citadelle FC vs Lakay United</p><p>Etoile Jacmel vs Nord Stars</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 2</p><p class="mt-1">Citadelle FC vs Etoile Jacmel</p><p>Lakay United vs Nord Stars</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 3</p><p class="mt-1">Citadelle FC vs Nord Stars</p><p>Lakay United vs Etoile Jacmel</p></div>
+            </div>
+          </article>
+
+          <article class="bg-surface-container rounded-xl border border-white/10 p-6">
+            <h3 class="font-label-md text-label-md uppercase text-primary-fixed mb-4">Poule B Fixtures</h3>
+            <div class="space-y-3 text-sm">
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 1</p><p class="mt-1">Port City FC vs Artibonite SC</p><p>Cap Warriors vs Soleil Club</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 2</p><p class="mt-1">Port City FC vs Cap Warriors</p><p>Artibonite SC vs Soleil Club</p></div>
+              <div class="border border-white/10 rounded-lg p-4"><p class="text-on-surface-variant uppercase text-[11px]">Matchday 3</p><p class="mt-1">Port City FC vs Soleil Club</p><p>Artibonite SC vs Cap Warriors</p></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="bracket" class="py-section-gap">
+      <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="material-symbols-outlined text-primary-fixed">account_tree</span>
+          <h2 class="font-headline-md text-headline-md uppercase">Knockout Bracket (8 Teams)</h2>
+        </div>
+      </div>
+
+      <div class="px-margin-mobile md:px-8 xl:px-10">
+        <div class="pb-2">
+          <div class="bracket-shell">
+            <svg class="bracket-lines" viewBox="0 0 1480 620" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M266 114 H330" />
+              <path d="M266 294 H330" />
+              <path d="M330 114 V294" />
+              <path d="M330 204 H355" />
+
+              <path d="M1214 114 H1150" />
+              <path d="M1214 294 H1150" />
+              <path d="M1150 114 V294" />
+              <path d="M1150 204 H1125" />
+
+              <path d="M577 204 H622" />
+              <path d="M858 204 H903" />
+            </svg>
+
+            <span class="stage-label" style="left: 4%; top: 3.23%;">Quarterfinal 1</span>
+            <span class="stage-label" style="left: 4%; top: 32.26%;">Quarterfinal 2</span>
+            <span class="stage-label" style="left: 24%; top: 18.06%;">Semifinal 1</span>
+            <span class="stage-label" style="left: 61%; top: 18.06%;">Semifinal 2</span>
+            <span class="stage-label" style="left: 82%; top: 3.23%;">Quarterfinal 3</span>
+            <span class="stage-label" style="left: 82%; top: 32.26%;">Quarterfinal 4</span>
+
+            <article class="match-card" style="left: 4%; top: 11.29%;">
+              <div class="row"><span class="seed">A1</span><span>Citadelle FC</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">B4</span><span>Soleil Club</span><span class="score">-</span></div>
+            </article>
+
+            <article class="match-card" style="left: 4%; top: 40.32%;">
+              <div class="row"><span class="seed">B1</span><span>Port City FC</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">A4</span><span>Nord Stars</span><span class="score">-</span></div>
+            </article>
+
+            <article class="match-card semi-card" style="left: 24%; top: 25%;">
+              <div class="row"><span class="seed">SF1</span><span>Winner QF1</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">SF1</span><span>Winner QF2</span><span class="score">-</span></div>
+            </article>
+
+            <article class="match-card" style="left: 82%; top: 11.29%;">
+              <div class="row"><span class="seed">A2</span><span>Lakay United</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">B3</span><span>Cap Warriors</span><span class="score">-</span></div>
+            </article>
+
+            <article class="match-card" style="left: 82%; top: 40.32%;">
+              <div class="row"><span class="seed">B2</span><span>Artibonite SC</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">A3</span><span>Etoile Jacmel</span><span class="score">-</span></div>
+            </article>
+
+            <article class="match-card semi-card" style="left: 61%; top: 25%;">
+              <div class="row"><span class="seed">SF2</span><span>Winner QF3</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">SF2</span><span>Winner QF4</span><span class="score">-</span></div>
+            </article>
+
+            <article class="match-card final-card" style="left: 42%; top: 21.77%;">
+              <p class="final-title">Finale</p>
+              <div class="row"><span class="seed">F</span><span>Winner SF1</span><span class="score">-</span></div>
+              <div class="row"><span class="seed">F</span><span>Winner SF2</span><span class="score">-</span></div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-surface-container-lowest w-full py-16 border-t border-white/5">
+    <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <span class="font-headline-md text-headline-md text-primary-fixed uppercase block">Gran Panpan Haiti Cup</span>
+        <p class="font-body-md text-body-md text-on-surface-variant">Match Schedule and Bracket Center</p>
+      </div>
+      <a href="/" class="font-label-md text-label-md uppercase text-on-surface-variant hover:text-primary-fixed transition-colors">Back to Home</a>
+    </div>
+  </footer>
+</body>
+</html>
