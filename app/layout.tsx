@@ -1,39 +1,32 @@
 import type { Metadata } from "next";
-import { Rajdhani, Teko } from "next/font/google";
+import { Montserrat, Poppins } from "next/font/google";
 import "./globals.css";
 
-const sportSans = Rajdhani({
+const bodyFont = Poppins({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-sport-sans",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-body",
   display: "swap",
 });
 
-const sportDisplay = Teko({
+const headingFont = Poppins({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-sport-display",
+  weight: ["500", "600", "700", "800", "900"],
+  variable: "--font-heading",
+  display: "swap",
+});
+
+const navFont = Montserrat({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-nav",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Gran Panpan Haiti Cup 2026",
+  title: "GRAN PANPAN HAITI CUP | Official Tournament Page",
   description:
-    "Official page for the 2026 Gran Panpan Haiti Cup. Professional tournament details, registration timeline, prizes, and contact.",
-  keywords: [
-    "Gran Panpan Haiti Cup",
-    "football tournament",
-    "soccer championship",
-    "Haiti cup 2026",
-    "team registration",
-  ],
-  authors: [{ name: "Gran Panpan Haiti Cup" }],
-  openGraph: {
-    title: "Gran Panpan Haiti Cup 2026",
-    description:
-      "Compete in a professionally organized international football championship.",
-    type: "website",
-  },
+    "Official page for the 2026 Gran Panpan Haiti Cup. Tournament information, prizes, rules, and registration.",
 };
 
 export default function RootLayout({
@@ -42,14 +35,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      data-scroll-behavior="smooth"
-      className={`${sportSans.variable} ${sportDisplay.variable} antialiased`}
-    >
-      <body className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        {children}
-      </body>
+    <html lang="en" className={`${bodyFont.variable} ${headingFont.variable} ${navFont.variable}`}>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }
