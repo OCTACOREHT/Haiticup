@@ -92,6 +92,73 @@ const knockoutCards = [
   },
 ];
 
+const mobileBracketRounds = [
+  {
+    stage: "Quarterfinals",
+    matches: [
+      {
+        id: "QF1",
+        rows: [
+          { seed: "1A", team: "1st Group A" },
+          { seed: "4B", team: "4th Group B" },
+        ],
+      },
+      {
+        id: "QF2",
+        rows: [
+          { seed: "1B", team: "1st Group B" },
+          { seed: "4A", team: "4th Group A" },
+        ],
+      },
+      {
+        id: "QF3",
+        rows: [
+          { seed: "2A", team: "2nd Group A" },
+          { seed: "3B", team: "3rd Group B" },
+        ],
+      },
+      {
+        id: "QF4",
+        rows: [
+          { seed: "2B", team: "2nd Group B" },
+          { seed: "3A", team: "3rd Group A" },
+        ],
+      },
+    ],
+  },
+  {
+    stage: "Semifinals",
+    matches: [
+      {
+        id: "SF1",
+        rows: [
+          { seed: "SF1", team: "Winner QF1" },
+          { seed: "SF1", team: "Winner QF2" },
+        ],
+      },
+      {
+        id: "SF2",
+        rows: [
+          { seed: "SF2", team: "Winner QF3" },
+          { seed: "SF2", team: "Winner QF4" },
+        ],
+      },
+    ],
+  },
+  {
+    stage: "Final",
+    matches: [
+      {
+        id: "F",
+        rows: [
+          { seed: "F", team: "Winner SF1" },
+          { seed: "F", team: "Winner SF2" },
+        ],
+      },
+    ],
+  },
+];
+
 export default function MatchSchedulePage() {
   useEffect(() => {
     const shell = document.querySelector<HTMLElement>(".bracket-shell");
@@ -224,27 +291,27 @@ export default function MatchSchedulePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/#registration" />
+      <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
 
-      <main className="flex-1 pt-24">
-        <section className="hero-glow relative overflow-hidden py-16 md:py-20">
-          <div className="mx-auto max-w-7xl px-4 md:px-16">
+      <main className="flex-1 pt-16">
+        <section className="hero-glow relative overflow-hidden py-10 md:py-14">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <p className="text-sm tracking-[0.16em] text-[#C81010] uppercase">Official Match Center</p>
-            <h1 className="font-heading mt-4 text-4xl text-[#0D47B5] uppercase md:text-6xl">
+            <h1 className="font-heading mt-4 text-3xl leading-[1.05] text-[#0D47B5] uppercase sm:text-4xl lg:text-6xl">
               Match Schedule, Poules And Professional Bracket
             </h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-[#0D47B5]/80">
+            <p className="mt-4 max-w-3xl text-base leading-7 text-[#0D47B5]/80 md:text-lg md:leading-8">
               8 teams are divided into 2 groups of 4 (Poule A and Poule B). After the group phase,
               teams enter the knockout bracket with quarterfinals, semifinals and final.
             </p>
           </div>
         </section>
 
-        <section id="groups" className="py-14">
-          <div className="mx-auto max-w-7xl px-4 md:px-16">
+        <section id="groups" className="py-10 md:py-14">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
               <span className="material-symbols-outlined text-[#C81010]">groups</span>
-              <h2 className="font-heading text-4xl text-[#0D47B5] uppercase">Poules (Group Stage)</h2>
+              <h2 className="font-heading text-2xl text-[#0D47B5] uppercase sm:text-3xl md:text-4xl">Poules (Group Stage)</h2>
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -315,11 +382,11 @@ export default function MatchSchedulePage() {
           </div>
         </section>
 
-        <section id="schedule" className="bg-[#F8FAFF] py-14">
-          <div className="mx-auto max-w-7xl px-4 md:px-16">
+        <section id="schedule" className="bg-[#F8FAFF] py-10 md:py-14">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
               <span className="material-symbols-outlined text-[#C81010]">calendar_month</span>
-              <h2 className="font-heading text-4xl text-[#0D47B5] uppercase">Group Match Schedule</h2>
+              <h2 className="font-heading text-2xl text-[#0D47B5] uppercase sm:text-3xl md:text-4xl">Group Match Schedule</h2>
             </div>
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -352,15 +419,55 @@ export default function MatchSchedulePage() {
           </div>
         </section>
 
-        <section id="bracket" className="py-[120px]">
-          <div className="mx-auto max-w-7xl px-4 md:px-16">
+        <section id="bracket" className="py-14 md:py-[110px]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
               <span className="material-symbols-outlined text-[#C81010]">account_tree</span>
-              <h2 className="font-heading text-4xl text-[#0D47B5] uppercase">Knockout Bracket (8 Teams)</h2>
+              <h2 className="font-heading text-2xl text-[#0D47B5] uppercase sm:text-3xl md:text-4xl">Knockout Bracket (8 Teams)</h2>
             </div>
           </div>
 
-          <div className="px-4 md:px-8 xl:px-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:hidden">
+            <div className="space-y-6">
+              {mobileBracketRounds.map((round) => (
+                <article key={round.stage} className="rounded-lg border border-[#0D47B5]/18 bg-[#F8FAFF] p-4 shadow-[0_8px_20px_rgba(13,71,181,0.08)]">
+                  <p className="text-[11px] font-semibold tracking-[0.14em] text-[#C81010] uppercase">{round.stage}</p>
+                  <div className="mt-3 space-y-3">
+                    {round.matches.map((match) => (
+                      <div
+                        key={`${round.stage}-${match.id}`}
+                        className={`rounded-md border p-3 ${
+                          round.stage === "Final"
+                            ? "border-[#C81010]/28 bg-[#FFF8F8]"
+                            : "border-[#0D47B5]/18 bg-white"
+                        }`}
+                      >
+                        <p className="text-[10px] font-semibold tracking-[0.12em] text-[#0D47B5]/65 uppercase">{match.id}</p>
+                        <div className="mt-2 space-y-1.5">
+                          {match.rows.map((row, index) => (
+                            <div
+                              key={`${round.stage}-${match.id}-${row.team}`}
+                              className={`flex items-center justify-between gap-2 text-sm text-[#0D47B5] ${
+                                index > 0 ? "border-t border-[#0D47B5]/14 pt-1.5" : ""
+                              }`}
+                            >
+                              <span className="min-w-[34px] text-[10px] font-semibold tracking-[0.08em] text-[#C81010] uppercase">
+                                {row.seed}
+                              </span>
+                              <span className="flex-1 truncate">{row.team}</span>
+                              <span className="h-4 min-w-3 rounded-sm bg-[#0D47B5]/10" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="hidden px-4 md:px-8 xl:px-10 lg:block">
             <div className="pb-2">
               <div className="bracket-shell">
                 <svg className="bracket-lines" viewBox="0 0 1480 620" preserveAspectRatio="none" aria-hidden="true">

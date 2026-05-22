@@ -21,6 +21,18 @@ a {
   text-decoration: none;
 }
 
+.register-cta-link {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.register-cta-link:visited,
+.register-cta-link:focus,
+.register-cta-link:active {
+  color: #f2c230 !important;
+  -webkit-text-fill-color: #f2c230;
+  background-color: #ffffff !important;
+}
+
 .font-heading {
   font-family: var(--font-heading), sans-serif;
   font-weight: 800;

@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type NavbarLink = {
   href: string;
@@ -27,9 +28,30 @@ export default function SiteNavbar({
   registerHref,
   registerLabel = "REGISTER NOW",
 }: SiteNavbarProps) {
+  const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const closeDrawer = () => setDrawerOpen(false);
+
+  useEffect(() => {
+    if (!drawerOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [drawerOpen]);
 
   return (
     <>
@@ -44,7 +66,7 @@ export default function SiteNavbar({
               priority
               className="mt-6 h-20 w-20 rounded-md bg-transparent object-contain"
             />
-            <span className="font-heading mt-3 text-[13px] leading-[1.05] tracking-tight text-[#0D47B5] uppercase md:text-[16px]">
+            <span className="mt-3 text-[13px] leading-[1.05] font-extrabold tracking-tight [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase md:text-[16px]">
               <span className="block">GRAN PANPAN</span>
               <span className="block text-[#C81010]">HAITI CUP</span>
             </span>
@@ -56,7 +78,7 @@ export default function SiteNavbar({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-1 py-2 text-xs font-semibold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] text-black uppercase transition-colors hover:text-black/75"
+                  className="px-1 py-2 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] text-black uppercase transition-colors hover:text-black/75"
                 >
                   {item.label}
                 </Link>
@@ -65,7 +87,8 @@ export default function SiteNavbar({
 
             <Link
               href={registerHref}
-              className="rounded-full bg-black px-5 py-2.5 text-xs font-semibold tracking-[0.08em] [font-family:var(--font-heading),sans-serif] text-white uppercase transition-all hover:-translate-y-0.5 hover:bg-[#111827]"
+              className="rounded-none border border-[#D2B200] bg-[#E0C200] px-5 py-2.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase transition-colors hover:bg-[#E8CC2A]"
+              style={{ color: "#ffffff" }}
             >
               {registerLabel}
             </Link>
@@ -75,15 +98,15 @@ export default function SiteNavbar({
             type="button"
             aria-label="Open menu"
             onClick={() => setDrawerOpen((prev) => !prev)}
-            className="rounded-full border border-[#0D47B5]/20 bg-[#f4f7ff] p-2 text-[#0D47B5] transition-colors hover:bg-white lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#0D47B5]/20 bg-white text-[#0D47B5] shadow-[0_3px_10px_rgba(13,71,181,0.12)] transition-colors hover:bg-[#f4f7ff] lg:hidden"
           >
-            <span className="material-symbols-outlined">{drawerOpen ? "close" : "menu"}</span>
+            <span className="material-symbols-outlined text-[22px]">{drawerOpen ? "close" : "menu"}</span>
           </button>
         </div>
       </header>
 
       <div
-        className={`fixed inset-0 z-[60] bg-[#0D47B5]/55 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[60] bg-[#081833]/60 backdrop-blur-[2px] transition-opacity duration-300 ${
           drawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={(event) => {
@@ -93,35 +116,71 @@ export default function SiteNavbar({
         }}
       >
         <div
-          className={`h-full w-80 bg-white py-2 shadow-2xl transition-transform duration-300 ${
-            drawerOpen ? "translate-x-0" : "-translate-x-full"
+          className={`ml-auto h-full w-full max-w-[360px] border-l border-[#0D47B5]/14 bg-white shadow-[0_26px_50px_rgba(8,24,51,0.35)] transition-transform duration-300 ${
+            drawerOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="px-6 py-8">
-            <span className="font-heading text-2xl text-[#C81010] uppercase">TOURNAMENT MENU</span>
+          <div className="flex items-center justify-between border-b border-[#0D47B5]/12 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/granpanpan.png"
+                alt="Gran Panpan logo"
+                width={38}
+                height={38}
+                className="h-9 w-9 rounded-sm object-contain"
+              />
+              <span className="text-[11px] leading-tight font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase">
+                Gran Panpan
+                <span className="block text-[#C81010]">Haiti Cup</span>
+              </span>
+            </div>
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={closeDrawer}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[#0D47B5]/16 bg-[#f6f8ff] text-[#0D47B5] transition-colors hover:bg-white"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
           </div>
 
-          <div className="flex flex-col gap-2 px-2">
-            {mobileLinks.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={closeDrawer}
-                className={`flex items-center gap-4 rounded-full px-4 py-3 text-sm font-semibold [font-family:var(--font-nav),sans-serif] uppercase transition-colors ${
-                  item.active
-                    ? "bg-[#e5e7eb] text-black"
-                    : "text-black hover:bg-[#f4f7ff] hover:text-black/75"
-                }`}
-              >
-                <span className="material-symbols-outlined">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
+          <div className="px-4 py-5">
+            <p className="text-[10px] font-semibold tracking-[0.14em] [font-family:var(--font-nav),sans-serif] text-[#0D47B5]/60 uppercase">
+              Navigation
+            </p>
+
+            <div className="mt-3 flex flex-col gap-2">
+              {mobileLinks.map((item) => {
+                const isActive = item.active || (!item.href.includes("#") && pathname === item.href);
+
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={closeDrawer}
+                    className={`group flex items-center gap-3 rounded-md border px-3 py-3 text-sm font-extrabold [font-family:var(--font-nav),sans-serif] uppercase transition-colors ${
+                      isActive
+                        ? "border-[#0D47B5]/22 bg-[#edf3ff] text-[#0D47B5]"
+                        : "border-[#0D47B5]/14 text-[#0D47B5] hover:bg-[#f4f7ff]"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined rounded-sm bg-white p-1.5 text-[18px] text-[#0D47B5] shadow-[inset_0_0_0_1px_rgba(13,71,181,0.14)]">
+                      {item.icon}
+                    </span>
+                    <span className="truncate">{item.label}</span>
+                    <span className="material-symbols-outlined ml-auto text-[18px] text-[#0D47B5]/38 transition-transform group-hover:translate-x-0.5">
+                      chevron_right
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
 
             <Link
               href={registerHref}
               onClick={closeDrawer}
-              className="mt-2 flex items-center justify-center rounded-full bg-black px-5 py-3 text-xs font-semibold tracking-[0.08em] [font-family:var(--font-heading),sans-serif] text-white uppercase"
+              className="mt-5 flex items-center justify-center rounded-md border border-[#D2B200] bg-[#E0C200] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase shadow-[0_10px_18px_rgba(224,194,0,0.28)] transition-colors hover:bg-[#E8CC2A]"
+              style={{ color: "#ffffff" }}
             >
               {registerLabel}
             </Link>

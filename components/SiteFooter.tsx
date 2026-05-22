@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-type FooterVariant = "home" | "schedule";
+type FooterVariant = "home" | "schedule" | "register";
 
 type FooterLink = {
   href: string;
@@ -28,10 +28,18 @@ const footerNavigation: Record<FooterVariant, FooterLink[]> = {
     { href: "#groups", label: "Groups" },
     { href: "#bracket", label: "Bracket" },
   ],
+  register: [
+    { href: "/", label: "Home" },
+    { href: "/match-schedule", label: "Match Schedule" },
+    { href: "/#prizes", label: "Prizes" },
+    { href: "/#rules", label: "Rules" },
+    { href: "/match-schedule#groups", label: "Groups" },
+    { href: "/match-schedule#bracket", label: "Bracket" },
+  ],
 };
 
 const footerResources: FooterLink[] = [
-  { href: "/#registration", label: "Team Registration" },
+  { href: "/register", label: "Team Registration" },
   { href: "/match-schedule#groups", label: "Group Stage" },
   { href: "/match-schedule#bracket", label: "Knockout Bracket" },
 ];
