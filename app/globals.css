@@ -11,7 +11,7 @@ html {
 body {
   margin: 0;
   background: #ffffff;
-  color: #004AD3;
+  color: #0D47B5;
   font-family: var(--font-body), sans-serif;
   overflow-x: hidden;
 }
@@ -81,7 +81,7 @@ a {
 }
 
 .bracket-lines path {
-  stroke: #004AD3;
+  stroke: #0D47B5;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -116,7 +116,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  color: #004AD3;
+  color: #0D47B5;
   font-family: var(--font-body), sans-serif;
   font-size: clamp(7px, 0.72vw, 12px);
   line-height: 1.3;
