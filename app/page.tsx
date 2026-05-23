@@ -50,8 +50,8 @@ const frameworkCards = [
     icon: "groups",
     title: "Competition Format",
     text: "2 groups of 4 teams. Each group plays a single round-robin (6 matches per group). Top teams advance to knockout rounds.",
-    cardClass: "border-[#004AD3]/20 bg-[#ffffff]",
-    iconClass: "border-[#004AD3]/22 bg-white text-[#004AD3]",
+    cardClass: "border-[#004AD3]/16",
+    iconClass: "bg-[#004AD3]/8 text-[#004AD3]",
     titleClass: "text-[#004AD3]",
   },
   {
@@ -59,8 +59,8 @@ const frameworkCards = [
     icon: "sports",
     title: "Match Standard",
     text: "Official 90-minute matches (2 x 45). Knockout ties follow official tiebreak procedures, including extra time and penalties when required.",
-    cardClass: "border-[#FF6B53]/20 bg-[#ffffff]",
-    iconClass: "border-[#FF6B53]/24 bg-white text-[#FF6B53]",
+    cardClass: "border-[#FF6B53]/20",
+    iconClass: "bg-[#FF6B53]/10 text-[#FF6B53]",
     titleClass: "text-[#FF6B53]",
   },
   {
@@ -68,17 +68,17 @@ const frameworkCards = [
     icon: "calendar_month",
     title: "Tournament Window",
     text: "Group stage, knockout rounds, and final are scheduled between July and September 2026 at the Ezell Hester Community Center.",
-    cardClass: "border-[#1AD1D7]/40 bg-[#ffffff]",
-    iconClass: "border-[#1AD1D7]/45 bg-white text-[#0B6A9B]",
-    titleClass: "text-[#0B6A9B]",
+    cardClass: "border-[#1AD1D7]/30",
+    iconClass: "bg-[#1AD1D7]/12 text-[#0B9EA6]",
+    titleClass: "text-[#0B9EA6]",
   },
   {
     id: "04",
     icon: "verified",
     title: "Professional Oversight",
     text: "Central match operations include scheduling control, result tracking, and officiating standards aligned with competitive tournament play.",
-    cardClass: "border-[#1AD1D7]/24 bg-[#ffffff]",
-    iconClass: "border-[#1AD1D7]/28 bg-white text-[#1AD1D7]",
+    cardClass: "border-[#004AD3]/16",
+    iconClass: "bg-[#1AD1D7]/10 text-[#1AD1D7]",
     titleClass: "text-[#1AD1D7]",
   },
 ];
@@ -91,7 +91,7 @@ const tournamentStats = [
 
 const tournamentSnapshot = [
   { label: "Format", value: "2 groups of 4 teams + knockout stage" },
-  { label: "Match Length", value: "90 minutes (2 x 45)" },
+  { label: "Match Length", value: "90 minutes" },
   { label: "Tournament Window", value: "July - September 2026" },
   { label: "Venue", value: "Ezell Hester Community Center" },
 ];
@@ -323,8 +323,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_100%)] py-24 md:py-28">
+        {/* ── About The Tournament ──────────────────────────────────────── */}
+        <section className="bg-white py-24 md:py-28">
           <div className="mx-auto max-w-[1180px] px-4 md:px-16">
+            {/* ── Header row ── */}
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
               <div className="lg:col-span-8">
                 <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#004AD3]/72 uppercase">
@@ -333,13 +335,14 @@ export default function Home() {
                 <h2 className="mt-3 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-[1.02] text-[#FF6B53] uppercase md:text-6xl">
                   Granpanpan Nations Cup 2026
                 </h2>
-                <p className="mt-5 max-w-3xl text-[15px] leading-8 text-[#004AD3]/88 md:text-base">
+                <p className="mt-5 max-w-3xl text-[15px] leading-8 text-[#004AD3]/80 md:text-base">
                   Granpanpan Nations Cup is a structured summer competition designed for elite amateur and
                   semi-professional football teams. This edition runs with 8 teams in 2 groups, followed by
                   a knockout bracket through quarterfinals, semifinals, and the championship final.
                 </p>
 
-                <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {/* ── Stats ── */}
+                <div className="mt-8 grid grid-cols-3 gap-4">
                   {tournamentStats.map((item) => (
                     <article
                       key={item.label}
@@ -356,52 +359,58 @@ export default function Home() {
                 </div>
               </div>
 
-              <aside className="rounded-lg border border-[#004AD3]/18 bg-white/95 p-6 shadow-[0_10px_28px_rgba(0,74,211,0.1)] lg:col-span-4">
-                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#004AD3]/68 uppercase">
-                  Competition Snapshot
-                </p>
-                <div className="mt-4 space-y-3">
-                  {tournamentSnapshot.map((item, index) => (
-                    <div
-                      key={item.label}
-                      className={`pb-3 ${index === tournamentSnapshot.length - 1 ? "border-b-0 pb-0" : "border-b border-[#004AD3]/12"}`}
-                    >
-                      <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] text-[#FF6B53] uppercase">
-                        {item.label}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-[#004AD3]/86">{item.value}</p>
-                    </div>
-                  ))}
+              {/* ── Snapshot card ── */}
+              <aside className="rounded-xl border border-[#004AD3]/14 bg-white shadow-[0_12px_36px_rgba(0,74,211,0.1)] lg:col-span-4">
+                <div className="p-6">
+                  <p className="text-[11px] font-bold [font-family:var(--font-nav),sans-serif] tracking-[0.15em] text-[#004AD3]/60 uppercase">
+                    Competition Snapshot
+                  </p>
+                  <div className="mt-4 space-y-0">
+                    {tournamentSnapshot.map((item, index) => (
+                      <div
+                        key={item.label}
+                        className={`py-3.5 ${index !== tournamentSnapshot.length - 1 ? "border-b border-[#004AD3]/10" : ""}`}
+                      >
+                        <p className="text-[10px] font-bold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-[#FF6B53] uppercase">
+                          {item.label}
+                        </p>
+                        <p className="mt-1 text-[14px] font-semibold leading-snug text-[#004AD3]/90">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </aside>
             </div>
 
-            <div className="mt-10 border-t border-[#004AD3]/18 pt-8">
-              <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#004AD3]/72 uppercase">
+            {/* ── Tournament Framework ── */}
+            <div className="mt-10 border-t border-[#004AD3]/12 pt-8">
+              <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#004AD3]/60 uppercase">
                 Tournament Framework
               </p>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {frameworkCards.map((card) => (
                   <article
                     key={card.id}
-                    className={`rounded-md border p-6 shadow-[0_8px_20px_rgba(0,74,211,0.07)] ${card.cardClass}`}
+                    className={`group relative overflow-hidden rounded-xl border bg-white p-6 shadow-[0_6px_20px_rgba(0,74,211,0.07)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,74,211,0.12)] hover:-translate-y-0.5 ${card.cardClass}`}
                   >
-                    <div className="flex items-start gap-3">
-                      <span className={`material-symbols-outlined rounded-sm border p-2 text-[18px] ${card.iconClass}`}>
-                        {card.icon}
-                      </span>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-[#004AD3]/58 uppercase">
+                    <div className="flex items-start gap-4">
+                      <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg ${card.iconClass}`}>
+                        <span className="material-symbols-outlined text-[20px] leading-none">
+                          {card.icon}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className={`text-[10px] font-bold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#004AD3]/45 uppercase`}>
                             {card.id}
-                          </p>
-                          <span className="h-px flex-1 bg-[#004AD3]/14" />
+                          </span>
+                          <span className="h-px flex-1 bg-[#004AD3]/10" />
                         </div>
-                        <h3 className={`mt-2 text-[14px] font-bold [font-family:var(--font-nav),sans-serif] tracking-[0.08em] uppercase ${card.titleClass}`}>
+                        <h3 className={`text-[13px] font-extrabold [font-family:var(--font-nav),sans-serif] tracking-[0.08em] uppercase ${card.titleClass}`}>
                           {card.title}
                         </h3>
-                        <p className="mt-2 text-[13px] leading-6 text-[#004AD3]/86">{card.text}</p>
+                        <p className="mt-2.5 text-[13px] leading-6 text-[#004AD3]/72">{card.text}</p>
                       </div>
                     </div>
                   </article>
