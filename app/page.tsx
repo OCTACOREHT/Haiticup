@@ -295,25 +295,25 @@ export default function Home() {
                       The Championship Has Started
                     </p>
                   ) : (
-                    <div className="flex flex-wrap items-end justify-center gap-4">
-                      <div className="flex w-[124px] items-end justify-center gap-2">
-                        <div className="w-[2ch] text-center text-4xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-white md:text-5xl">{formatCountdownPart(countdownDisplay.days)}</div>
-                        <div className="pb-1 text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase">Days</div>
+                    <div className="flex flex-nowrap items-end justify-center gap-1.5 md:gap-4">
+                      <div className="flex w-auto items-end justify-center gap-1 md:w-[124px] md:gap-2">
+                        <div className="w-[2ch] text-center text-3xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-white md:text-5xl">{formatCountdownPart(countdownDisplay.days)}</div>
+                        <div className="pb-1 text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase md:text-xs">Days</div>
                       </div>
-                      <span className="pb-1 text-2xl text-white/35">:</span>
-                      <div className="flex w-[124px] items-end justify-center gap-2">
-                        <div className="w-[2ch] text-center text-4xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-white md:text-5xl">{formatCountdownPart(countdownDisplay.hours)}</div>
-                        <div className="pb-1 text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase">Hours</div>
+                      <span className="pb-1 text-xl text-white/35 md:text-2xl">:</span>
+                      <div className="flex w-auto items-end justify-center gap-1 md:w-[124px] md:gap-2">
+                        <div className="w-[2ch] text-center text-3xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-white md:text-5xl">{formatCountdownPart(countdownDisplay.hours)}</div>
+                        <div className="pb-1 text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase md:text-xs">Hours</div>
                       </div>
-                      <span className="pb-1 text-2xl text-white/35">:</span>
-                      <div className="flex w-[132px] items-end justify-center gap-2">
-                        <div className="w-[2ch] text-center text-4xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-white md:text-5xl">{formatCountdownPart(countdownDisplay.minutes)}</div>
-                        <div className="pb-1 text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase">Minutes</div>
+                      <span className="pb-1 text-xl text-white/35 md:text-2xl">:</span>
+                      <div className="flex w-auto items-end justify-center gap-1 md:w-[132px] md:gap-2">
+                        <div className="w-[2ch] text-center text-3xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-white md:text-5xl">{formatCountdownPart(countdownDisplay.minutes)}</div>
+                        <div className="pb-1 text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase md:text-xs">Mins</div>
                       </div>
-                      <span className="pb-1 text-2xl text-white/35">:</span>
-                      <div className="flex w-[134px] items-end justify-center gap-2">
-                        <div className="w-[2ch] text-center text-4xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-[#1AD1D7] md:text-5xl">{formatCountdownPart(countdownDisplay.seconds)}</div>
-                        <div className="pb-1 text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase">Seconds</div>
+                      <span className="pb-1 text-xl text-white/35 md:text-2xl">:</span>
+                      <div className="flex w-auto items-end justify-center gap-1 md:w-[134px] md:gap-2">
+                        <div className="w-[2ch] text-center text-3xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-[#1AD1D7] md:text-5xl">{formatCountdownPart(countdownDisplay.seconds)}</div>
+                        <div className="pb-1 text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase md:text-xs">Secs</div>
                       </div>
                     </div>
                   )}
