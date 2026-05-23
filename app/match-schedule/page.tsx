@@ -296,11 +296,11 @@ export default function MatchSchedulePage() {
       <main className="flex-1 pt-16">
         <section className="hero-glow relative overflow-hidden py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
-            <p className="text-sm tracking-[0.16em] text-[#C81010] uppercase">Official Match Center</p>
-            <h1 className="font-heading mt-4 text-3xl leading-[1.05] text-[#0D47B5] uppercase sm:text-4xl lg:text-6xl">
+            <p className="text-sm tracking-[0.16em] text-[#FF6B53] uppercase">Official Match Center</p>
+            <h1 className="font-heading mt-4 text-3xl leading-[1.05] text-[#004AD3] uppercase sm:text-4xl lg:text-6xl">
               Match Schedule, Poules And Professional Bracket
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-[#0D47B5]/80 md:text-lg md:leading-8">
+            <p className="mt-4 max-w-3xl text-base leading-7 text-[#004AD3]/80 md:text-lg md:leading-8">
               8 teams are divided into 2 groups of 4 (Poule A and Poule B). After the group phase,
               teams enter the knockout bracket with quarterfinals, semifinals and final.
             </p>
@@ -310,18 +310,18 @@ export default function MatchSchedulePage() {
         <section id="groups" className="py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#C81010]">groups</span>
-              <h2 className="font-heading text-2xl text-[#0D47B5] uppercase sm:text-3xl md:text-4xl">Poules (Group Stage)</h2>
+              <span className="material-symbols-outlined text-[#FF6B53]">groups</span>
+              <h2 className="font-heading text-2xl text-[#004AD3] uppercase sm:text-3xl md:text-4xl">Poules (Group Stage)</h2>
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <article className="overflow-hidden rounded-xl border border-[#0D47B5]/20 bg-white">
-                <div className="border-b border-[#0D47B5]/20 bg-white px-6 py-4">
-                  <h3 className="font-heading text-xl text-[#C81010] uppercase">Poule A</h3>
+              <article className="overflow-hidden rounded-xl border border-[#004AD3]/20 bg-white">
+                <div className="border-b border-[#004AD3]/20 bg-white px-6 py-4">
+                  <h3 className="font-heading text-xl text-[#FF6B53] uppercase">Poule A</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="text-[11px] tracking-wider text-[#0D47B5]/70 uppercase">
+                    <thead className="text-[11px] tracking-wider text-[#004AD3]/70 uppercase">
                       <tr>
                         <th className="px-5 py-3 text-left">Equipe</th>
                         <th className="px-3 py-3 text-center">Pts</th>
@@ -333,7 +333,7 @@ export default function MatchSchedulePage() {
                     </thead>
                     <tbody>
                       {groupRowsA.map((team) => (
-                        <tr key={team} className="border-t border-[#0D47B5]/15">
+                        <tr key={team} className="border-t border-[#004AD3]/15">
                           <td className="px-5 py-3">{team}</td>
                           <td className="text-center">0</td>
                           <td className="text-center">0</td>
@@ -347,13 +347,13 @@ export default function MatchSchedulePage() {
                 </div>
               </article>
 
-              <article className="overflow-hidden rounded-xl border border-[#0D47B5]/20 bg-white">
-                <div className="border-b border-[#0D47B5]/20 bg-white px-6 py-4">
-                  <h3 className="font-heading text-xl text-[#C81010] uppercase">Poule B</h3>
+              <article className="overflow-hidden rounded-xl border border-[#004AD3]/20 bg-white">
+                <div className="border-b border-[#004AD3]/20 bg-white px-6 py-4">
+                  <h3 className="font-heading text-xl text-[#FF6B53] uppercase">Poule B</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="text-[11px] tracking-wider text-[#0D47B5]/70 uppercase">
+                    <thead className="text-[11px] tracking-wider text-[#004AD3]/70 uppercase">
                       <tr>
                         <th className="px-5 py-3 text-left">Equipe</th>
                         <th className="px-3 py-3 text-center">Pts</th>
@@ -365,7 +365,7 @@ export default function MatchSchedulePage() {
                     </thead>
                     <tbody>
                       {groupRowsB.map((team) => (
-                        <tr key={team} className="border-t border-[#0D47B5]/15">
+                        <tr key={team} className="border-t border-[#004AD3]/15">
                           <td className="px-5 py-3">{team}</td>
                           <td className="text-center">0</td>
                           <td className="text-center">0</td>
@@ -382,20 +382,20 @@ export default function MatchSchedulePage() {
           </div>
         </section>
 
-        <section id="schedule" className="bg-[#F8FAFF] py-10 md:py-14">
+        <section id="schedule" className="bg-[#ffffff] py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#C81010]">calendar_month</span>
-              <h2 className="font-heading text-2xl text-[#0D47B5] uppercase sm:text-3xl md:text-4xl">Group Match Schedule</h2>
+              <span className="material-symbols-outlined text-[#FF6B53]">calendar_month</span>
+              <h2 className="font-heading text-2xl text-[#004AD3] uppercase sm:text-3xl md:text-4xl">Group Match Schedule</h2>
             </div>
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <article className="rounded-xl border border-[#0D47B5]/20 bg-white p-6">
-                <h3 className="mb-4 text-sm tracking-[0.08em] text-[#C81010] uppercase">Poule A Fixtures</h3>
+              <article className="rounded-xl border border-[#004AD3]/20 bg-white p-6">
+                <h3 className="mb-4 text-sm tracking-[0.08em] text-[#FF6B53] uppercase">Poule A Fixtures</h3>
                 <div className="space-y-3 text-sm">
                   {fixturesA.map((pair, index) => (
-                    <div key={pair.join("-")} className="rounded-lg border border-[#0D47B5]/20 p-4">
-                      <p className="text-[11px] text-[#0D47B5]/65 uppercase">Matchday {index + 1}</p>
+                    <div key={pair.join("-")} className="rounded-lg border border-[#004AD3]/20 p-4">
+                      <p className="text-[11px] text-[#004AD3]/65 uppercase">Matchday {index + 1}</p>
                       <p className="mt-1">{pair[0]}</p>
                       <p>{pair[1]}</p>
                     </div>
@@ -403,12 +403,12 @@ export default function MatchSchedulePage() {
                 </div>
               </article>
 
-              <article className="rounded-xl border border-[#0D47B5]/20 bg-white p-6">
-                <h3 className="mb-4 text-sm tracking-[0.08em] text-[#C81010] uppercase">Poule B Fixtures</h3>
+              <article className="rounded-xl border border-[#004AD3]/20 bg-white p-6">
+                <h3 className="mb-4 text-sm tracking-[0.08em] text-[#FF6B53] uppercase">Poule B Fixtures</h3>
                 <div className="space-y-3 text-sm">
                   {fixturesB.map((pair, index) => (
-                    <div key={pair.join("-")} className="rounded-lg border border-[#0D47B5]/20 p-4">
-                      <p className="text-[11px] text-[#0D47B5]/65 uppercase">Matchday {index + 1}</p>
+                    <div key={pair.join("-")} className="rounded-lg border border-[#004AD3]/20 p-4">
+                      <p className="text-[11px] text-[#004AD3]/65 uppercase">Matchday {index + 1}</p>
                       <p className="mt-1">{pair[0]}</p>
                       <p>{pair[1]}</p>
                     </div>
@@ -422,40 +422,40 @@ export default function MatchSchedulePage() {
         <section id="bracket" className="py-14 md:py-[110px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#C81010]">account_tree</span>
-              <h2 className="font-heading text-2xl text-[#0D47B5] uppercase sm:text-3xl md:text-4xl">Knockout Bracket (8 Teams)</h2>
+              <span className="material-symbols-outlined text-[#FF6B53]">account_tree</span>
+              <h2 className="font-heading text-2xl text-[#004AD3] uppercase sm:text-3xl md:text-4xl">Knockout Bracket (8 Teams)</h2>
             </div>
           </div>
 
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:hidden">
             <div className="space-y-6">
               {mobileBracketRounds.map((round) => (
-                <article key={round.stage} className="rounded-lg border border-[#0D47B5]/18 bg-[#F8FAFF] p-4 shadow-[0_8px_20px_rgba(13,71,181,0.08)]">
-                  <p className="text-[11px] font-semibold tracking-[0.14em] text-[#C81010] uppercase">{round.stage}</p>
+                <article key={round.stage} className="rounded-lg border border-[#004AD3]/18 bg-[#ffffff] p-4 shadow-[0_8px_20px_rgba(0,74,211,0.08)]">
+                  <p className="text-[11px] font-semibold tracking-[0.14em] text-[#FF6B53] uppercase">{round.stage}</p>
                   <div className="mt-3 space-y-3">
                     {round.matches.map((match) => (
                       <div
                         key={`${round.stage}-${match.id}`}
                         className={`rounded-md border p-3 ${
                           round.stage === "Final"
-                            ? "border-[#C81010]/28 bg-[#FFF8F8]"
-                            : "border-[#0D47B5]/18 bg-white"
+                            ? "border-[#FF6B53]/28 bg-[#ffffff]"
+                            : "border-[#004AD3]/18 bg-white"
                         }`}
                       >
-                        <p className="text-[10px] font-semibold tracking-[0.12em] text-[#0D47B5]/65 uppercase">{match.id}</p>
+                        <p className="text-[10px] font-semibold tracking-[0.12em] text-[#004AD3]/65 uppercase">{match.id}</p>
                         <div className="mt-2 space-y-1.5">
                           {match.rows.map((row, index) => (
                             <div
                               key={`${round.stage}-${match.id}-${row.team}`}
-                              className={`flex items-center justify-between gap-2 text-sm text-[#0D47B5] ${
-                                index > 0 ? "border-t border-[#0D47B5]/14 pt-1.5" : ""
+                              className={`flex items-center justify-between gap-2 text-sm text-[#004AD3] ${
+                                index > 0 ? "border-t border-[#004AD3]/14 pt-1.5" : ""
                               }`}
                             >
-                              <span className="min-w-[34px] text-[10px] font-semibold tracking-[0.08em] text-[#C81010] uppercase">
+                              <span className="min-w-[34px] text-[10px] font-semibold tracking-[0.08em] text-[#FF6B53] uppercase">
                                 {row.seed}
                               </span>
                               <span className="flex-1 truncate">{row.team}</span>
-                              <span className="h-4 min-w-3 rounded-sm bg-[#0D47B5]/10" />
+                              <span className="h-4 min-w-3 rounded-sm bg-[#004AD3]/10" />
                             </div>
                           ))}
                         </div>

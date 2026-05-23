@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import SiteNavbar from "@/components/SiteNavbar";
@@ -24,22 +25,22 @@ const rulesCards = [
     id: "1",
     title: "Team Composition",
     text: "Max 18 players per squad. All players must be registered with valid ID by July 1st, 2026.",
-    card: "border-black/20 bg-[#F2C230] text-black",
-    badge: "bg-black text-[#F2C230]",
+    card: "border-black/20 bg-[#1AD1D7] text-black",
+    badge: "bg-black text-[#1AD1D7]",
   },
   {
     id: "2",
     title: "Match Format",
     text: "Standard 90-minute matches (45 min halves). Group stage followed by direct elimination rounds.",
-    card: "border-[#C81010]/35 bg-[#C81010] text-white",
-    badge: "bg-white text-[#C81010]",
+    card: "border-[#FF6B53]/35 bg-[#FF6B53] text-white",
+    badge: "bg-white text-[#FF6B53]",
   },
   {
     id: "3",
     title: "Code of Conduct",
     text: "Zero tolerance for unsportsmanlike behavior. Fair play is the cornerstone of the Haiti Cup.",
-    card: "border-[#0D47B5]/35 bg-[#0D47B5] text-white",
-    badge: "bg-white text-[#0D47B5]",
+    card: "border-[#004AD3]/35 bg-[#004AD3] text-white",
+    badge: "bg-white text-[#004AD3]",
   },
 ];
 
@@ -49,36 +50,36 @@ const frameworkCards = [
     icon: "groups",
     title: "Competition Format",
     text: "2 groups of 4 teams. Each group plays a single round-robin (6 matches per group). Top teams advance to knockout rounds.",
-    cardClass: "border-[#0D47B5]/20 bg-[#F5F9FF]",
-    iconClass: "border-[#0D47B5]/22 bg-white text-[#0D47B5]",
-    titleClass: "text-[#0D47B5]",
+    cardClass: "border-[#004AD3]/20 bg-[#ffffff]",
+    iconClass: "border-[#004AD3]/22 bg-white text-[#004AD3]",
+    titleClass: "text-[#004AD3]",
   },
   {
     id: "02",
     icon: "sports",
     title: "Match Standard",
     text: "Official 90-minute matches (2 x 45). Knockout ties follow official tiebreak procedures, including extra time and penalties when required.",
-    cardClass: "border-[#C81010]/20 bg-[#FFF7F7]",
-    iconClass: "border-[#C81010]/24 bg-white text-[#C81010]",
-    titleClass: "text-[#C81010]",
+    cardClass: "border-[#FF6B53]/20 bg-[#ffffff]",
+    iconClass: "border-[#FF6B53]/24 bg-white text-[#FF6B53]",
+    titleClass: "text-[#FF6B53]",
   },
   {
     id: "03",
     icon: "calendar_month",
     title: "Tournament Window",
     text: "Group stage, knockout rounds, and final are scheduled between July and September 2026 at the Ezeile Community Center.",
-    cardClass: "border-[#F2C230]/40 bg-[#FFFEF4]",
-    iconClass: "border-[#F2C230]/45 bg-white text-[#C89C00]",
-    titleClass: "text-[#C89C00]",
+    cardClass: "border-[#1AD1D7]/40 bg-[#ffffff]",
+    iconClass: "border-[#1AD1D7]/45 bg-white text-[#0B6A9B]",
+    titleClass: "text-[#0B6A9B]",
   },
   {
     id: "04",
     icon: "verified",
     title: "Professional Oversight",
     text: "Central match operations include scheduling control, result tracking, and officiating standards aligned with competitive tournament play.",
-    cardClass: "border-[#2B8A5A]/24 bg-[#F4FBF7]",
-    iconClass: "border-[#2B8A5A]/28 bg-white text-[#2B8A5A]",
-    titleClass: "text-[#2B8A5A]",
+    cardClass: "border-[#1AD1D7]/24 bg-[#ffffff]",
+    iconClass: "border-[#1AD1D7]/28 bg-white text-[#1AD1D7]",
+    titleClass: "text-[#1AD1D7]",
   },
 ];
 
@@ -110,25 +111,25 @@ const individualPrizeCards = [
     prizeKey: "mvp" as const,
     title: "Tournament MVP",
     icon: "star",
-    cardClass: "border-[#0D47B5]/18 bg-[#F8FAFF]",
-    labelClass: "text-[#0D47B5]",
-    iconClass: "text-[#0D47B5]",
+    cardClass: "border-[#004AD3]/18 bg-[#ffffff]",
+    labelClass: "text-[#004AD3]",
+    iconClass: "text-[#004AD3]",
   },
   {
     prizeKey: "bestScorer" as const,
     title: "Best Scorer",
     icon: "sports_soccer",
-    cardClass: "border-[#C81010]/22 bg-[#FFF9F9]",
-    labelClass: "text-[#C81010]",
-    iconClass: "text-[#C81010]",
+    cardClass: "border-[#FF6B53]/22 bg-[#ffffff]",
+    labelClass: "text-[#FF6B53]",
+    iconClass: "text-[#FF6B53]",
   },
   {
     prizeKey: "topAssists" as const,
     title: "Top Assists",
     icon: "assistant",
-    cardClass: "border-[#F2C230]/40 bg-[#FFFEF5]",
-    labelClass: "text-[#C89C00]",
-    iconClass: "text-[#C89C00]",
+    cardClass: "border-[#1AD1D7]/40 bg-[#ffffff]",
+    labelClass: "text-[#0B6A9B]",
+    iconClass: "text-[#0B6A9B]",
   },
 ];
 
@@ -228,24 +229,36 @@ export default function Home() {
       <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
 
       <main className="flex-1">
-        <section className="relative flex min-h-screen items-center overflow-hidden bg-[#050d1f] pt-16">
+        <section className="relative flex min-h-screen items-center overflow-hidden bg-[#000000] pt-16">
           <div className="absolute inset-0 z-0">
-            <img
-              className="h-full w-full object-cover opacity-45 grayscale"
-              alt="Night football stadium"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZreNeO4EsA3JT_UE_pFQ4SiYtcjgv2TEgf4p74YCk_M5bqoto4i9ftSDFZpS2XJICKNL8K6DxHXupA5UgJgOpl0OCtxvswNNl3UyhtDRaoFRT5ogZwG5aSJJNb0NAU3K4iaKFuDACuacdchHdu9AZ0IRP1a_oGEejMJdnY9y1rIQQXZTER2eYLfSmgUTm53rOXjVkYeROb8utaCT3g3BwfFiRcwCVgKgTIr8flOQO4JbGqeYEoejpcpkwbKlXqtiFPOiFKI_c"
+            <Image
+              src="/Full%20bg%20design.png"
+              alt="Full background design"
+              fill
+              priority
+              unoptimized
+              className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/30 to-black/38" />
           </div>
 
           <div className="relative z-10 mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-6 px-4 md:px-16 lg:grid-cols-12">
             <div className="mx-auto flex w-full max-w-[920px] flex-col items-center justify-center gap-2 text-center lg:col-span-12">
-              <span className="text-xs font-semibold tracking-[0.16em] text-[#F2C230] uppercase">
+              <Image
+                src="/G%20logo.png"
+                alt="G logo"
+                width={180}
+                height={220}
+                unoptimized
+                priority
+                className="mb-4 h-24 w-auto object-contain md:h-32"
+              />
+              <span className="text-xs font-semibold tracking-[0.16em] text-[#1AD1D7] uppercase">
                 EZEILE COMMUNITY CENTER | JULY 2026
               </span>
               <h1 className="font-heading text-3xl leading-[1.02] text-white uppercase md:text-6xl">
                 Get your team ready and{" "}
-                <span className="text-[#C81010]">
+                <span className="text-[#FF6B53]">
                   be part of the competition
                 </span>
               </h1>
@@ -255,11 +268,11 @@ export default function Home() {
                   <span className="text-xs font-bold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] text-white/60 uppercase">
                     Champion Prize
                   </span>
-                  <span className="text-4xl font-bold [font-family:var(--font-nav),sans-serif] text-[#C81010] md:text-5xl">
+                  <span className="text-4xl font-bold [font-family:var(--font-nav),sans-serif] text-[#FF6B53] md:text-5xl">
                     $10,000
                   </span>
                 </div>
-                <div className="hidden h-12 w-px bg-[#0D47B5]/20 md:block" />
+                <div className="hidden h-12 w-px bg-[#004AD3]/20 md:block" />
                 <div className="flex flex-col">
                   <span className="text-xs font-bold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] text-white/60 uppercase">
                     Runner-up
@@ -278,7 +291,7 @@ export default function Home() {
                   </div>
 
                   {countdownDisplay.isStarted ? (
-                    <p className="text-2xl font-bold [font-family:var(--font-nav),sans-serif] text-[#F2C230] uppercase">
+                    <p className="text-2xl font-bold [font-family:var(--font-nav),sans-serif] text-[#1AD1D7] uppercase">
                       The Championship Has Started
                     </p>
                   ) : (
@@ -299,7 +312,7 @@ export default function Home() {
                       </div>
                       <span className="pb-1 text-2xl text-white/35">:</span>
                       <div className="flex w-[134px] items-end justify-center gap-2">
-                        <div className="w-[2ch] text-center text-4xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-[#F2C230] md:text-5xl">{formatCountdownPart(countdownDisplay.seconds)}</div>
+                        <div className="w-[2ch] text-center text-4xl font-bold [font-family:var(--font-nav),sans-serif] tabular-nums text-[#1AD1D7] md:text-5xl">{formatCountdownPart(countdownDisplay.seconds)}</div>
                         <div className="pb-1 text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/70 uppercase">Seconds</div>
                       </div>
                     </div>
@@ -310,17 +323,17 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="bg-[linear-gradient(180deg,#EEF3FF_0%,#F8FAFF_100%)] py-24 md:py-28">
+        <section className="bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_100%)] py-24 md:py-28">
           <div className="mx-auto max-w-[1180px] px-4 md:px-16">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
               <div className="lg:col-span-8">
-                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#0D47B5]/72 uppercase">
+                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#004AD3]/72 uppercase">
                   About The Tournament
                 </p>
-                <h2 className="mt-3 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-[1.02] text-[#C81010] uppercase md:text-6xl">
+                <h2 className="mt-3 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-[1.02] text-[#FF6B53] uppercase md:text-6xl">
                   Gran Panpan Haiti Cup 2026
                 </h2>
-                <p className="mt-5 max-w-3xl text-[15px] leading-8 text-[#0D47B5]/88 md:text-base">
+                <p className="mt-5 max-w-3xl text-[15px] leading-8 text-[#004AD3]/88 md:text-base">
                   Gran Panpan Haiti Cup is a structured summer competition designed for elite amateur and
                   semi-professional football teams. This edition runs with 8 teams in 2 groups, followed by
                   a knockout bracket through quarterfinals, semifinals, and the championship final.
@@ -330,12 +343,12 @@ export default function Home() {
                   {tournamentStats.map((item) => (
                     <article
                       key={item.label}
-                      className="rounded-md border border-[#0D47B5]/16 bg-white px-5 py-4 shadow-[0_8px_18px_rgba(13,71,181,0.08)]"
+                      className="rounded-md border border-[#004AD3]/16 bg-white px-5 py-4 shadow-[0_8px_18px_rgba(0,74,211,0.08)]"
                     >
-                      <p className="text-5xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-none text-[#C81010]">
+                      <p className="text-5xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-none text-[#FF6B53]">
                         {item.value}
                       </p>
-                      <p className="mt-2 text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-[#0D47B5]/68 uppercase">
+                      <p className="mt-2 text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-[#004AD3]/68 uppercase">
                         {item.label}
                       </p>
                     </article>
@@ -343,28 +356,28 @@ export default function Home() {
                 </div>
               </div>
 
-              <aside className="rounded-lg border border-[#0D47B5]/18 bg-white/95 p-6 shadow-[0_10px_28px_rgba(13,71,181,0.1)] lg:col-span-4">
-                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#0D47B5]/68 uppercase">
+              <aside className="rounded-lg border border-[#004AD3]/18 bg-white/95 p-6 shadow-[0_10px_28px_rgba(0,74,211,0.1)] lg:col-span-4">
+                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#004AD3]/68 uppercase">
                   Competition Snapshot
                 </p>
                 <div className="mt-4 space-y-3">
                   {tournamentSnapshot.map((item, index) => (
                     <div
                       key={item.label}
-                      className={`pb-3 ${index === tournamentSnapshot.length - 1 ? "border-b-0 pb-0" : "border-b border-[#0D47B5]/12"}`}
+                      className={`pb-3 ${index === tournamentSnapshot.length - 1 ? "border-b-0 pb-0" : "border-b border-[#004AD3]/12"}`}
                     >
-                      <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] text-[#C81010] uppercase">
+                      <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] text-[#FF6B53] uppercase">
                         {item.label}
                       </p>
-                      <p className="mt-1 text-sm leading-6 text-[#0D47B5]/86">{item.value}</p>
+                      <p className="mt-1 text-sm leading-6 text-[#004AD3]/86">{item.value}</p>
                     </div>
                   ))}
                 </div>
               </aside>
             </div>
 
-            <div className="mt-10 border-t border-[#0D47B5]/18 pt-8">
-              <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#0D47B5]/72 uppercase">
+            <div className="mt-10 border-t border-[#004AD3]/18 pt-8">
+              <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#004AD3]/72 uppercase">
                 Tournament Framework
               </p>
 
@@ -372,7 +385,7 @@ export default function Home() {
                 {frameworkCards.map((card) => (
                   <article
                     key={card.id}
-                    className={`rounded-md border p-6 shadow-[0_8px_20px_rgba(13,71,181,0.07)] ${card.cardClass}`}
+                    className={`rounded-md border p-6 shadow-[0_8px_20px_rgba(0,74,211,0.07)] ${card.cardClass}`}
                   >
                     <div className="flex items-start gap-3">
                       <span className={`material-symbols-outlined rounded-sm border p-2 text-[18px] ${card.iconClass}`}>
@@ -380,15 +393,15 @@ export default function Home() {
                       </span>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-[#0D47B5]/58 uppercase">
+                          <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-[#004AD3]/58 uppercase">
                             {card.id}
                           </p>
-                          <span className="h-px flex-1 bg-[#0D47B5]/14" />
+                          <span className="h-px flex-1 bg-[#004AD3]/14" />
                         </div>
                         <h3 className={`mt-2 text-[14px] font-bold [font-family:var(--font-nav),sans-serif] tracking-[0.08em] uppercase ${card.titleClass}`}>
                           {card.title}
                         </h3>
-                        <p className="mt-2 text-[13px] leading-6 text-[#0D47B5]/86">{card.text}</p>
+                        <p className="mt-2 text-[13px] leading-6 text-[#004AD3]/86">{card.text}</p>
                       </div>
                     </div>
                   </article>
@@ -402,23 +415,23 @@ export default function Home() {
           <div className="mx-auto max-w-[1100px] px-4 md:px-16">
             <div className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-12 md:items-end">
               <div className="md:col-span-7">
-                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#0D47B5]/62 uppercase">
+                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#004AD3]/62 uppercase">
                   Prize Structure
                 </p>
-                <h2 className="mt-2 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-[0.95] text-[#0D47B5] uppercase md:text-6xl">
+                <h2 className="mt-2 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-[0.95] text-[#004AD3] uppercase md:text-6xl">
                   Tournament
                   <br />
                   Prizes
                 </h2>
               </div>
-              <p className="text-sm leading-7 text-[#0D47B5]/78 md:col-span-5 md:max-w-md">
+              <p className="text-sm leading-7 text-[#004AD3]/78 md:col-span-5 md:max-w-md">
                 Total announced prize pool includes team awards and individual performance awards.
                 Financial prizes are combined with official tournament honors.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
-              <article className="flex h-full flex-col rounded-lg bg-[#0D47B5] p-7 text-white shadow-[0_14px_34px_rgba(13,71,181,0.28)] lg:col-span-7 md:p-8">
+              <article className="flex h-full flex-col rounded-lg bg-[#004AD3] p-7 text-white shadow-[0_14px_34px_rgba(0,74,211,0.28)] lg:col-span-7 md:p-8">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-white/74 uppercase">
@@ -431,31 +444,31 @@ export default function Home() {
                       Plus Official Trophy & Gold Medals
                     </p>
                   </div>
-                  <span className="material-symbols-outlined rounded-md bg-white/10 p-2.5 text-[22px] text-[#F2C230]">emoji_events</span>
+                  <span className="material-symbols-outlined rounded-md bg-white/10 p-2.5 text-[22px] text-[#1AD1D7]">emoji_events</span>
                 </div>
-                <p className="mt-auto pt-8 text-5xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#F2C230] tabular-nums md:text-6xl">
+                <p className="mt-auto pt-8 text-5xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#1AD1D7] tabular-nums md:text-6xl">
                   {formatPrizeAmount(animatedPrizeAmounts.champion)}
                 </p>
               </article>
 
-              <article className="flex h-full flex-col rounded-lg border border-[#0D47B5]/20 bg-[#F8FAFF] p-7 shadow-[0_8px_24px_rgba(13,71,181,0.1)] lg:col-span-5 md:p-8">
+              <article className="flex h-full flex-col rounded-lg border border-[#004AD3]/20 bg-[#ffffff] p-7 shadow-[0_8px_24px_rgba(0,74,211,0.1)] lg:col-span-5 md:p-8">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-[#0D47B5]/62 uppercase">
+                    <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.12em] text-[#004AD3]/62 uppercase">
                       2nd Place
                     </p>
-                    <h3 className="mt-2 text-[34px] leading-[1] font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase md:text-[40px]">
+                    <h3 className="mt-2 text-[34px] leading-[1] font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase md:text-[40px]">
                       Runner-up
                     </h3>
-                    <p className="mt-2 text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.08em] text-[#0D47B5]/76 uppercase">
+                    <p className="mt-2 text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.08em] text-[#004AD3]/76 uppercase">
                       Plus Silver Medals
                     </p>
                   </div>
-                  <span className="material-symbols-outlined rounded-md border border-[#0D47B5]/16 bg-white p-2.5 text-[22px] text-[#0D47B5]/72">
+                  <span className="material-symbols-outlined rounded-md border border-[#004AD3]/16 bg-white p-2.5 text-[22px] text-[#004AD3]/72">
                     military_tech
                   </span>
                 </div>
-                <p className="mt-auto pt-8 text-5xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] tabular-nums md:text-6xl">
+                <p className="mt-auto pt-8 text-5xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] tabular-nums md:text-6xl">
                   {formatPrizeAmount(animatedPrizeAmounts.runnerUp)}
                 </p>
               </article>
@@ -470,7 +483,7 @@ export default function Home() {
                     </p>
                     <span className={`material-symbols-outlined text-[15px] ${card.iconClass}`}>{card.icon}</span>
                   </div>
-                  <p className="mt-2 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] tabular-nums">
+                  <p className="mt-2 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] tabular-nums">
                     {formatPrizeAmount(animatedPrizeAmounts[card.prizeKey])}
                   </p>
                 </article>
@@ -481,7 +494,7 @@ export default function Home() {
 
         <section id="registration" className="py-[120px]">
           <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 md:px-16 lg:grid-cols-12">
-            <div className="flex min-h-[400px] flex-col justify-between rounded-xl bg-[#C81010] p-12 text-white lg:col-span-7">
+            <div className="flex min-h-[400px] flex-col justify-between rounded-xl bg-[#FF6B53] p-12 text-white lg:col-span-7">
               <div>
                 <h2 className="font-heading mb-4 text-4xl uppercase md:text-6xl">REGISTER NOW</h2>
                 <p className="mb-8 max-w-md text-lg">
@@ -499,22 +512,22 @@ export default function Home() {
                 </div>
                 <Link
                   href="/register"
-                  className="register-cta-link rounded-sm bg-white px-12 py-5 text-sm font-bold !text-[#F2C230] uppercase transition-transform hover:scale-105 hover:bg-white active:!text-[#F2C230] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                  className="register-cta-link rounded-sm bg-white px-12 py-5 text-sm font-bold !text-[#1AD1D7] uppercase transition-transform hover:scale-105 hover:bg-white active:!text-[#1AD1D7] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
                 >
                   Get Started
                 </Link>
               </div>
             </div>
 
-            <div className="space-y-8 rounded-xl border border-[#0D47B5]/15 bg-white p-12 lg:col-span-5">
-              <h3 className="font-heading border-b border-[#0D47B5]/20 pb-4 text-3xl text-[#0D47B5] uppercase">LOGISTICS</h3>
+            <div className="space-y-8 rounded-xl border border-[#004AD3]/15 bg-white p-12 lg:col-span-5">
+              <h3 className="font-heading border-b border-[#004AD3]/20 pb-4 text-3xl text-[#004AD3] uppercase">LOGISTICS</h3>
               <div className="space-y-6">
                 {logistics.map((item) => (
                   <div key={item.label} className="flex gap-6">
-                    <span className="material-symbols-outlined text-[#C81010]">{item.icon}</span>
+                    <span className="material-symbols-outlined text-[#FF6B53]">{item.icon}</span>
                     <div>
-                      <p className="text-sm text-[#0D47B5]/60 uppercase">{item.label}</p>
-                      <p className="text-lg text-[#0D47B5]">{item.value}</p>
+                      <p className="text-sm text-[#004AD3]/60 uppercase">{item.label}</p>
+                      <p className="text-lg text-[#004AD3]">{item.value}</p>
                     </div>
                   </div>
                 ))}
@@ -523,20 +536,20 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="schedule" className="bg-[#F8FAFF] py-[120px]">
+        <section id="schedule" className="bg-[#ffffff] py-[120px]">
           <div className="mx-auto max-w-[1280px] px-4 md:px-16">
             <div className="mb-12 flex items-end justify-between">
-              <h2 className="font-heading text-4xl text-[#0D47B5] uppercase md:text-6xl">MATCH SCHEDULE</h2>
-              <div className="flex items-center gap-2 text-[#C81010]">
-                <span className="h-3 w-3 animate-pulse rounded-full bg-[#C81010]" />
+              <h2 className="font-heading text-4xl text-[#004AD3] uppercase md:text-6xl">MATCH SCHEDULE</h2>
+              <div className="flex items-center gap-2 text-[#FF6B53]">
+                <span className="h-3 w-3 animate-pulse rounded-full bg-[#FF6B53]" />
                 <span className="text-sm uppercase">Live Scoreboard Coming Soon</span>
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-[#0D47B5]/15 bg-white">
-              <div className="flex h-[220px] flex-col items-center justify-center gap-3 bg-white text-[#0D47B5]/45 md:h-[280px]">
-                <span className="material-symbols-outlined text-5xl text-[#0D47B5]/35">pending_actions</span>
-                <p className="text-center text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#0D47B5]/45 uppercase md:text-sm">
+            <div className="overflow-hidden rounded-xl border border-[#004AD3]/15 bg-white">
+              <div className="flex h-[220px] flex-col items-center justify-center gap-3 bg-white text-[#004AD3]/45 md:h-[280px]">
+                <span className="material-symbols-outlined text-5xl text-[#004AD3]/35">pending_actions</span>
+                <p className="text-center text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#004AD3]/45 uppercase md:text-sm">
                   Full Match Schedule To Be Announced June 2026
                 </p>
               </div>
@@ -546,7 +559,7 @@ export default function Home() {
 
         <section id="rules" className="py-[120px]">
           <div className="mx-auto max-w-[1280px] px-4 md:px-16">
-            <h2 className="font-heading mb-10 text-center text-4xl text-[#0D47B5] uppercase md:text-5xl">TOURNAMENT RULES</h2>
+            <h2 className="font-heading mb-10 text-center text-4xl text-[#004AD3] uppercase md:text-5xl">TOURNAMENT RULES</h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {rulesCards.map((card) => (
                 <div key={card.id} className={`space-y-4 rounded-xl border p-6 ${card.card}`}>

@@ -47,7 +47,7 @@ const positionOptions = [
 ];
 
 const inputClassName =
-  "w-full rounded-md border border-[#0D47B5]/20 bg-white px-3 py-2 text-sm text-[#0D47B5] outline-none transition focus:border-[#0D47B5] focus:ring-2 focus:ring-[#0D47B5]/15";
+  "w-full rounded-md border border-[#004AD3]/20 bg-white px-3 py-2 text-sm text-[#004AD3] outline-none transition focus:border-[#004AD3] focus:ring-2 focus:ring-[#004AD3]/15";
 
 export default function RegisterPage() {
   const [teamName, setTeamName] = useState("");
@@ -109,19 +109,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8FAFF]">
+    <div className="flex min-h-screen flex-col bg-[#ffffff]">
       <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
 
       <main className="flex-1 pt-24 pb-16">
         <section className="mx-auto w-full max-w-[1100px] px-4 md:px-10">
-          <div className="rounded-xl border border-[#0D47B5]/15 bg-white p-8 shadow-[0_12px_28px_rgba(13,71,181,0.08)] md:p-10">
-            <p className="text-[11px] font-semibold tracking-[0.14em] text-[#0D47B5]/65 uppercase">
+          <div className="rounded-xl border border-[#004AD3]/15 bg-white p-8 shadow-[0_12px_28px_rgba(0,74,211,0.08)] md:p-10">
+            <p className="text-[11px] font-semibold tracking-[0.14em] text-[#004AD3]/65 uppercase">
               Team Registration
             </p>
-            <h1 className="mt-2 text-3xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase md:text-5xl">
+            <h1 className="mt-2 text-3xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase md:text-5xl">
               Register Now
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#0D47B5]/78 md:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#004AD3]/78 md:text-base">
               Fill the team profile and add your players roster for tournament verification.
             </p>
 
@@ -130,7 +130,7 @@ export default function RegisterPage() {
                 <div className="space-y-5 lg:col-span-8">
                   <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold tracking-[0.08em] text-[#0D47B5]/70 uppercase">
+                      <span className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">
                         Team Name
                       </span>
                       <input
@@ -143,7 +143,7 @@ export default function RegisterPage() {
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold tracking-[0.08em] text-[#0D47B5]/70 uppercase">
+                      <span className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">
                         Team Manager
                       </span>
                       <input
@@ -156,7 +156,7 @@ export default function RegisterPage() {
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold tracking-[0.08em] text-[#0D47B5]/70 uppercase">
+                      <span className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">
                         Phone Number
                       </span>
                       <input
@@ -169,7 +169,7 @@ export default function RegisterPage() {
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold tracking-[0.08em] text-[#0D47B5]/70 uppercase">
+                      <span className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">
                         Contact Email
                       </span>
                       <input
@@ -183,7 +183,7 @@ export default function RegisterPage() {
                     </label>
 
                     <label className="space-y-2 md:col-span-2">
-                      <span className="text-xs font-semibold tracking-[0.08em] text-[#0D47B5]/70 uppercase">
+                      <span className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">
                         Club Address
                       </span>
                       <textarea
@@ -196,7 +196,7 @@ export default function RegisterPage() {
                     </label>
 
                     <label className="space-y-2 md:col-span-2">
-                      <span className="text-xs font-semibold tracking-[0.08em] text-[#0D47B5]/70 uppercase">
+                      <span className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">
                         Website
                       </span>
                       <input
@@ -210,40 +210,40 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <aside className="rounded-lg border border-[#0D47B5]/18 bg-[#F7FAFF] p-5 lg:col-span-4">
-                  <p className="text-xs font-semibold tracking-[0.08em] text-[#0D47B5]/70 uppercase">Club Logo</p>
-                  <label className="mt-3 flex cursor-pointer items-center justify-center rounded-md border border-dashed border-[#0D47B5]/35 bg-white px-4 py-5 text-center">
+                <aside className="rounded-lg border border-[#004AD3]/18 bg-[#ffffff] p-5 lg:col-span-4">
+                  <p className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">Club Logo</p>
+                  <label className="mt-3 flex cursor-pointer items-center justify-center rounded-md border border-dashed border-[#004AD3]/35 bg-white px-4 py-5 text-center">
                     <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-                    <span className="text-sm font-semibold text-[#0D47B5]">Upload Logo</span>
+                    <span className="text-sm font-semibold text-[#004AD3]">Upload Logo</span>
                   </label>
 
                   {logoPreview ? (
-                    <div className="mt-4 flex flex-col items-center rounded-md border border-[#0D47B5]/18 bg-white p-3 text-center">
+                    <div className="mt-4 flex flex-col items-center rounded-md border border-[#004AD3]/18 bg-white p-3 text-center">
                       <Image
                         src={logoPreview}
                         alt="Club logo preview"
                         width={120}
                         height={120}
                         unoptimized
-                        className="h-[120px] w-[120px] rounded-md border border-[#0D47B5]/18 object-contain"
+                        className="h-[120px] w-[120px] rounded-md border border-[#004AD3]/18 object-contain"
                       />
-                      <p className="mt-2 text-xs text-[#0D47B5]/72">{logoFileName}</p>
+                      <p className="mt-2 text-xs text-[#004AD3]/72">{logoFileName}</p>
                     </div>
                   ) : (
-                    <p className="mt-4 text-xs text-[#0D47B5]/60">No logo selected yet.</p>
+                    <p className="mt-4 text-xs text-[#004AD3]/60">No logo selected yet.</p>
                   )}
                 </aside>
               </div>
 
-              <section className="rounded-lg border border-[#0D47B5]/15 bg-[#F9FBFF] p-5 md:p-6">
+              <section className="rounded-lg border border-[#004AD3]/15 bg-[#ffffff] p-5 md:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase">
+                  <h2 className="text-xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase">
                     Players Roster
                   </h2>
                   <button
                     type="button"
                     onClick={addPlayer}
-                    className="inline-flex items-center gap-2 rounded-md border border-[#0D47B5] bg-white px-4 py-2 text-xs font-bold tracking-[0.08em] text-[#0D47B5] uppercase hover:bg-[#EEF4FF]"
+                    className="inline-flex items-center gap-2 rounded-md border border-[#004AD3] bg-white px-4 py-2 text-xs font-bold tracking-[0.08em] text-[#004AD3] uppercase hover:bg-[#ffffff]"
                   >
                     <span className="material-symbols-outlined text-base">person_add</span>
                     Add Player
@@ -252,15 +252,15 @@ export default function RegisterPage() {
 
                 <div className="mt-4 space-y-3">
                   {players.map((player, index) => (
-                    <article key={player.id} className="rounded-md border border-[#0D47B5]/15 bg-white p-4">
+                    <article key={player.id} className="rounded-md border border-[#004AD3]/15 bg-white p-4">
                       <div className="mb-3 flex items-center justify-between gap-3">
-                        <p className="text-xs font-bold tracking-[0.08em] text-[#0D47B5]/70 uppercase">
+                        <p className="text-xs font-bold tracking-[0.08em] text-[#004AD3]/70 uppercase">
                           Player {index + 1}
                         </p>
                         <button
                           type="button"
                           onClick={() => removePlayer(player.id)}
-                          className="inline-flex items-center gap-1 rounded border border-[#C81010]/35 px-2.5 py-1 text-[11px] font-bold tracking-[0.08em] text-[#C81010] uppercase hover:bg-[#FFF6F6]"
+                          className="inline-flex items-center gap-1 rounded border border-[#FF6B53]/35 px-2.5 py-1 text-[11px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase hover:bg-[#ffffff]"
                         >
                           <span className="material-symbols-outlined text-sm">delete</span>
                           Remove
@@ -269,7 +269,7 @@ export default function RegisterPage() {
 
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                         <label className="space-y-1 md:col-span-5">
-                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#0D47B5]/65 uppercase">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
                             Full Name
                           </span>
                           <input
@@ -281,7 +281,7 @@ export default function RegisterPage() {
                         </label>
 
                         <label className="space-y-1 md:col-span-3">
-                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#0D47B5]/65 uppercase">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
                             Position
                           </span>
                           <select
@@ -300,7 +300,7 @@ export default function RegisterPage() {
                         </label>
 
                         <label className="space-y-1 md:col-span-2">
-                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#0D47B5]/65 uppercase">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
                             Jersey No.
                           </span>
                           <input
@@ -312,7 +312,7 @@ export default function RegisterPage() {
                         </label>
 
                         <label className="space-y-1 md:col-span-2">
-                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#0D47B5]/65 uppercase">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
                             Age
                           </span>
                           <input
@@ -334,11 +334,11 @@ export default function RegisterPage() {
               <div className="flex flex-col items-start gap-3 md:flex-row md:items-center">
                 <button
                   type="submit"
-                  className="rounded-none border border-[#D2B200] bg-[#E0C200] px-7 py-3 text-sm font-extrabold tracking-[0.08em] text-white uppercase hover:bg-[#E8CC2A]"
+                  className="rounded-none border border-[#0B6A9B] bg-[#1AD1D7] px-7 py-3 text-sm font-extrabold tracking-[0.08em] text-white uppercase hover:bg-[#0B6A9B]"
                 >
                   Submit Registration
                 </button>
-                {statusMessage ? <p className="text-sm text-[#0D47B5]/78">{statusMessage}</p> : null}
+                {statusMessage ? <p className="text-sm text-[#004AD3]/78">{statusMessage}</p> : null}
               </div>
             </form>
           </div>

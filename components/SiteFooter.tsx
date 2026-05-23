@@ -54,7 +54,7 @@ export default function SiteFooter({ variant }: SiteFooterProps) {
   const links = footerNavigation[variant];
 
   return (
-    <footer className="w-full border-t border-[#0D47B5]/15 bg-[#081833] text-white">
+    <footer className="w-full border-t border-[#004AD3]/15 bg-[#030B2E] text-white">
       <div className="mx-auto max-w-[1280px] px-4 pt-14 pb-6 md:px-16 md:pt-16 md:pb-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
           <div className="space-y-5 lg:col-span-5">
@@ -80,7 +80,7 @@ export default function SiteFooter({ variant }: SiteFooterProps) {
                   <Link
                     key={`${variant}-${item.href}-${item.label}`}
                     href={item.href}
-                    className="text-sm [font-family:var(--font-nav),sans-serif] text-white/88 transition-colors hover:text-[#F2C230]"
+                    className="text-sm [font-family:var(--font-nav),sans-serif] text-white/88 transition-colors hover:text-[#1AD1D7]"
                   >
                     {item.label}
                   </Link>
@@ -97,7 +97,7 @@ export default function SiteFooter({ variant }: SiteFooterProps) {
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="text-sm [font-family:var(--font-nav),sans-serif] text-white/88 transition-colors hover:text-[#F2C230]"
+                    className="text-sm [font-family:var(--font-nav),sans-serif] text-white/88 transition-colors hover:text-[#1AD1D7]"
                   >
                     {item.label}
                   </Link>
@@ -112,7 +112,7 @@ export default function SiteFooter({ variant }: SiteFooterProps) {
               <div className="flex flex-col gap-3.5">
                 {footerContacts.map((item) => (
                   <div key={item.label} className="flex items-start gap-2.5">
-                    <span className="material-symbols-outlined mt-0.5 text-[18px] text-[#F2C230]">{item.icon}</span>
+                    <span className="material-symbols-outlined mt-0.5 text-[18px] text-[#1AD1D7]">{item.icon}</span>
                     <div>
                       <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] text-white/55 uppercase">
                         {item.label}

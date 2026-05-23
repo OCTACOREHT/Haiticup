@@ -28,6 +28,9 @@ export default function SiteNavbar({
   registerHref,
   registerLabel = "REGISTER NOW",
 }: SiteNavbarProps) {
+  const logoSrc = "/Granpanpan%20Nation%20cupfull.png";
+  const logoWidth = 398;
+  const logoHeight = 100;
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -55,21 +58,18 @@ export default function SiteNavbar({
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-[#d7e0f5] bg-white/95 shadow-[0_8px_22px_rgba(13,71,181,0.09)] backdrop-blur-xl">
+      <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-black/15 bg-white shadow-[0_8px_22px_rgba(0,0,0,0.09)] backdrop-blur-xl">
         <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between px-4 md:px-16">
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/granpanpan.png"
+              src={logoSrc}
               alt="Gran Panpan logo"
-              width={80}
-              height={80}
+              width={logoWidth}
+              height={logoHeight}
+              quality={100}
               priority
-              className="mt-6 h-20 w-20 rounded-md bg-transparent object-contain"
+              className="mt-2 h-11 w-auto bg-transparent object-contain"
             />
-            <span className="mt-3 text-[13px] leading-[1.05] font-extrabold tracking-tight [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase md:text-[16px]">
-              <span className="block">GRAN PANPAN</span>
-              <span className="block text-[#C81010]">HAITI CUP</span>
-            </span>
           </Link>
 
           <div className="hidden items-center gap-4 lg:flex">
@@ -78,7 +78,8 @@ export default function SiteNavbar({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-1 py-2 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] text-black uppercase transition-colors hover:text-black/75"
+                  className="px-1 py-2 text-[15px] font-bold tracking-normal [font-family:var(--font-nav),sans-serif] !text-black transition-colors hover:!text-black"
+                  style={{ color: "#000000" }}
                 >
                   {item.label}
                 </Link>
@@ -87,7 +88,7 @@ export default function SiteNavbar({
 
             <Link
               href={registerHref}
-              className="rounded-none border border-[#D2B200] bg-[#E0C200] px-5 py-2.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase transition-colors hover:bg-[#E8CC2A]"
+              className="rounded-none border border-[#0B6A9B] bg-[#1AD1D7] px-5 py-2.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase transition-colors hover:bg-[#0B6A9B]"
               style={{ color: "#ffffff" }}
             >
               {registerLabel}
@@ -98,7 +99,7 @@ export default function SiteNavbar({
             type="button"
             aria-label="Open menu"
             onClick={() => setDrawerOpen((prev) => !prev)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#0D47B5]/20 bg-white text-[#0D47B5] shadow-[0_3px_10px_rgba(13,71,181,0.12)] transition-colors hover:bg-[#f4f7ff] lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-black/20 bg-white text-black shadow-[0_3px_10px_rgba(0,0,0,0.12)] transition-colors hover:bg-[#ffffff] lg:hidden"
           >
             <span className="material-symbols-outlined text-[22px]">{drawerOpen ? "close" : "menu"}</span>
           </button>
@@ -106,7 +107,7 @@ export default function SiteNavbar({
       </header>
 
       <div
-        className={`fixed inset-0 z-[60] bg-[#081833]/60 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[60] bg-[#030B2E]/60 backdrop-blur-[2px] transition-opacity duration-300 ${
           drawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={(event) => {
@@ -116,36 +117,33 @@ export default function SiteNavbar({
         }}
       >
         <div
-          className={`ml-auto h-full w-full max-w-[360px] border-l border-[#0D47B5]/14 bg-white shadow-[0_26px_50px_rgba(8,24,51,0.35)] transition-transform duration-300 ${
+          className={`ml-auto h-full w-full max-w-[360px] border-l border-black/14 bg-white shadow-[0_26px_50px_rgba(0,0,0,0.35)] transition-transform duration-300 ${
             drawerOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between border-b border-[#0D47B5]/12 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-black/12 px-5 py-4">
             <div className="flex items-center gap-3">
               <Image
-                src="/granpanpan.png"
+                src={logoSrc}
                 alt="Gran Panpan logo"
-                width={38}
-                height={38}
-                className="h-9 w-9 rounded-sm object-contain"
+                width={logoWidth}
+                height={logoHeight}
+                quality={100}
+                className="h-8 w-auto rounded-sm object-contain"
               />
-              <span className="text-[11px] leading-tight font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase">
-                Gran Panpan
-                <span className="block text-[#C81010]">Haiti Cup</span>
-              </span>
             </div>
             <button
               type="button"
               aria-label="Close menu"
               onClick={closeDrawer}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[#0D47B5]/16 bg-[#f6f8ff] text-[#0D47B5] transition-colors hover:bg-white"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-black/16 bg-[#ffffff] text-black transition-colors hover:bg-white"
             >
               <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
           </div>
 
           <div className="px-4 py-5">
-            <p className="text-[10px] font-semibold tracking-[0.14em] [font-family:var(--font-nav),sans-serif] text-[#0D47B5]/60 uppercase">
+            <p className="text-[10px] font-semibold tracking-[0.14em] [font-family:var(--font-nav),sans-serif] text-black/60 uppercase">
               Navigation
             </p>
 
@@ -158,17 +156,17 @@ export default function SiteNavbar({
                     key={item.label}
                     href={item.href}
                     onClick={closeDrawer}
-                    className={`group flex items-center gap-3 rounded-md border px-3 py-3 text-sm font-extrabold [font-family:var(--font-nav),sans-serif] uppercase transition-colors ${
+                    className={`group flex items-center gap-3 rounded-md border px-3 py-3 text-base font-bold [font-family:var(--font-nav),sans-serif] transition-colors ${
                       isActive
-                        ? "border-[#0D47B5]/22 bg-[#edf3ff] text-[#0D47B5]"
-                        : "border-[#0D47B5]/14 text-[#0D47B5] hover:bg-[#f4f7ff]"
+                        ? "border-black/20 bg-[#ffffff] text-black"
+                        : "border-black/15 text-black hover:bg-[#ffffff]"
                     }`}
                   >
-                    <span className="material-symbols-outlined rounded-sm bg-white p-1.5 text-[18px] text-[#0D47B5] shadow-[inset_0_0_0_1px_rgba(13,71,181,0.14)]">
+                    <span className="material-symbols-outlined rounded-sm bg-white p-1.5 text-[18px] text-black shadow-[inset_0_0_0_1px_rgba(0,0,0,0.14)]">
                       {item.icon}
                     </span>
                     <span className="truncate">{item.label}</span>
-                    <span className="material-symbols-outlined ml-auto text-[18px] text-[#0D47B5]/38 transition-transform group-hover:translate-x-0.5">
+                    <span className="material-symbols-outlined ml-auto text-[18px] text-black/38 transition-transform group-hover:translate-x-0.5">
                       chevron_right
                     </span>
                   </Link>
@@ -179,7 +177,7 @@ export default function SiteNavbar({
             <Link
               href={registerHref}
               onClick={closeDrawer}
-              className="mt-5 flex items-center justify-center rounded-md border border-[#D2B200] bg-[#E0C200] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase shadow-[0_10px_18px_rgba(224,194,0,0.28)] transition-colors hover:bg-[#E8CC2A]"
+              className="mt-5 flex items-center justify-center rounded-md border border-[#0B6A9B] bg-[#1AD1D7] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase shadow-[0_10px_18px_rgba(26,209,215,0.28)] transition-colors hover:bg-[#0B6A9B]"
               style={{ color: "#ffffff" }}
             >
               {registerLabel}
