@@ -63,7 +63,7 @@ export default function SiteNavbar({
           <Link href="/" className="flex items-center gap-3">
             <Image
               src={logoSrc}
-              alt="Gran Panpan logo"
+              alt="Granpanpan Nations Cup logo"
               width={logoWidth}
               height={logoHeight}
               quality={100}
@@ -88,7 +88,7 @@ export default function SiteNavbar({
 
             <Link
               href={registerHref}
-              className="rounded-none border border-[#0B6A9B] bg-[#1AD1D7] px-5 py-2.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase transition-colors hover:bg-[#0B6A9B]"
+              className="rounded-none border-0 bg-[#1AD1D7] px-5 py-2.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase transition-colors hover:bg-[#0B6A9B]"
               style={{ color: "#ffffff" }}
             >
               {registerLabel}
@@ -125,7 +125,7 @@ export default function SiteNavbar({
             <div className="flex items-center gap-3">
               <Image
                 src={logoSrc}
-                alt="Gran Panpan logo"
+                alt="Granpanpan Nations Cup logo"
                 width={logoWidth}
                 height={logoHeight}
                 quality={100}
@@ -177,7 +177,7 @@ export default function SiteNavbar({
             <Link
               href={registerHref}
               onClick={closeDrawer}
-              className="mt-5 flex items-center justify-center rounded-md border border-[#0B6A9B] bg-[#1AD1D7] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase shadow-[0_10px_18px_rgba(26,209,215,0.28)] transition-colors hover:bg-[#0B6A9B]"
+              className="mt-5 flex items-center justify-center rounded-md border-0 bg-[#1AD1D7] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase shadow-[0_10px_18px_rgba(26,209,215,0.28)] transition-colors hover:bg-[#0B6A9B]"
               style={{ color: "#ffffff" }}
             >
               {registerLabel}

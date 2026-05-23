@@ -16,7 +16,7 @@ const navLinks = [
 
 const logistics = [
   { icon: "calendar_month", label: "Dates", value: "July 12, 2026 - Sept 6, 2026" },
-  { icon: "location_on", label: "Venue", value: "Ezeile Community Center" },
+  { icon: "location_on", label: "Venue", value: "Ezell Hester Community Center" },
   { icon: "call", label: "Contact Support", value: "+1 (561) 704-4613" },
 ];
 
@@ -38,7 +38,7 @@ const rulesCards = [
   {
     id: "3",
     title: "Code of Conduct",
-    text: "Zero tolerance for unsportsmanlike behavior. Fair play is the cornerstone of the Haiti Cup.",
+    text: "Zero tolerance for unsportsmanlike behavior. Fair play is the cornerstone of the Granpanpan Nations Cup.",
     card: "border-[#004AD3]/35 bg-[#004AD3] text-white",
     badge: "bg-white text-[#004AD3]",
   },
@@ -67,7 +67,7 @@ const frameworkCards = [
     id: "03",
     icon: "calendar_month",
     title: "Tournament Window",
-    text: "Group stage, knockout rounds, and final are scheduled between July and September 2026 at the Ezeile Community Center.",
+    text: "Group stage, knockout rounds, and final are scheduled between July and September 2026 at the Ezell Hester Community Center.",
     cardClass: "border-[#1AD1D7]/40 bg-[#ffffff]",
     iconClass: "border-[#1AD1D7]/45 bg-white text-[#0B6A9B]",
     titleClass: "text-[#0B6A9B]",
@@ -93,7 +93,7 @@ const tournamentSnapshot = [
   { label: "Format", value: "2 groups of 4 teams + knockout stage" },
   { label: "Match Length", value: "90 minutes (2 x 45)" },
   { label: "Tournament Window", value: "July - September 2026" },
-  { label: "Venue", value: "Ezeile Community Center" },
+  { label: "Venue", value: "Ezell Hester Community Center" },
 ];
 
 const PRIZE_TARGETS = {
@@ -254,7 +254,7 @@ export default function Home() {
                 className="mb-4 h-24 w-auto object-contain md:h-32"
               />
               <span className="text-xs font-semibold tracking-[0.16em] text-[#1AD1D7] uppercase">
-                EZEILE COMMUNITY CENTER | JULY 2026
+                EZELL HESTER COMMUNITY CENTER JULY 2026
               </span>
               <h1 className="font-heading text-3xl leading-[1.02] text-white uppercase md:text-6xl">
                 Get your team ready and{" "}
@@ -331,10 +331,10 @@ export default function Home() {
                   About The Tournament
                 </p>
                 <h2 className="mt-3 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-[1.02] text-[#FF6B53] uppercase md:text-6xl">
-                  Gran Panpan Haiti Cup 2026
+                  Granpanpan Nations Cup 2026
                 </h2>
                 <p className="mt-5 max-w-3xl text-[15px] leading-8 text-[#004AD3]/88 md:text-base">
-                  Gran Panpan Haiti Cup is a structured summer competition designed for elite amateur and
+                  Granpanpan Nations Cup is a structured summer competition designed for elite amateur and
                   semi-professional football teams. This edition runs with 8 teams in 2 groups, followed by
                   a knockout bracket through quarterfinals, semifinals, and the championship final.
                 </p>

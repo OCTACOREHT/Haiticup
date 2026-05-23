@@ -46,7 +46,7 @@ const footerResources: FooterLink[] = [
 
 const footerContacts = [
   { icon: "calendar_month", label: "Tournament Window", value: "July - September 2026" },
-  { icon: "location_on", label: "Venue", value: "Ezeile Community Center" },
+  { icon: "location_on", label: "Venue", value: "Ezell Hester Community Center" },
   { icon: "call", label: "Operations Desk", value: "+1 (561) 704-4613" },
 ];
 
@@ -62,7 +62,7 @@ export default function SiteFooter({ variant }: SiteFooterProps) {
               Official Tournament Platform
             </p>
             <h2 className="text-3xl font-extrabold [font-family:var(--font-nav),sans-serif] leading-tight uppercase md:text-4xl">
-              Gran Panpan Haiti Cup
+              Granpanpan Nations Cup
             </h2>
             <p className="max-w-md text-sm leading-7 text-white/78 md:text-base">
               Structured football competition for elite amateur and semi-professional teams,
@@ -128,7 +128,7 @@ export default function SiteFooter({ variant }: SiteFooterProps) {
 
         <div className="mt-9 border-t border-white/20 pt-6">
           <p className="text-center text-xs [font-family:var(--font-nav),sans-serif] tracking-[0.06em] text-white/60 uppercase">
-            &copy; 2026 Gran Panpan Haiti Cup. All rights reserved.
+            &copy; 2026 Granpanpan Nations Cup. All rights reserved.
           </p>
         </div>
       </div>

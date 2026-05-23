@@ -24,9 +24,9 @@ const navFont = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "GRAN PANPAN HAITI CUP | Official Tournament Page",
+  title: "GRANPANPAN NATIONS CUP Official Tournament Page",
   description:
-    "Official page for the 2026 Gran Panpan Haiti Cup. Tournament information, prizes, rules, and registration.",
+    "Official page for the 2026 Granpanpan Nations Cup. Tournament information, prizes, rules, and registration.",
 };
 
 export default function RootLayout({
