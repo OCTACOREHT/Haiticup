@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import SiteNavbar from "@/components/SiteNavbar";
 import SiteFooter from "@/components/SiteFooter";
 import Reveal from "@/components/Reveal";
+import { InfiniteSlider } from "@/components/ui/infinite-slider";
 
 const navLinks = [
   { href: "/match-schedule", label: "Match Schedule" },
@@ -43,6 +44,17 @@ const rulesCards = [
     card: "border-[#0D47B5]/35 bg-[#0D47B5] text-white",
     badge: "bg-white text-[#0D47B5]",
   },
+];
+
+const registeredTeams = [
+  { name: "1804 FC", logo: "/Logo ekip/1804 FC.png" },
+  { name: "Elite Energy FC", logo: "/Logo ekip/Elite  Energy FC .png" },
+  { name: "FC des Vétéran", logo: "/Logo ekip/FC des Vétéran.png" },
+  { name: "FC pac", logo: "/Logo ekip/FC pac.png" },
+  { name: "Fc Top Notch", logo: "/Logo ekip/Fc Top Notch.png" },
+  { name: "Galaxy Fc", logo: "/Logo ekip/Galaxy Fc.png" },
+  { name: "Haitian Team FC", logo: "/Logo ekip/Haitian Team FC.png" },
+  { name: "Island united FC", logo: "/Logo ekip/Island united FC.png" },
 ];
 
 const frameworkCards = [
@@ -343,6 +355,38 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* ── Registered Teams Marquee ──────────────────────────────────────── */}
+        <section className="bg-[#f8f9fa] py-16 border-b border-[#0D47B5]/10 overflow-hidden">
+          <Reveal direction="up" className="mx-auto max-w-[1180px] px-4 md:px-16 mb-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div>
+              <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#0D47B5]/72 uppercase">
+                The Competition
+              </p>
+              <h3 className="mt-2 text-2xl md:text-3xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase">
+                Teams Already Registered
+              </h3>
+            </div>
+            <Link
+              href="/register"
+              className="register-cta-link rounded bg-[#FF6B53] px-8 py-3 text-[13px] font-bold text-white uppercase tracking-wider hover:bg-[#e05a45] transition-colors whitespace-nowrap"
+            >
+              Join The Roster
+            </Link>
+          </Reveal>
+          
+          <Reveal direction="up" delay={200} className="w-full py-8">
+            <div className="w-full [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
+              <InfiniteSlider gap={32} duration={40} durationOnHover={80}>
+                {registeredTeams.map((team, idx) => (
+                  <div key={idx} className="flex h-[90px] w-[130px] items-center justify-center">
+                    <Image src={team.logo} alt={team.name} width={130} height={130} className="max-h-full max-w-full object-contain" unoptimized />
+                  </div>
+                ))}
+              </InfiniteSlider>
+            </div>
+          </Reveal>
         </section>
 
         {/* ── About The Tournament ──────────────────────────────────────── */}
