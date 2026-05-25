@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
@@ -56,7 +56,27 @@ const validateAdminAccess = async (accessToken: string) => {
   };
 };
 
-export default function AdminLoginPage() {
+const AdminLoginFallback = () => (
+  <div className="flex min-h-screen flex-col bg-[#ffffff]">
+    <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
+
+    <main className="flex-1 pt-24 pb-16">
+      <section className="mx-auto w-full max-w-[560px] px-4 md:px-10">
+        <div className="rounded-xl border border-[#004AD3]/15 bg-white p-8 shadow-[0_12px_28px_rgba(0,74,211,0.08)]">
+          <p className="text-[11px] font-semibold tracking-[0.14em] text-[#004AD3]/65 uppercase">Admin Access</p>
+          <h1 className="mt-2 text-3xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase">
+            Admin Login
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-[#004AD3]/78">Loading secure login...</p>
+        </div>
+      </section>
+    </main>
+
+    <SiteFooter variant="register" />
+  </div>
+);
+
+function AdminLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") || "/admin";
@@ -202,5 +222,13 @@ export default function AdminLoginPage() {
 
       <SiteFooter variant="register" />
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<AdminLoginFallback />}>
+      <AdminLoginContent />
+    </Suspense>
   );
 }

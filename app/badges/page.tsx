@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
@@ -203,7 +203,27 @@ const drawStrongBlackText = ({
   });
 };
 
-export default function BadgesPage() {
+const BadgesPageFallback = () => (
+  <div className="flex min-h-screen flex-col bg-[#ffffff]">
+    <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
+    <main className="flex-1 pt-24 pb-16">
+      <section className="mx-auto w-full max-w-[1200px] px-4 md:px-10">
+        <div className="rounded-xl border border-[#004AD3]/15 bg-white p-6 shadow-[0_12px_28px_rgba(0,74,211,0.08)] md:p-8">
+          <p className="text-[11px] font-semibold tracking-[0.14em] text-[#004AD3]/65 uppercase">Badge Generator</p>
+          <h1 className="mt-2 text-2xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase md:text-4xl">
+            Nations Cup PDF Template
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[#004AD3]/78 md:text-base">
+            Loading badge generator...
+          </p>
+        </div>
+      </section>
+    </main>
+    <SiteFooter variant="register" />
+  </div>
+);
+
+function BadgesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedMemberKey = searchParams.get("member") ?? "";
@@ -671,5 +691,13 @@ export default function BadgesPage() {
 
       <SiteFooter variant="register" />
     </div>
+  );
+}
+
+export default function BadgesPage() {
+  return (
+    <Suspense fallback={<BadgesPageFallback />}>
+      <BadgesPageContent />
+    </Suspense>
   );
 }
