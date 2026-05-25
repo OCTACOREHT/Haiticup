@@ -77,24 +77,24 @@ const mobileLinks = [
 ];
 
 const defaultLayout: BadgeLayout = {
-  photoX: 0.34,
-  photoYTop: 0.215,
-  photoSize: 0.28,
-  qrX: 0.69,
-  qrYTop: 0.74,
+  photoX: 0.363,
+  photoYTop: 0.218,
+  photoSize: 0.274,
+  qrX: 0.39,
+  qrYTop: 0.596,
   qrSize: 0.22,
-  nameX: 0.08,
-  nameYTop: 0.64,
-  nameSize: 0.056,
-  titleX: 0.08,
-  titleYTop: 0.70,
-  titleSize: 0.036,
-  teamX: 0.08,
-  teamYTop: 0.75,
-  teamSize: 0.031,
-  idX: 0.08,
-  idYTop: 0.80,
-  idSize: 0.030,
+  nameX: 0.5,
+  nameYTop: 0.465,
+  nameSize: 0.046,
+  titleX: 0.5,
+  titleYTop: 0.482,
+  titleSize: 0.033,
+  teamX: 0.5,
+  teamYTop: 0.736,
+  teamSize: 0.028,
+  idX: 0.5,
+  idYTop: 0.514,
+  idSize: 0.031,
 };
 
 const dataUrlToUint8Array = (dataUrl: string): Uint8Array => {
@@ -120,7 +120,7 @@ const loadImageElement = (src: string) =>
     image.src = src;
   });
 
-const createFittedPhotoDataUrl = async (sourceDataUrl: string, size = 900): Promise<string> => {
+const createCircularPhotoDataUrl = async (sourceDataUrl: string, size = 900): Promise<string> => {
   const image = await loadImageElement(sourceDataUrl);
   const canvas = document.createElement("canvas");
   canvas.width = size;
@@ -132,28 +132,28 @@ const createFittedPhotoDataUrl = async (sourceDataUrl: string, size = 900): Prom
   }
 
   context.clearRect(0, 0, size, size);
-  context.fillStyle = "#FFFFFF";
-  context.fillRect(0, 0, size, size);
-
   const sourceWidth = image.width || 1;
   const sourceHeight = image.height || 1;
-  const ratio = Math.min(size / sourceWidth, size / sourceHeight);
+
+  // Cover the full circle area with the photo.
+  const ratio = Math.max(size / sourceWidth, size / sourceHeight);
   const drawWidth = sourceWidth * ratio;
   const drawHeight = sourceHeight * ratio;
   const drawX = (size - drawWidth) / 2;
-  const drawY = (size - drawHeight) / 2;
+  // Positive offset moves the visible face slightly downward in the circle.
+  const verticalOffsetPx = size * 0.09;
+  const drawY = (size - drawHeight) / 2 + verticalOffsetPx;
 
+  context.save();
+  context.beginPath();
+  context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  context.closePath();
+  context.clip();
   context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+  context.restore();
 
   return canvas.toDataURL("image/png");
 };
-
-const clampPercent = (value: number) => Math.max(0, Math.min(1, value));
-
-const updateLayoutValue = (layout: BadgeLayout, key: keyof BadgeLayout, value: number): BadgeLayout => ({
-  ...layout,
-  [key]: clampPercent(value),
-});
 
 const drawStrongBlackText = ({
   page,
@@ -162,7 +162,7 @@ const drawStrongBlackText = ({
   y,
   size,
   font,
-  hasTrueBoldFont,
+  color = rgb(0, 0, 0),
 }: {
   page: import("pdf-lib").PDFPage;
   text: string;
@@ -170,37 +170,29 @@ const drawStrongBlackText = ({
   y: number;
   size: number;
   font: import("pdf-lib").PDFFont;
-  hasTrueBoldFont: boolean;
+  color?: ReturnType<typeof rgb>;
 }) => {
-  const color = rgb(0, 0, 0);
+  page.drawText(text, { x, y, size, font, color });
+};
 
-  if (hasTrueBoldFont) {
-    page.drawText(text, { x, y, size, font, color });
-    return;
+const fitTextSizeToWidth = ({
+  font,
+  text,
+  startSize,
+  minSize,
+  maxWidth,
+}: {
+  font: import("pdf-lib").PDFFont;
+  text: string;
+  startSize: number;
+  minSize: number;
+  maxWidth: number;
+}) => {
+  let size = startSize;
+  while (size > minSize && font.widthOfTextAtSize(text, size) > maxWidth) {
+    size -= 0.4;
   }
-
-  const offset = Math.max(0.35, size * 0.03);
-  const passes: Array<[number, number]> = [
-    [0, 0],
-    [offset, 0],
-    [-offset, 0],
-    [0, offset],
-    [0, -offset],
-    [offset * 0.7, offset * 0.7],
-    [offset * 0.7, -offset * 0.7],
-    [-offset * 0.7, offset * 0.7],
-    [-offset * 0.7, -offset * 0.7],
-  ];
-
-  passes.forEach(([dx, dy]) => {
-    page.drawText(text, {
-      x: x + dx,
-      y: y + dy,
-      size,
-      font,
-      color,
-    });
-  });
+  return Math.max(size, minSize);
 };
 
 const BadgesPageFallback = () => (
@@ -211,7 +203,7 @@ const BadgesPageFallback = () => (
         <div className="rounded-xl border border-[#004AD3]/15 bg-white p-6 shadow-[0_12px_28px_rgba(0,74,211,0.08)] md:p-8">
           <p className="text-[11px] font-semibold tracking-[0.14em] text-[#004AD3]/65 uppercase">Badge Generator</p>
           <h1 className="mt-2 text-2xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase md:text-4xl">
-            Nations Cup PDF Template
+            Badge PDF Template
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[#004AD3]/78 md:text-base">
             Loading badge generator...
@@ -227,6 +219,7 @@ function BadgesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedMemberKey = searchParams.get("member") ?? "";
+  const isEmbedded = searchParams.get("embed") === "1";
   const [isLoading, setIsLoading] = useState(true);
   const [members, setMembers] = useState<BadgeMember[]>([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -234,7 +227,7 @@ function BadgesPageContent() {
   const [templatePdfBytes, setTemplatePdfBytes] = useState<ArrayBuffer | null>(null);
   const [montserratRegularBytes, setMontserratRegularBytes] = useState<ArrayBuffer | null>(null);
   const [montserratBoldBytes, setMontserratBoldBytes] = useState<ArrayBuffer | null>(null);
-  const [layout, setLayout] = useState<BadgeLayout>(defaultLayout);
+  const [montserratSemiBoldBytes, setMontserratSemiBoldBytes] = useState<ArrayBuffer | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [generatedBytes, setGeneratedBytes] = useState<ArrayBuffer | null>(null);
@@ -265,13 +258,17 @@ function BadgesPageContent() {
           }
           router.replace(
             `/admin/login?next=${encodeURIComponent(
-              requestedMemberKey ? `/badges?member=${requestedMemberKey}` : "/badges",
+              requestedMemberKey
+                ? `/badges?member=${requestedMemberKey}${isEmbedded ? "&embed=1" : ""}`
+                : isEmbedded
+                  ? "/badges?embed=1"
+                  : "/badges",
             )}`,
           );
           return;
         }
 
-        const [membersResponse, templateResult, montserratResult, montserratBoldResult] = await Promise.all([
+        const [membersResponse, templateResult, montserratResult, montserratBoldResult, montserratSemiBoldResult] = await Promise.all([
           fetch("/api/members", {
             method: "GET",
             headers: {
@@ -280,9 +277,10 @@ function BadgesPageContent() {
             },
             cache: "no-store",
           }),
-          fetch("/Nations%20Cup.pdf"),
+          fetch("/Badge%20Granpanpan%20n.C.pdf"),
           fetch("/Montserrat-Regular.ttf"),
           fetch("/Montserrat-Bold.ttf"),
+          fetch("/Montserrat-SemiBold.ttf"),
         ]);
 
         const membersResult = (await membersResponse.json().catch(() => null)) as MembersApiResponse | null;
@@ -295,7 +293,11 @@ function BadgesPageContent() {
           }
           router.replace(
             `/admin/login?next=${encodeURIComponent(
-              requestedMemberKey ? `/badges?member=${requestedMemberKey}` : "/badges",
+              requestedMemberKey
+                ? `/badges?member=${requestedMemberKey}${isEmbedded ? "&embed=1" : ""}`
+                : isEmbedded
+                  ? "/badges?embed=1"
+                  : "/badges",
             )}`,
           );
           return;
@@ -307,7 +309,7 @@ function BadgesPageContent() {
             setStatusMessage("Access denied: this account is not authorized for admin.");
             setIsLoading(false);
           }
-          router.replace("/admin/login?next=/badges");
+          router.replace(`/admin/login?next=${encodeURIComponent(isEmbedded ? "/badges?embed=1" : "/badges")}`);
           return;
         }
 
@@ -315,10 +317,16 @@ function BadgesPageContent() {
           throw new Error(membersResult?.error || "Unable to fetch members for badges.");
         }
         if (!templateResult.ok) {
-          throw new Error("Template PDF (Nations Cup.pdf) could not be loaded.");
+          throw new Error("Template PDF (Badge Granpanpan n.C.pdf) could not be loaded.");
         }
         if (!montserratResult.ok) {
           throw new Error("Montserrat-Regular.ttf could not be loaded.");
+        }
+        if (!montserratBoldResult.ok) {
+          throw new Error("Montserrat-Bold.ttf could not be loaded.");
+        }
+        if (!montserratSemiBoldResult.ok) {
+          throw new Error("Montserrat-SemiBold.ttf could not be loaded.");
         }
 
         const combinedMembers: BadgeMember[] = (membersResult?.members ?? [])
@@ -337,7 +345,8 @@ function BadgesPageContent() {
           }));
         const templateBytes = await templateResult.arrayBuffer();
         const montserratBytes = await montserratResult.arrayBuffer();
-        const montserratBold = montserratBoldResult.ok ? await montserratBoldResult.arrayBuffer() : null;
+        const montserratBold = await montserratBoldResult.arrayBuffer();
+        const montserratSemiBold = await montserratSemiBoldResult.arrayBuffer();
 
         if (!isMounted) return;
 
@@ -345,6 +354,7 @@ function BadgesPageContent() {
         setTemplatePdfBytes(templateBytes);
         setMontserratRegularBytes(montserratBytes);
         setMontserratBoldBytes(montserratBold);
+        setMontserratSemiBoldBytes(montserratSemiBold);
         setSelectedMemberKey(
           requestedMemberKey && combinedMembers.some((member) => member.key === requestedMemberKey)
             ? requestedMemberKey
@@ -373,10 +383,10 @@ function BadgesPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [requestedMemberKey, router]);
+  }, [isEmbedded, requestedMemberKey, router]);
 
   useEffect(() => {
-    if (!selectedMember || !templatePdfBytes || !montserratRegularBytes) {
+    if (!selectedMember || !templatePdfBytes || !montserratRegularBytes || !montserratBoldBytes || !montserratSemiBoldBytes) {
       return;
     }
 
@@ -385,18 +395,19 @@ function BadgesPageContent() {
 
     const generate = async () => {
       setIsGenerating(true);
-      setStatusMessage("Generating badge from the exact Nations Cup PDF template...");
+      setStatusMessage("Generating badge from the exact badge PDF template...");
 
       try {
         const pdfDoc = await PDFDocument.load(templatePdfBytes);
         pdfDoc.registerFontkit(fontkit);
         const page = pdfDoc.getPages()[0];
         const { width, height } = page.getSize();
-        const baseFont = await pdfDoc.embedFont(montserratRegularBytes);
-        const hasTrueBoldFont = Boolean(montserratBoldBytes);
-        const boldFont = montserratBoldBytes ? await pdfDoc.embedFont(montserratBoldBytes) : baseFont;
+        const montserratBoldFont = await pdfDoc.embedFont(montserratBoldBytes, { subset: false });
+        const montserratSemiBoldFont = await pdfDoc.embedFont(montserratSemiBoldBytes, { subset: false });
+        const layout = defaultLayout;
+        const badgeBlue = rgb(0.03, 0.07, 0.36);
 
-        const photoDataUrl = await createFittedPhotoDataUrl(selectedMember.photoUrl);
+        const photoDataUrl = await createCircularPhotoDataUrl(selectedMember.photoUrl);
         const photoBytes = dataUrlToUint8Array(photoDataUrl);
         const qrBytes = dataUrlToUint8Array(selectedMember.qrCodeDataUrl);
 
@@ -413,38 +424,6 @@ function BadgesPageContent() {
         const qrX = width * layout.qrX;
         const qrY = height - height * layout.qrYTop - qrSize;
 
-        const photoPadding = width * 0.02;
-        page.drawRectangle({
-          x: photoX - photoPadding,
-          y: photoY - photoPadding,
-          width: photoSize + photoPadding * 2,
-          height: photoSize + photoPadding * 2,
-          color: rgb(1, 1, 1),
-        });
-
-        const qrPadding = width * 0.015;
-        page.drawRectangle({
-          x: qrX - qrPadding,
-          y: qrY - qrPadding,
-          width: qrSize + qrPadding * 2,
-          height: qrSize + qrPadding * 2,
-          color: rgb(1, 1, 1),
-        });
-
-        const textLeft = width * (Math.min(layout.nameX, layout.titleX, layout.teamX, layout.idX) - 0.03);
-        const textTop = height * (Math.min(layout.nameYTop, layout.titleYTop, layout.teamYTop, layout.idYTop) - 0.05);
-        const textBottom =
-          height * (Math.max(layout.nameYTop, layout.titleYTop, layout.teamYTop, layout.idYTop) + 0.05);
-        const textHeight = Math.max(width * 0.12, textBottom - textTop);
-
-        page.drawRectangle({
-          x: textLeft,
-          y: height - textTop - textHeight,
-          width: width * 0.66,
-          height: textHeight,
-          color: rgb(1, 1, 1),
-        });
-
         page.drawImage(photoImage, {
           x: photoX,
           y: photoY,
@@ -459,45 +438,198 @@ function BadgesPageContent() {
           height: qrSize,
         });
 
-        drawStrongBlackText({
-          page,
-          text: selectedMember.fullName.toUpperCase(),
-          x: width * layout.nameX,
-          y: height - height * layout.nameYTop,
-          size: width * layout.nameSize,
-          font: boldFont,
-          hasTrueBoldFont,
+        const resolveBadgeLine = ({
+          text,
+          sizePercent,
+          maxWidthPercent,
+          font,
+          minScale = 0.55,
+        }: {
+          text: string;
+          sizePercent: number;
+          maxWidthPercent: number;
+          font: import("pdf-lib").PDFFont;
+          minScale?: number;
+        }) => {
+          const startSize = width * sizePercent;
+          const size = fitTextSizeToWidth({
+            font,
+            text,
+            startSize,
+            minSize: Math.max(7, startSize * minScale),
+            maxWidth: width * maxWidthPercent,
+          });
+          return {
+            size,
+            lineHeight: font.heightAtSize(size),
+            textWidth: font.widthOfTextAtSize(text, size),
+          };
+        };
+
+        const drawCenteredResolvedLine = ({
+          text,
+          font,
+          topPx,
+          size,
+          lineHeight,
+          textWidth,
+        }: {
+          text: string;
+          font: import("pdf-lib").PDFFont;
+          topPx: number;
+          size: number;
+          lineHeight: number;
+          textWidth: number;
+        }) => {
+          const y = height - topPx - lineHeight;
+          const x = width * 0.5 - textWidth / 2;
+          drawStrongBlackText({
+            page,
+            text,
+            x,
+            y,
+            size,
+            font,
+            color: badgeBlue,
+          });
+          return { bottomTopPx: topPx + lineHeight };
+        };
+
+        const typeText = selectedMember.memberType.toUpperCase();
+        const nameText = selectedMember.fullName;
+        const roleText = selectedMember.subtitle || selectedMember.title;
+        const idText = `ID N : ${selectedMember.badgeId}`;
+
+        const typeLine = resolveBadgeLine({
+          text: typeText,
+          sizePercent: 0.038,
+          maxWidthPercent: 0.5,
+          font: montserratBoldFont,
+          minScale: 0.7,
+        });
+        const nameLine = resolveBadgeLine({
+          text: nameText,
+          sizePercent: layout.nameSize,
+          maxWidthPercent: 0.78,
+          font: montserratBoldFont,
+          minScale: 0.42,
+        });
+        const roleLine = resolveBadgeLine({
+          text: roleText,
+          sizePercent: layout.titleSize,
+          maxWidthPercent: 0.78,
+          font: montserratSemiBoldFont,
+          minScale: 0.5,
+        });
+        const idLine = resolveBadgeLine({
+          text: idText,
+          sizePercent: layout.idSize,
+          maxWidthPercent: 0.88,
+          font: montserratSemiBoldFont,
+          minScale: 0.42,
         });
 
-        drawStrongBlackText({
-          page,
-          text: `${selectedMember.title} - ${selectedMember.subtitle}`.toUpperCase(),
-          x: width * layout.titleX,
-          y: height - height * layout.titleYTop,
-          size: width * layout.titleSize,
-          font: boldFont,
-          hasTrueBoldFont,
+        // Enforce equal interline between name, role, and ID for consistent rhythm.
+        const interlinePx = width * 0.0045;
+        const typeToNameGapPx = width * 0.006;
+        const nameTopPx = height * layout.nameYTop;
+        const typeTopPx = nameTopPx - typeLine.lineHeight - typeToNameGapPx;
+        drawCenteredResolvedLine({
+          text: typeText,
+          font: montserratBoldFont,
+          topPx: typeTopPx,
+          size: typeLine.size,
+          lineHeight: typeLine.lineHeight,
+          textWidth: typeLine.textWidth,
+        });
+        const nameDraw = drawCenteredResolvedLine({
+          text: nameText,
+          font: montserratBoldFont,
+          topPx: nameTopPx,
+          size: nameLine.size,
+          lineHeight: nameLine.lineHeight,
+          textWidth: nameLine.textWidth,
+        });
+        const roleTopPx = nameDraw.bottomTopPx + interlinePx;
+        const roleDraw = drawCenteredResolvedLine({
+          text: roleText,
+          font: montserratSemiBoldFont,
+          topPx: roleTopPx,
+          size: roleLine.size,
+          lineHeight: roleLine.lineHeight,
+          textWidth: roleLine.textWidth,
+        });
+        const idTopPx = roleDraw.bottomTopPx + interlinePx;
+        drawCenteredResolvedLine({
+          text: idText,
+          font: montserratSemiBoldFont,
+          topPx: idTopPx,
+          size: idLine.size,
+          lineHeight: idLine.lineHeight,
+          textWidth: idLine.textWidth,
         });
 
+        const scanText = "SCAN ME";
+        const scanSize = fitTextSizeToWidth({
+          font: montserratBoldFont,
+          text: scanText,
+          startSize: width * 0.052,
+          minSize: width * 0.04,
+          maxWidth: qrSize + width * 0.12,
+        });
+        const scanX = qrX + qrSize / 2 - montserratBoldFont.widthOfTextAtSize(scanText, scanSize) / 2;
+        const scanY = qrY - width * 0.055;
         drawStrongBlackText({
           page,
-          text: `TEAM: ${selectedMember.teamName.toUpperCase()}`,
-          x: width * layout.teamX,
-          y: height - height * layout.teamYTop,
-          size: width * layout.teamSize,
-          font: boldFont,
-          hasTrueBoldFont,
+          text: scanText,
+          x: scanX,
+          y: scanY,
+          size: scanSize,
+          font: montserratBoldFont,
+          color: badgeBlue,
         });
 
+        const validText = "VALID UNTIL: 12/2026";
+        const validSize = width * 0.03;
+        const validX = qrX + qrSize / 2 - montserratSemiBoldFont.widthOfTextAtSize(validText, validSize) / 2;
+        const validY = scanY - width * 0.055;
         drawStrongBlackText({
           page,
-          text: `ID: ${selectedMember.badgeId}`,
-          x: width * layout.idX,
-          y: height - height * layout.idYTop,
-          size: width * layout.idSize,
-          font: boldFont,
-          hasTrueBoldFont,
+          text: validText,
+          x: validX,
+          y: validY,
+          size: validSize,
+          font: montserratSemiBoldFont,
+          color: badgeBlue,
         });
+
+        const secondPage = pdfDoc.getPages()[1];
+        if (secondPage) {
+          const websiteText = "www.granpanpannationscup.com";
+          const { width: page2Width, height: page2Height } = secondPage.getSize();
+          const websiteSize = fitTextSizeToWidth({
+            font: montserratBoldFont,
+            text: websiteText,
+            startSize: page2Width * 0.028,
+            minSize: page2Width * 0.02,
+            maxWidth: page2Width * 0.82,
+          });
+          const websiteWidth = montserratBoldFont.widthOfTextAtSize(websiteText, websiteSize);
+          const websiteLineHeight = montserratBoldFont.heightAtSize(websiteSize);
+          const websiteX = page2Width / 2 - websiteWidth / 2;
+          const websiteTopPx = page2Height * 0.66;
+          const websiteY = page2Height - websiteTopPx - websiteLineHeight;
+
+          drawStrongBlackText({
+            page: secondPage,
+            text: websiteText,
+            x: websiteX,
+            y: websiteY,
+            size: websiteSize,
+            font: montserratBoldFont,
+            color: badgeBlue,
+          });
+        }
 
         const bytes = await pdfDoc.save();
         const byteCopy = new Uint8Array(bytes.length);
@@ -553,7 +685,7 @@ function BadgesPageContent() {
         URL.revokeObjectURL(localPreviewUrl);
       }
     };
-  }, [layout, montserratBoldBytes, montserratRegularBytes, selectedMember, templatePdfBytes]);
+  }, [montserratBoldBytes, montserratRegularBytes, montserratSemiBoldBytes, selectedMember, templatePdfBytes]);
 
   useEffect(() => {
     return () => {
@@ -577,17 +709,17 @@ function BadgesPageContent() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#ffffff]">
-      <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
+      {!isEmbedded ? <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" /> : null}
 
-      <main className="flex-1 pt-24 pb-16">
-        <section className="mx-auto w-full max-w-[1200px] px-4 md:px-10">
+      <main className={isEmbedded ? "flex-1 p-3" : "flex-1 pt-24 pb-16"}>
+        <section className={isEmbedded ? "mx-auto w-full" : "mx-auto w-full max-w-[1200px] px-4 md:px-10"}>
           <div className="rounded-xl border border-[#004AD3]/15 bg-white p-6 shadow-[0_12px_28px_rgba(0,74,211,0.08)] md:p-8">
             <p className="text-[11px] font-semibold tracking-[0.14em] text-[#004AD3]/65 uppercase">Badge Generator</p>
             <h1 className="mt-2 text-2xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase md:text-4xl">
-              Nations Cup PDF Template
+              Badge PDF Template
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[#004AD3]/78 md:text-base">
-              This page uses the exact original file <strong>Nations Cup.pdf</strong> and only injects real photo, name,
+              This page uses the exact original file <strong>Badge Granpanpan n.C.pdf</strong> and only injects real photo, name,
               title, ID, and QR data.
             </p>
 
@@ -612,49 +744,21 @@ function BadgesPageContent() {
                 </label>
 
                 <div className="rounded-md border border-[#004AD3]/12 bg-[#FAFCFF] p-4">
-                  <p className="text-xs font-bold tracking-[0.08em] text-[#004AD3]/70 uppercase">Position Controls</p>
-                  <p className="mt-2 text-[11px] leading-5 text-[#004AD3]/65">
-                    Keep these values only for alignment fine-tuning while staying on the same exact template.
-                  </p>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    {(
-                      [
-                        ["photoX", "Photo X"],
-                        ["photoYTop", "Photo Y"],
-                        ["photoSize", "Photo Size"],
-                        ["qrX", "QR X"],
-                        ["qrYTop", "QR Y"],
-                        ["qrSize", "QR Size"],
-                        ["nameX", "Name X"],
-                        ["nameYTop", "Name Y"],
-                        ["nameSize", "Name Size"],
-                        ["titleX", "Title X"],
-                        ["titleYTop", "Title Y"],
-                        ["titleSize", "Title Size"],
-                        ["teamX", "Team X"],
-                        ["teamYTop", "Team Y"],
-                        ["teamSize", "Team Size"],
-                        ["idX", "ID X"],
-                        ["idYTop", "ID Y"],
-                        ["idSize", "ID Size"],
-                      ] as Array<[keyof BadgeLayout, string]>
-                    ).map(([key, label]) => (
-                      <label key={key} className="space-y-1">
-                        <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">
-                          {label}
-                        </span>
-                        <input
-                          type="number"
-                          min={0}
-                          max={1}
-                          step={0.005}
-                          value={layout[key]}
-                          onChange={(event) => setLayout((current) => updateLayoutValue(current, key, Number(event.target.value)))}
-                          className="w-full rounded border border-[#004AD3]/20 px-2 py-1 text-xs text-[#004AD3] outline-none focus:border-[#004AD3]"
-                        />
-                      </label>
-                    ))}
-                  </div>
+                  <p className="text-xs font-bold tracking-[0.08em] text-[#004AD3]/70 uppercase">Selected Member</p>
+                  {selectedMember ? (
+                    <div className="mt-3 space-y-2 text-sm text-[#004AD3]/85">
+                      <p className="font-semibold">{selectedMember.fullName}</p>
+                      <p>
+                        {selectedMember.memberType} - {selectedMember.teamName}
+                      </p>
+                      <p className="font-mono text-xs">{selectedMember.badgeId}</p>
+                      <p className="text-[11px] text-[#004AD3]/70">
+                        Font used in PDF: <strong>Montserrat Bold</strong> (black).
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-[11px] text-[#004AD3]/70">Select a member to preview.</p>
+                  )}
                 </div>
 
                 <button
@@ -689,7 +793,7 @@ function BadgesPageContent() {
         </section>
       </main>
 
-      <SiteFooter variant="register" />
+      {!isEmbedded ? <SiteFooter variant="register" /> : null}
     </div>
   );
 }

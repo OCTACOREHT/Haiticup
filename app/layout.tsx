@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { Montserrat, Poppins } from "next/font/google";
+import { Montserrat, Poppins, Geist } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const bodyFont = Poppins({
   subsets: ["latin"],
@@ -35,13 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${bodyFont.variable} ${headingFont.variable} ${navFont.variable}`}>
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        />
-      </head>
+    <html lang="en" className={cn(bodyFont.variable, headingFont.variable, navFont.variable, "font-sans", geist.variable)}>
       <body>{children}</body>
     </html>
   );
