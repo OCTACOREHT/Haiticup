@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import SiteNavbar from "@/components/SiteNavbar";
 import SiteFooter from "@/components/SiteFooter";
+import AppIcon from "@/components/AppIcon";
 
 const navLinks = [
   { href: "/match-schedule", label: "Match Schedule" },
@@ -310,7 +311,7 @@ export default function MatchSchedulePage() {
         <section id="groups" className="py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#FF6B53]">groups</span>
+              <AppIcon name="groups" className="text-[#FF6B53]" />
               <h2 className="font-heading text-2xl text-[#004AD3] uppercase sm:text-3xl md:text-4xl">Poules (Group Stage)</h2>
             </div>
 
@@ -385,7 +386,7 @@ export default function MatchSchedulePage() {
         <section id="schedule" className="bg-[#ffffff] py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#FF6B53]">calendar_month</span>
+              <AppIcon name="calendar_month" className="text-[#FF6B53]" />
               <h2 className="font-heading text-2xl text-[#004AD3] uppercase sm:text-3xl md:text-4xl">Group Match Schedule</h2>
             </div>
 
@@ -422,7 +423,7 @@ export default function MatchSchedulePage() {
         <section id="bracket" className="py-14 md:py-[110px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#FF6B53]">account_tree</span>
+              <AppIcon name="account_tree" className="text-[#FF6B53]" />
               <h2 className="font-heading text-2xl text-[#004AD3] uppercase sm:text-3xl md:text-4xl">Knockout Bracket (8 Teams)</h2>
             </div>
           </div>

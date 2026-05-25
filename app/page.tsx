@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import SiteNavbar from "@/components/SiteNavbar";
 import SiteFooter from "@/components/SiteFooter";
 import Reveal from "@/components/Reveal";
+import AppIcon from "@/components/AppIcon";
 import { InfiniteSlider } from "@/components/ui/infinite-slider";
 
 const navLinks = [
@@ -273,7 +274,7 @@ export default function Home() {
               unoptimized
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/30 to-black/38" />
+
           </div>
 
           <div className="relative z-10 mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-6 px-4 md:px-16 lg:grid-cols-12">
@@ -370,7 +371,7 @@ export default function Home() {
             </div>
             <Link
               href="/register"
-              className="register-cta-link rounded bg-[#FF6B53] px-8 py-3 text-[13px] font-bold text-white uppercase tracking-wider hover:bg-[#e05a45] transition-colors whitespace-nowrap"
+              className="rounded bg-[#FF6B53] px-8 py-3 text-[13px] font-bold text-white uppercase tracking-wider hover:bg-[#e05a45] transition-colors whitespace-nowrap"
             >
               Join The Roster
             </Link>
@@ -466,9 +467,7 @@ export default function Home() {
                   >
                     <div className="flex items-start gap-4">
                       <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg ${card.iconClass}`}>
-                        <span className="material-symbols-outlined text-[20px] leading-none">
-                          {card.icon}
-                        </span>
+                        <AppIcon name={card.icon} className="text-[20px] leading-none" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="mb-2 flex items-center gap-2">
@@ -526,7 +525,7 @@ export default function Home() {
                         Plus Official Trophy & Gold Medals
                       </p>
                     </div>
-                    <span className="material-symbols-outlined rounded-md bg-white/10 p-2.5 text-[22px] text-[#1AD1D7]">emoji_events</span>
+                    <AppIcon name="emoji_events" className="rounded-md bg-white/10 p-2.5 text-[22px] text-[#1AD1D7]" />
                   </div>
                   <p className="mt-auto pt-8 text-5xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#1AD1D7] tabular-nums md:text-6xl">
                     {formatPrizeAmount(animatedPrizeAmounts.champion)}
@@ -548,9 +547,10 @@ export default function Home() {
                         Plus Silver Medals
                       </p>
                     </div>
-                    <span className="material-symbols-outlined rounded-md border border-[#0D47B5]/16 bg-white p-2.5 text-[22px] text-[#0D47B5]/72">
-                      military_tech
-                    </span>
+                    <AppIcon
+                      name="military_tech"
+                      className="rounded-md border border-[#0D47B5]/16 bg-white p-2.5 text-[22px] text-[#0D47B5]/72"
+                    />
                   </div>
                   <p className="mt-auto pt-8 text-5xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] tabular-nums md:text-6xl">
                     {formatPrizeAmount(animatedPrizeAmounts.runnerUp)}
@@ -567,7 +567,7 @@ export default function Home() {
                       <p className={`text-[10px] font-bold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] uppercase ${card.labelClass}`}>
                         {card.title}
                       </p>
-                      <span className={`material-symbols-outlined text-[15px] ${card.iconClass}`}>{card.icon}</span>
+                      <AppIcon name={card.icon} className={`text-[15px] ${card.iconClass}`} />
                     </div>
                     <p className="mt-2 text-4xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] tabular-nums">
                       {formatPrizeAmount(animatedPrizeAmounts[card.prizeKey])}
@@ -600,7 +600,7 @@ export default function Home() {
                   </div>
                   <Link
                     href="/register"
-                    className="register-cta-link rounded-sm bg-white px-12 py-5 text-sm font-bold !text-[#1AD1D7] uppercase transition-transform hover:scale-105 hover:bg-white active:!text-[#1AD1D7] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                    className="rounded-sm bg-white px-12 py-5 text-sm font-bold !text-[#1AD1D7] uppercase transition-transform hover:scale-105 hover:bg-white active:!text-[#1AD1D7] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
                   >
                     Get Started
                   </Link>
@@ -614,7 +614,7 @@ export default function Home() {
                 <div className="space-y-6">
                   {logistics.map((item) => (
                     <div key={item.label} className="flex gap-6">
-                      <span className="material-symbols-outlined text-[#FF6B53]">{item.icon}</span>
+                      <AppIcon name={item.icon} className="text-[#FF6B53]" />
                       <div>
                         <p className="text-sm text-[#0D47B5]/60 uppercase">{item.label}</p>
                         <p className="text-lg text-[#0D47B5]">{item.value}</p>
@@ -642,7 +642,7 @@ export default function Home() {
             <Reveal direction="up" delay={200}>
               <div className="overflow-hidden rounded-xl border border-[#0D47B5]/15 bg-white">
                 <div className="flex h-[220px] flex-col items-center justify-center gap-3 bg-white text-[#0D47B5]/45 md:h-[280px]">
-                  <span className="material-symbols-outlined text-5xl text-[#0D47B5]/35">pending_actions</span>
+                  <AppIcon name="pending_actions" className="text-5xl text-[#0D47B5]/35" />
                   <p className="text-center text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#0D47B5]/45 uppercase md:text-sm">
                     Full Match Schedule To Be Announced June 2026
                   </p>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import AppIcon from "@/components/AppIcon";
 
 type NavbarLink = {
   href: string;
@@ -101,7 +102,7 @@ export default function SiteNavbar({
             onClick={() => setDrawerOpen((prev) => !prev)}
             className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-black/20 bg-white text-black shadow-[0_3px_10px_rgba(0,0,0,0.12)] transition-colors hover:bg-[#ffffff] lg:hidden"
           >
-            <span className="material-symbols-outlined text-[22px]">{drawerOpen ? "close" : "menu"}</span>
+            <AppIcon name={drawerOpen ? "close" : "menu"} className="text-[22px]" />
           </button>
         </div>
       </header>
@@ -138,7 +139,7 @@ export default function SiteNavbar({
               onClick={closeDrawer}
               className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-black/16 bg-[#ffffff] text-black transition-colors hover:bg-white"
             >
-              <span className="material-symbols-outlined text-[20px]">close</span>
+              <AppIcon name="close" className="text-[20px]" />
             </button>
           </div>
 
@@ -156,19 +157,21 @@ export default function SiteNavbar({
                     key={item.label}
                     href={item.href}
                     onClick={closeDrawer}
-                    className={`group flex items-center gap-3 rounded-md border px-3 py-3 text-base font-bold [font-family:var(--font-nav),sans-serif] transition-colors ${
+                    className={`group flex min-w-0 items-center gap-3 rounded-md border px-3 py-3 text-base font-bold [font-family:var(--font-nav),sans-serif] transition-colors ${
                       isActive
                         ? "border-black/20 bg-[#ffffff] text-black"
                         : "border-black/15 text-black hover:bg-[#ffffff]"
                     }`}
                   >
-                    <span className="material-symbols-outlined rounded-sm bg-white p-1.5 text-[18px] text-black shadow-[inset_0_0_0_1px_rgba(0,0,0,0.14)]">
-                      {item.icon}
-                    </span>
-                    <span className="truncate">{item.label}</span>
-                    <span className="material-symbols-outlined ml-auto text-[18px] text-black/38 transition-transform group-hover:translate-x-0.5">
-                      chevron_right
-                    </span>
+                    <AppIcon
+                      name={item.icon}
+                      className="rounded-sm bg-white p-1.5 text-[18px] text-black shadow-[inset_0_0_0_1px_rgba(0,0,0,0.14)]"
+                    />
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    <AppIcon
+                      name="chevron_right"
+                      className="ml-auto text-[18px] text-black/38 transition-transform group-hover:translate-x-0.5"
+                    />
                   </Link>
                 );
               })}

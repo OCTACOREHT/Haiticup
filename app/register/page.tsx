@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { ChangeEvent, FormEvent, useState } from "react";
 import QRCode from "qrcode";
+import AppIcon from "@/components/AppIcon";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
 import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
@@ -677,7 +678,7 @@ export default function RegisterPage() {
                           : "hover:bg-[#ffffff]"
                       }`}
                     >
-                      <span className="material-symbols-outlined text-base">person_add</span>
+                      <AppIcon name="person_add" className="text-base" />
                       Add Staff
                     </button>
                   </div>
@@ -703,7 +704,7 @@ export default function RegisterPage() {
                               : "hover:bg-[#ffffff]"
                           }`}
                         >
-                          <span className="material-symbols-outlined text-sm">delete</span>
+                          <AppIcon name="delete" className="text-sm" />
                           Remove
                         </button>
                       </div>
@@ -825,7 +826,7 @@ export default function RegisterPage() {
                         players.length >= PLAYER_MAX_COUNT ? "cursor-not-allowed opacity-50" : "hover:bg-[#ffffff]"
                       }`}
                     >
-                      <span className="material-symbols-outlined text-base">person_add</span>
+                      <AppIcon name="person_add" className="text-base" />
                       Add Player
                     </button>
                   </div>
@@ -846,7 +847,7 @@ export default function RegisterPage() {
                           onClick={() => removePlayer(player.id)}
                           className="inline-flex items-center gap-1 rounded border border-[#FF6B53]/35 px-2.5 py-1 text-[11px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase hover:bg-[#ffffff]"
                         >
-                          <span className="material-symbols-outlined text-sm">delete</span>
+                          <AppIcon name="delete" className="text-sm" />
                           Remove
                         </button>
                       </div>

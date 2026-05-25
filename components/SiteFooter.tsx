@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AppIcon from "@/components/AppIcon";
 
 type FooterVariant = "home" | "schedule" | "register";
 
@@ -112,7 +113,7 @@ export default function SiteFooter({ variant }: SiteFooterProps) {
               <div className="flex flex-col gap-3.5">
                 {footerContacts.map((item) => (
                   <div key={item.label} className="flex items-start gap-2.5">
-                    <span className="material-symbols-outlined mt-0.5 text-[18px] text-[#1AD1D7]">{item.icon}</span>
+                    <AppIcon name={item.icon} className="mt-0.5 text-[18px] text-[#1AD1D7]" />
                     <div>
                       <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] text-white/55 uppercase">
                         {item.label}
