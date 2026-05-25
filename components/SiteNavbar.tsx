@@ -107,7 +107,7 @@ export default function SiteNavbar({
       </header>
 
       <div
-        className={`fixed inset-0 z-[60] bg-[#030B2E]/60 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[60] overflow-hidden bg-[#030B2E]/60 backdrop-blur-[2px] transition-opacity duration-300 ${
           drawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={(event) => {

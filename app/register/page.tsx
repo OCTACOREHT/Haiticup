@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
+import QRCode from "qrcode";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
 
@@ -11,9 +12,27 @@ type PlayerRow = {
   position: string;
   jerseyNumber: string;
   age: string;
+  photoPreview: string | null;
+  photoFileName: string;
+  photoFile: File | null;
 };
 
 type PlayerField = "fullName" | "position" | "jerseyNumber" | "age";
+
+type StaffRow = {
+  id: number;
+  fullName: string;
+  role: string;
+  phoneNumber: string;
+  email: string;
+  photoPreview: string | null;
+  photoFileName: string;
+  photoFile: File | null;
+};
+
+type StaffField = "fullName" | "role" | "phoneNumber" | "email";
+type BadgeMemberType = "STAFF" | "PLAYER";
+type StatusTone = "info" | "success" | "error";
 
 const navLinks = [
   { href: "/match-schedule", label: "Match Schedule" },
@@ -37,6 +56,20 @@ const createPlayer = (id: number): PlayerRow => ({
   position: "",
   jerseyNumber: "",
   age: "",
+  photoPreview: null,
+  photoFileName: "",
+  photoFile: null,
+});
+
+const createStaff = (id: number): StaffRow => ({
+  id,
+  fullName: "",
+  role: "",
+  phoneNumber: "",
+  email: "",
+  photoPreview: null,
+  photoFileName: "",
+  photoFile: null,
 });
 
 const positionOptions = [
@@ -46,8 +79,77 @@ const positionOptions = [
   "Forward",
 ];
 
+const staffRoleOptions = [
+  "Head Coach",
+  "Assistant Coach",
+  "Team Manager",
+  "Physiotherapist",
+  "Logistics Officer",
+  "Media Officer",
+  "Other",
+];
+
+const STAFF_MIN_COUNT = 1;
+const STAFF_MAX_COUNT = 5;
+const PLAYER_MIN_COUNT = 0;
+const PLAYER_MAX_COUNT = 20;
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE_LABEL = "5 MB";
+const TOURNAMENT_YEAR = "2026";
+
 const inputClassName =
   "w-full rounded-md border border-[#004AD3]/20 bg-white px-3 py-2 text-sm text-[#004AD3] outline-none transition focus:border-[#004AD3] focus:ring-2 focus:ring-[#004AD3]/15";
+
+const readImageAsDataUrl = (
+  file: File,
+  onSuccess: (dataUrl: string) => void,
+  onError: () => void,
+) => {
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    if (typeof reader.result === "string") {
+      onSuccess(reader.result);
+      return;
+    }
+    onError();
+  };
+
+  reader.onerror = () => onError();
+  reader.readAsDataURL(file);
+};
+
+const validateImageUpload = (file: File, label: string) => {
+  if (!file.type.startsWith("image/")) {
+    return `${label}: please upload a valid image file.`;
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return `${label}: image must be ${MAX_IMAGE_SIZE_LABEL} or less.`;
+  }
+
+  return null;
+};
+
+const toUpperAlphaNumeric = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+const buildTeamCode = (rawTeamName: string, registrationId: string) => {
+  const normalizedTeam = toUpperAlphaNumeric(rawTeamName).slice(0, 6).padEnd(6, "X");
+  const registrationChunk = toUpperAlphaNumeric(registrationId).slice(-4).padStart(4, "0");
+  return `${normalizedTeam}${registrationChunk}`;
+};
+
+const buildBadgeId = (memberType: BadgeMemberType, teamCode: string, serial: number) => {
+  const prefix = memberType === "STAFF" ? "STF" : "PLY";
+  return `${prefix}-${TOURNAMENT_YEAR}-${teamCode}-${String(serial).padStart(2, "0")}`;
+};
+
+const buildQrCodeDataUrl = (payload: Record<string, unknown>) =>
+  QRCode.toDataURL(JSON.stringify(payload), {
+    errorCorrectionLevel: "M",
+    margin: 1,
+    width: 320,
+  });
 
 export default function RegisterPage() {
   const [teamName, setTeamName] = useState("");
@@ -59,40 +161,59 @@ export default function RegisterPage() {
 
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFileName, setLogoFileName] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const [players, setPlayers] = useState<PlayerRow[]>([createPlayer(1)]);
-  const [nextPlayerId, setNextPlayerId] = useState(2);
+  const [staffMembers, setStaffMembers] = useState<StaffRow[]>([createStaff(1)]);
+  const [photoAuthorization, setPhotoAuthorization] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<StatusTone>("info");
 
-  useEffect(() => {
-    return () => {
-      if (logoPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(logoPreview);
-      }
-    };
-  }, [logoPreview]);
+  const clearStatus = () => {
+    setStatusMessage(null);
+  };
+
+  const showStatus = (message: string, tone: StatusTone = "info") => {
+    setStatusMessage(message);
+    setStatusTone(tone);
+  };
 
   const handleLogoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
-    const newPreview = URL.createObjectURL(selectedFile);
-    setLogoPreview((currentPreview) => {
-      if (currentPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(currentPreview);
-      }
-      return newPreview;
-    });
-    setLogoFileName(selectedFile.name);
+    const validationError = validateImageUpload(selectedFile, "Club logo");
+    if (validationError) {
+      showStatus(validationError, "error");
+      event.target.value = "";
+      return;
+    }
+
+    readImageAsDataUrl(
+      selectedFile,
+      (dataUrl) => {
+        setLogoPreview(dataUrl);
+        setLogoFileName(selectedFile.name);
+        setLogoFile(selectedFile);
+        clearStatus();
+      },
+      () => showStatus("Unable to read the club logo file. Please try another image.", "error"),
+    );
   };
 
   const addPlayer = () => {
-    setPlayers((current) => [...current, createPlayer(nextPlayerId)]);
-    setNextPlayerId((current) => current + 1);
+    setPlayers((current) => {
+      if (current.length >= PLAYER_MAX_COUNT) return current;
+      const nextId = current.reduce((maxId, player) => Math.max(maxId, player.id), 0) + 1;
+      return [...current, createPlayer(nextId)];
+    });
   };
 
   const removePlayer = (id: number) => {
-    setPlayers((current) => (current.length === 1 ? current : current.filter((player) => player.id !== id)));
+    setPlayers((current) =>
+      current.length <= PLAYER_MIN_COUNT ? current : current.filter((player) => player.id !== id),
+    );
   };
 
   const updatePlayer = (id: number, field: PlayerField, value: string) => {
@@ -101,11 +222,268 @@ export default function RegisterPage() {
     );
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setStatusMessage(
-      `Registration draft ready for ${teamName || "your team"} with ${players.length} player entries.`,
+  const updatePlayerPhoto = (id: number, event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+
+    const validationError = validateImageUpload(selectedFile, "Player photo");
+    if (validationError) {
+      showStatus(validationError, "error");
+      event.target.value = "";
+      return;
+    }
+
+    readImageAsDataUrl(
+      selectedFile,
+      (dataUrl) => {
+        setPlayers((current) =>
+          current.map((player) =>
+            player.id === id
+              ? { ...player, photoPreview: dataUrl, photoFileName: selectedFile.name, photoFile: selectedFile }
+              : player,
+          ),
+        );
+        clearStatus();
+      },
+      () => showStatus("Unable to read the player photo. Please try another image.", "error"),
     );
+  };
+
+  const updateStaff = (id: number, field: StaffField, value: string) => {
+    setStaffMembers((current) =>
+      current.map((staff) => (staff.id === id ? { ...staff, [field]: value } : staff)),
+    );
+  };
+
+  const addStaff = () => {
+    setStaffMembers((current) => {
+      if (current.length >= STAFF_MAX_COUNT) return current;
+      const nextId = current.reduce((maxId, staff) => Math.max(maxId, staff.id), 0) + 1;
+      return [...current, createStaff(nextId)];
+    });
+  };
+
+  const removeStaff = (id: number) => {
+    setStaffMembers((current) => {
+      if (current.length <= STAFF_MIN_COUNT) return current;
+      return current.filter((staff) => staff.id !== id);
+    });
+  };
+
+  const updateStaffPhoto = (id: number, event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+
+    const validationError = validateImageUpload(selectedFile, "Staff photo");
+    if (validationError) {
+      showStatus(validationError, "error");
+      event.target.value = "";
+      return;
+    }
+
+    readImageAsDataUrl(
+      selectedFile,
+      (dataUrl) => {
+        setStaffMembers((current) =>
+          current.map((staff) =>
+            staff.id === id
+              ? { ...staff, photoPreview: dataUrl, photoFileName: selectedFile.name, photoFile: selectedFile }
+              : staff,
+          ),
+        );
+        clearStatus();
+      },
+      () => showStatus("Unable to read the staff photo. Please try another image.", "error"),
+    );
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    if (staffMembers.length < STAFF_MIN_COUNT) {
+      showStatus(`At least ${STAFF_MIN_COUNT} staff member is required for testing.`, "error");
+      return;
+    }
+
+    if (staffMembers.length > STAFF_MAX_COUNT) {
+      showStatus(`Maximum allowed staff members is ${STAFF_MAX_COUNT}.`, "error");
+      return;
+    }
+
+    if (players.length > PLAYER_MAX_COUNT) {
+      showStatus(`Maximum allowed players is ${PLAYER_MAX_COUNT}.`, "error");
+      return;
+    }
+
+    if (!logoFile || !logoPreview) {
+      showStatus("Please upload the club logo before submitting.", "error");
+      return;
+    }
+
+    const hasInvalidStaff = staffMembers.some(
+      (staff) =>
+        !staff.fullName.trim() ||
+        !staff.role.trim() ||
+        !staff.phoneNumber.trim() ||
+        !staff.email.trim() ||
+        !staff.photoPreview ||
+        !staff.photoFile,
+    );
+
+    if (hasInvalidStaff) {
+      showStatus("Please complete all staff fields and upload all staff photos.", "error");
+      return;
+    }
+
+    const hasInvalidPlayers = players.some(
+      (player) =>
+        !player.fullName.trim() ||
+        !player.position.trim() ||
+        !player.jerseyNumber.trim() ||
+        !player.age.trim() ||
+        Number.isNaN(Number(player.age)) ||
+        !player.photoPreview ||
+        !player.photoFile,
+    );
+
+    if (hasInvalidPlayers) {
+      showStatus("Please complete all player fields and upload each player photo.", "error");
+      return;
+    }
+
+    if (!photoAuthorization) {
+      showStatus("Please authorize photo usage for badges and official tournament passes.", "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    showStatus("Submitting registration...", "info");
+
+    try {
+      showStatus("Generating badge IDs and QR codes...", "info");
+      const registrationToken = crypto.randomUUID();
+      const teamCode = buildTeamCode(teamName, registrationToken);
+
+      const staffPayload = await Promise.all(
+        staffMembers.map(async (staff, index) => {
+          if (!staff.photoFile) {
+            throw new Error(`Missing staff photo for member ${index + 1}.`);
+          }
+
+          const badgeId = buildBadgeId("STAFF", teamCode, index + 1);
+          const qrPayload = {
+            badge_id: badgeId,
+            member_type: "STAFF",
+            registration_id: registrationToken,
+            team_name: teamName.trim(),
+            team_code: teamCode,
+            full_name: staff.fullName.trim(),
+            role: staff.role.trim(),
+            phone_number: staff.phoneNumber.trim(),
+            email: staff.email.trim(),
+          };
+
+          const qrCodeDataUrl = await buildQrCodeDataUrl(qrPayload);
+
+          return {
+            badge_id: badgeId,
+            full_name: staff.fullName.trim(),
+            role: staff.role.trim(),
+            phone_number: staff.phoneNumber.trim(),
+            email: staff.email.trim(),
+            photo_url: staff.photoPreview,
+            photo_size_bytes: staff.photoFile.size,
+            qr_payload: qrPayload,
+            qr_code_data_url: qrCodeDataUrl,
+          };
+        }),
+      );
+
+      const playersPayload = await Promise.all(
+        players.map(async (player, index) => {
+          if (!player.photoFile) {
+            throw new Error(`Missing player photo for member ${index + 1}.`);
+          }
+
+          const badgeId = buildBadgeId("PLAYER", teamCode, index + 1);
+          const qrPayload = {
+            badge_id: badgeId,
+            member_type: "PLAYER",
+            registration_id: registrationToken,
+            team_name: teamName.trim(),
+            team_code: teamCode,
+            full_name: player.fullName.trim(),
+            position: player.position.trim(),
+            jersey_number: player.jerseyNumber.trim(),
+            age: Number(player.age),
+          };
+
+          const qrCodeDataUrl = await buildQrCodeDataUrl(qrPayload);
+
+          return {
+            badge_id: badgeId,
+            full_name: player.fullName.trim(),
+            position: player.position.trim(),
+            jersey_number: player.jerseyNumber.trim(),
+            age: Number(player.age),
+            photo_url: player.photoPreview,
+            photo_size_bytes: player.photoFile.size,
+            qr_payload: qrPayload,
+            qr_code_data_url: qrCodeDataUrl,
+          };
+        }),
+      );
+
+      showStatus("Saving registration...", "info");
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          team_name: teamName.trim(),
+          manager_name: managerName.trim(),
+          phone_number: phoneNumber.trim(),
+          contact_email: contactEmail.trim(),
+          club_address: clubAddress.trim(),
+          website: website.trim() || null,
+          club_logo_url: logoPreview,
+          photo_authorization: photoAuthorization,
+          staff_members: staffPayload,
+          players: playersPayload,
+        }),
+      });
+
+      const result = (await response.json().catch(() => null)) as
+        | { error?: string; registration_id?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(result?.error || "Server failed to save registration.");
+      }
+
+      const registrationId = result?.registration_id ?? "N/A";
+      showStatus(
+        `Inscription confirmée. L'équipe ${teamName || "N/A"} est enregistrée avec ${staffMembers.length} staff et ${players.length} joueurs. Référence dossier: ${registrationId}.`,
+        "success",
+      );
+    } catch (error: unknown) {
+      const message =
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof error.message === "string"
+          ? error.message
+          : "Failed to submit registration to Supabase.";
+
+      showStatus(`Submission failed: ${message}`, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -216,6 +594,7 @@ export default function RegisterPage() {
                     <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
                     <span className="text-sm font-semibold text-[#004AD3]">Upload Logo</span>
                   </label>
+                  <p className="mt-2 text-[11px] text-[#004AD3]/60">Maximum file size: {MAX_IMAGE_SIZE_LABEL}</p>
 
                   {logoPreview ? (
                     <div className="mt-4 flex flex-col items-center rounded-md border border-[#004AD3]/18 bg-white p-3 text-center">
@@ -235,20 +614,205 @@ export default function RegisterPage() {
                 </aside>
               </div>
 
+              <section className="rounded-lg border border-[#FF6B53]/20 bg-[#FFF8F4] p-5 md:p-6">
+                <h2 className="text-lg font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase md:text-xl">
+                  Photo Memo & Authorization
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[#0D47B5]/82">
+                  Memo: All staff and player photos must be identity photos (passport/ID style), with a clear face and
+                  neutral background. These photos will be used for official badges, passes, and tournament
+                  identification.
+                </p>
+                <label className="mt-4 flex items-start gap-3 rounded-md border border-[#0D47B5]/20 bg-white p-4">
+                  <input
+                    type="checkbox"
+                    checked={photoAuthorization}
+                    onChange={(event) => setPhotoAuthorization(event.target.checked)}
+                    className="mt-1 h-4 w-4 accent-[#0D47B5]"
+                    required
+                  />
+                  <span className="text-sm font-semibold leading-6 text-[#0D47B5]/88">
+                    I authorize the tournament organizers to use submitted staff and player photos for badges, passes,
+                    and official identity materials.
+                  </span>
+                </label>
+              </section>
+
+              <section className="rounded-lg border border-[#004AD3]/15 bg-[#ffffff] p-5 md:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase">
+                    Staff List
+                  </h2>
+                  <div className="flex items-center gap-3">
+                    <p className="text-xs font-bold tracking-[0.08em] text-[#FF6B53] uppercase">
+                      {staffMembers.length}/{STAFF_MAX_COUNT} Staff (Test Mode)
+                    </p>
+                    <button
+                      type="button"
+                      onClick={addStaff}
+                      disabled={staffMembers.length >= STAFF_MAX_COUNT}
+                      className={`inline-flex items-center gap-2 rounded-md border border-[#004AD3] bg-white px-4 py-2 text-xs font-bold tracking-[0.08em] text-[#004AD3] uppercase ${
+                        staffMembers.length >= STAFF_MAX_COUNT
+                          ? "cursor-not-allowed opacity-50"
+                          : "hover:bg-[#ffffff]"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-base">person_add</span>
+                      Add Staff
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-[#004AD3]/68">
+                  Test mode active: minimum {STAFF_MIN_COUNT}, maximum {STAFF_MAX_COUNT} staff.
+                </p>
+
+                <div className="mt-4 space-y-3">
+                  {staffMembers.map((staff, index) => (
+                    <article key={staff.id} className="rounded-md border border-[#004AD3]/15 bg-white p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <p className="text-xs font-bold tracking-[0.08em] text-[#004AD3]/70 uppercase">
+                          Staff {index + 1}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => removeStaff(staff.id)}
+                          disabled={staffMembers.length <= STAFF_MIN_COUNT}
+                          className={`inline-flex items-center gap-1 rounded border border-[#FF6B53]/35 px-2.5 py-1 text-[11px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase ${
+                            staffMembers.length <= STAFF_MIN_COUNT
+                              ? "cursor-not-allowed opacity-50"
+                              : "hover:bg-[#ffffff]"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                          Remove
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                        <label className="space-y-1 md:col-span-4">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
+                            Full Name
+                          </span>
+                          <input
+                            className={inputClassName}
+                            value={staff.fullName}
+                            onChange={(event) => updateStaff(staff.id, "fullName", event.target.value)}
+                            required
+                          />
+                        </label>
+
+                        <label className="space-y-1 md:col-span-3">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
+                            Role
+                          </span>
+                          <select
+                            className={inputClassName}
+                            value={staff.role}
+                            onChange={(event) => updateStaff(staff.id, "role", event.target.value)}
+                            required
+                          >
+                            <option value="">Select role</option>
+                            {staffRoleOptions.map((role) => (
+                              <option key={role} value={role}>
+                                {role}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label className="space-y-1 md:col-span-3">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
+                            Phone
+                          </span>
+                          <input
+                            className={inputClassName}
+                            value={staff.phoneNumber}
+                            onChange={(event) => updateStaff(staff.id, "phoneNumber", event.target.value)}
+                            required
+                          />
+                        </label>
+
+                        <label className="space-y-1 md:col-span-2">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
+                            Email
+                          </span>
+                          <input
+                            type="email"
+                            className={inputClassName}
+                            value={staff.email}
+                            onChange={(event) => updateStaff(staff.id, "email", event.target.value)}
+                            required
+                          />
+                        </label>
+
+                        <label className="space-y-1 md:col-span-8">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
+                            Identity Photo
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className={inputClassName}
+                            onChange={(event) => updateStaffPhoto(staff.id, event)}
+                            required
+                          />
+                          <p className="text-[11px] text-[#004AD3]/60">
+                            Accepted: clear ID-style photo (headshot only). Max {MAX_IMAGE_SIZE_LABEL}.
+                          </p>
+                        </label>
+
+                        <div className="md:col-span-4">
+                          {staff.photoPreview ? (
+                            <div className="flex h-full flex-col items-center justify-center rounded-md border border-[#004AD3]/18 bg-white p-3 text-center">
+                              <Image
+                                src={staff.photoPreview}
+                                alt={`${staff.fullName || `Staff ${index + 1}`} photo preview`}
+                                width={92}
+                                height={92}
+                                unoptimized
+                                className="h-[92px] w-[92px] rounded-md border border-[#004AD3]/18 object-cover"
+                              />
+                              <p className="mt-2 max-w-full truncate text-[11px] text-[#004AD3]/72">
+                                {staff.photoFileName}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="flex h-full items-center justify-center rounded-md border border-dashed border-[#004AD3]/20 bg-[#FAFCFF] p-3 text-center text-xs text-[#004AD3]/58">
+                              No staff photo uploaded yet.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
               <section className="rounded-lg border border-[#004AD3]/15 bg-[#ffffff] p-5 md:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase">
                     Players Roster
                   </h2>
-                  <button
-                    type="button"
-                    onClick={addPlayer}
-                    className="inline-flex items-center gap-2 rounded-md border border-[#004AD3] bg-white px-4 py-2 text-xs font-bold tracking-[0.08em] text-[#004AD3] uppercase hover:bg-[#ffffff]"
-                  >
-                    <span className="material-symbols-outlined text-base">person_add</span>
-                    Add Player
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <p className="text-xs font-bold tracking-[0.08em] text-[#0D47B5]/70 uppercase">
+                      {players.length}/{PLAYER_MAX_COUNT}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={addPlayer}
+                      disabled={players.length >= PLAYER_MAX_COUNT}
+                      className={`inline-flex items-center gap-2 rounded-md border border-[#004AD3] bg-white px-4 py-2 text-xs font-bold tracking-[0.08em] text-[#004AD3] uppercase ${
+                        players.length >= PLAYER_MAX_COUNT ? "cursor-not-allowed opacity-50" : "hover:bg-[#ffffff]"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-base">person_add</span>
+                      Add Player
+                    </button>
+                  </div>
                 </div>
+                <p className="mt-2 text-xs text-[#004AD3]/68">
+                  Maximum {PLAYER_MAX_COUNT} players allowed per team.
+                </p>
 
                 <div className="mt-4 space-y-3">
                   {players.map((player, index) => (
@@ -325,6 +889,44 @@ export default function RegisterPage() {
                             required
                           />
                         </label>
+
+                        <label className="space-y-1 md:col-span-8">
+                          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#004AD3]/65 uppercase">
+                            Identity Photo
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className={inputClassName}
+                            onChange={(event) => updatePlayerPhoto(player.id, event)}
+                            required
+                          />
+                          <p className="text-[11px] text-[#004AD3]/60">
+                            Accepted: clear ID-style photo (headshot only). Max {MAX_IMAGE_SIZE_LABEL}.
+                          </p>
+                        </label>
+
+                        <div className="md:col-span-4">
+                          {player.photoPreview ? (
+                            <div className="flex h-full flex-col items-center justify-center rounded-md border border-[#004AD3]/18 bg-white p-3 text-center">
+                              <Image
+                                src={player.photoPreview}
+                                alt={`${player.fullName || `Player ${index + 1}`} photo preview`}
+                                width={92}
+                                height={92}
+                                unoptimized
+                                className="h-[92px] w-[92px] rounded-md border border-[#004AD3]/18 object-cover"
+                              />
+                              <p className="mt-2 max-w-full truncate text-[11px] text-[#004AD3]/72">
+                                {player.photoFileName}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="flex h-full items-center justify-center rounded-md border border-dashed border-[#004AD3]/20 bg-[#FAFCFF] p-3 text-center text-xs text-[#004AD3]/58">
+                              No player photo uploaded yet.
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </article>
                   ))}
@@ -334,12 +936,31 @@ export default function RegisterPage() {
               <div className="flex flex-col items-start gap-3 md:flex-row md:items-center">
                 <button
                   type="submit"
-                  className="rounded-none border border-[#0B6A9B] bg-[#1AD1D7] px-7 py-3 text-sm font-extrabold tracking-[0.08em] text-white uppercase hover:bg-[#0B6A9B]"
+                  disabled={isSubmitting}
+                  className={`rounded-none border border-[#0B6A9B] px-7 py-3 text-sm font-extrabold tracking-[0.08em] text-white uppercase ${
+                    isSubmitting ? "cursor-not-allowed bg-[#0B6A9B]/70" : "bg-[#1AD1D7] hover:bg-[#0B6A9B]"
+                  }`}
                 >
-                  Submit Registration
+                  {isSubmitting ? "Submitting..." : "Submit Registration"}
                 </button>
-                {statusMessage ? <p className="text-sm text-[#004AD3]/78">{statusMessage}</p> : null}
               </div>
+
+              {statusMessage ? (
+                <div
+                  className={`rounded-md border px-4 py-3 text-sm ${
+                    statusTone === "success"
+                      ? "border-[#0D7A39]/35 bg-[#F3FFF8] text-[#0A5A2B]"
+                      : statusTone === "error"
+                        ? "border-[#B3261E]/30 bg-[#FFF5F5] text-[#8A1C18]"
+                        : "border-[#004AD3]/20 bg-[#F8FBFF] text-[#004AD3]/90"
+                  }`}
+                >
+                  <p className="font-bold uppercase">
+                    {statusTone === "success" ? "Confirmation" : statusTone === "error" ? "Action Required" : "Status"}
+                  </p>
+                  <p className="mt-1">{statusMessage}</p>
+                </div>
+              ) : null}
             </form>
           </div>
         </section>
