@@ -60,6 +60,13 @@ type SanctionRow = {
   created_at: string;
 };
 
+type SupabaseQueryError = {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+  hint?: string | null;
+};
+
 export type PublicMemberGoal = {
   matchId: string;
   minute: number | null;
@@ -104,6 +111,37 @@ const toSafeText = (value: string | null | undefined, fallback: string) => {
 };
 
 const normalizeBadgeId = (value: string) => value.trim().toUpperCase();
+
+const normalizeErrorCode = (error: SupabaseQueryError | null | undefined) =>
+  String(error?.code ?? "")
+    .trim()
+    .toUpperCase();
+
+const normalizeErrorMessage = (error: SupabaseQueryError | null | undefined) =>
+  String(error?.message ?? "").toLowerCase();
+
+const isMissingTableError = (error: SupabaseQueryError | null | undefined) => {
+  const code = normalizeErrorCode(error);
+  const message = normalizeErrorMessage(error);
+  return (
+    code === "42P01" ||
+    code === "PGRST205" ||
+    message.includes("could not find the table") ||
+    message.includes("relation") && message.includes("does not exist")
+  );
+};
+
+const isMissingColumnError = (error: SupabaseQueryError | null | undefined) => {
+  const code = normalizeErrorCode(error);
+  const message = normalizeErrorMessage(error);
+  return code === "42703" || code === "PGRST204" || (message.includes("column") && message.includes("does not exist"));
+};
+
+const isInvalidUuidInputError = (error: SupabaseQueryError | null | undefined) => {
+  const code = normalizeErrorCode(error);
+  const message = normalizeErrorMessage(error);
+  return code === "22P02" && message.includes("uuid");
+};
 
 const isDateActive = ({
   startsAt,
@@ -160,8 +198,8 @@ const readSanctions = async ({
     .order("created_at", { ascending: false });
 
   if (sanctionsResult.error) {
-    // If the table does not exist yet, continue without sanctions.
-    if (sanctionsResult.error.code === "42P01") {
+    // If the sanctions table/columns are not ready yet, keep scan page functional.
+    if (isMissingTableError(sanctionsResult.error) || isMissingColumnError(sanctionsResult.error)) {
       return [];
     }
     throw new Error(`member_sanctions: ${sanctionsResult.error.message}`);
@@ -186,11 +224,35 @@ export const getPublicMemberProfileByBadgeId = async (
     .eq("badge_id", badgeId)
     .limit(1);
 
-  if (playerResult.error) {
+  let playerRows = (playerResult.data ?? []) as PlayerRow[];
+  if (playerResult.error && isMissingColumnError(playerResult.error)) {
+    const fallbackResult = await supabase
+      .from("registere_players")
+      .select("id, registere_id, badge_id, full_name, position, jersey_number, photo_url")
+      .eq("badge_id", badgeId)
+      .limit(1);
+
+    if (fallbackResult.error) {
+      throw new Error(`registere_players: ${fallbackResult.error.message}`);
+    }
+
+    playerRows = ((fallbackResult.data ?? []) as Array<{
+      id: string;
+      registere_id: string;
+      badge_id: string;
+      full_name: string | null;
+      position: string | null;
+      jersey_number: string | null;
+      photo_url: string | null;
+    }>).map((row) => ({
+      ...row,
+      age: null,
+    }));
+  } else if (playerResult.error) {
     throw new Error(`registere_players: ${playerResult.error.message}`);
   }
 
-  const player = ((playerResult.data ?? []) as PlayerRow[])[0];
+  const player = playerRows[0];
 
   if (player) {
     const [teamResult, goalsResult, sanctions] = await Promise.all([
@@ -206,12 +268,17 @@ export const getPublicMemberProfileByBadgeId = async (
     if (teamResult.error) {
       throw new Error(`registere: ${teamResult.error.message}`);
     }
-    if (goalsResult.error) {
+    if (
+      goalsResult.error &&
+      !isMissingTableError(goalsResult.error) &&
+      !isMissingColumnError(goalsResult.error) &&
+      !isInvalidUuidInputError(goalsResult.error)
+    ) {
       throw new Error(`tournament_match_goals: ${goalsResult.error.message}`);
     }
 
     const team = ((teamResult.data ?? []) as TeamRow[])[0];
-    const goalRows = (goalsResult.data ?? []) as GoalRow[];
+    const goalRows = goalsResult.error ? [] : ((goalsResult.data ?? []) as GoalRow[]);
     const matchIds = Array.from(new Set(goalRows.map((goal) => goal.match_id)));
 
     let matches: MatchRow[] = [];
@@ -221,11 +288,15 @@ export const getPublicMemberProfileByBadgeId = async (
         .select("id, stage, home_registere_id, away_registere_id, kickoff_at, home_score, away_score, status")
         .in("id", matchIds);
 
-      if (matchesResult.error) {
+      if (
+        matchesResult.error &&
+        !isMissingTableError(matchesResult.error) &&
+        !isMissingColumnError(matchesResult.error)
+      ) {
         throw new Error(`tournament_matches: ${matchesResult.error.message}`);
       }
 
-      matches = (matchesResult.data ?? []) as MatchRow[];
+      matches = matchesResult.error ? [] : ((matchesResult.data ?? []) as MatchRow[]);
     }
 
     const teamIds = new Set<string>([player.registere_id]);
@@ -311,11 +382,35 @@ export const getPublicMemberProfileByBadgeId = async (
     .eq("badge_id", badgeId)
     .limit(1);
 
-  if (staffResult.error) {
+  let staffRows = (staffResult.data ?? []) as StaffRow[];
+  if (staffResult.error && isMissingColumnError(staffResult.error)) {
+    const fallbackResult = await supabase
+      .from("registere_staff")
+      .select("id, registere_id, badge_id, full_name, role, photo_url")
+      .eq("badge_id", badgeId)
+      .limit(1);
+
+    if (fallbackResult.error) {
+      throw new Error(`registere_staff: ${fallbackResult.error.message}`);
+    }
+
+    staffRows = ((fallbackResult.data ?? []) as Array<{
+      id: string;
+      registere_id: string;
+      badge_id: string;
+      full_name: string | null;
+      role: string | null;
+      photo_url: string | null;
+    }>).map((row) => ({
+      ...row,
+      email: null,
+      phone_number: null,
+    }));
+  } else if (staffResult.error) {
     throw new Error(`registere_staff: ${staffResult.error.message}`);
   }
 
-  const staff = ((staffResult.data ?? []) as StaffRow[])[0];
+  const staff = staffRows[0];
   if (!staff) {
     return null;
   }

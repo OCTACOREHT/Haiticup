@@ -22,7 +22,40 @@ export default async function ScanBadgePage({
   params: Promise<{ badgeId: string }>;
 }) {
   const { badgeId } = await params;
-  const profile = await getPublicMemberProfileByBadgeId(badgeId);
+
+  let profile: Awaited<ReturnType<typeof getPublicMemberProfileByBadgeId>> = null;
+  let loadError: string | null = null;
+
+  try {
+    profile = await getPublicMemberProfileByBadgeId(badgeId);
+  } catch (error: unknown) {
+    loadError =
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error &&
+      typeof error.message === "string"
+        ? error.message
+        : "Unable to load badge profile.";
+  }
+
+  if (loadError) {
+    return (
+      <main className="min-h-screen bg-[#f4f6ff] px-4 py-8 text-[#03124a]">
+        <section className="mx-auto w-full max-w-[760px] rounded-2xl border border-[#d7263d]/20 bg-white p-6 shadow-[0_16px_45px_rgba(215,38,61,0.14)] md:p-8">
+          <p className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#d7263d]/80">Granpanpan Nations Cup</p>
+          <h1 className="mt-2 text-2xl font-extrabold [font-family:var(--font-nav),sans-serif] uppercase text-[#a80f25] md:text-3xl">
+            Badge Profile Unavailable
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-[#6b1f2b]">
+            {loadError}
+          </p>
+          <p className="mt-2 text-sm leading-7 text-[#6b1f2b]/85">
+            Verify production environment variables and database tables, then reload this page.
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   if (!profile) {
     notFound();
