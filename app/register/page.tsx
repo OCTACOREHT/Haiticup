@@ -5,6 +5,7 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import QRCode from "qrcode";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
+import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
 
 type PlayerRow = {
   id: number;
@@ -96,6 +97,7 @@ const PLAYER_MAX_COUNT = 20;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_SIZE_LABEL = "5 MB";
 const TOURNAMENT_YEAR = "2026";
+const QR_IMAGE_SIZE_PX = 1400;
 
 const inputClassName =
   "w-full rounded-md border border-[#004AD3]/20 bg-white px-3 py-2 text-sm text-[#004AD3] outline-none transition focus:border-[#004AD3] focus:ring-2 focus:ring-[#004AD3]/15";
@@ -144,12 +146,22 @@ const buildBadgeId = (memberType: BadgeMemberType, teamCode: string, serial: num
   return `${prefix}-${TOURNAMENT_YEAR}-${teamCode}-${String(serial).padStart(2, "0")}`;
 };
 
-const buildQrCodeDataUrl = (payload: Record<string, unknown>) =>
-  QRCode.toDataURL(JSON.stringify(payload), {
-    errorCorrectionLevel: "M",
-    margin: 1,
-    width: 320,
+const buildQrCodeDataUrl = (badgeId: string) => {
+  const scanUrl = buildBadgeScanUrl({
+    badgeId,
+    originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
   });
+
+  return QRCode.toDataURL(scanUrl, {
+    errorCorrectionLevel: "M",
+    margin: 2,
+    width: QR_IMAGE_SIZE_PX,
+    color: {
+      dark: "#000000FF",
+      light: "#FFFFFFFF",
+    },
+  });
+};
 
 export default function RegisterPage() {
   const [teamName, setTeamName] = useState("");
@@ -385,9 +397,13 @@ export default function RegisterPage() {
             role: staff.role.trim(),
             phone_number: staff.phoneNumber.trim(),
             email: staff.email.trim(),
+            scan_url: buildBadgeScanUrl({
+              badgeId,
+              originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
+            }),
           };
 
-          const qrCodeDataUrl = await buildQrCodeDataUrl(qrPayload);
+          const qrCodeDataUrl = await buildQrCodeDataUrl(badgeId);
 
           return {
             badge_id: badgeId,
@@ -420,9 +436,13 @@ export default function RegisterPage() {
             position: player.position.trim(),
             jersey_number: player.jerseyNumber.trim(),
             age: Number(player.age),
+            scan_url: buildBadgeScanUrl({
+              badgeId,
+              originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
+            }),
           };
 
-          const qrCodeDataUrl = await buildQrCodeDataUrl(qrPayload);
+          const qrCodeDataUrl = await buildQrCodeDataUrl(badgeId);
 
           return {
             badge_id: badgeId,

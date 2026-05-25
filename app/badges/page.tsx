@@ -4,8 +4,10 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
+import QRCode from "qrcode";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
+import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type BadgeMember = {
@@ -19,6 +21,7 @@ type BadgeMember = {
   subtitle: string;
   photoUrl: string;
   qrCodeDataUrl: string;
+  qrPayload: Record<string, unknown> | null;
 };
 
 type MembersApiResponse = {
@@ -33,6 +36,7 @@ type MembersApiResponse = {
     subtitle: string;
     photoUrl: string | null;
     qrCodeDataUrl: string | null;
+    qrPayload: Record<string, unknown> | null;
   }>;
   staffCount: number;
   playerCount: number;
@@ -75,6 +79,10 @@ const mobileLinks = [
   { href: "/match-schedule#groups", icon: "groups", label: "Groups" },
   { href: "/match-schedule#bracket", icon: "account_tree", label: "Bracket" },
 ];
+
+const BADGE_TEMPLATE_FILENAME = "Badge .pdf";
+const BADGE_TEMPLATE_URL = "/Badge%20.pdf";
+const QR_IMAGE_SIZE_PX = 1400;
 
 const defaultLayout: BadgeLayout = {
   photoX: 0.363,
@@ -120,6 +128,58 @@ const loadImageElement = (src: string) =>
     image.src = src;
   });
 
+const normalizeQrDataUrl = async (sourceDataUrl: string, size = QR_IMAGE_SIZE_PX): Promise<string> => {
+  const image = await loadImageElement(sourceDataUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("Canvas context is unavailable.");
+  }
+
+  context.imageSmoothingEnabled = false;
+  context.clearRect(0, 0, size, size);
+  context.drawImage(image, 0, 0, size, size);
+
+  const imageData = context.getImageData(0, 0, size, size);
+  const { data } = imageData;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    const binaryValue = luminance < 180 ? 0 : 255;
+    data[i] = binaryValue;
+    data[i + 1] = binaryValue;
+    data[i + 2] = binaryValue;
+    data[i + 3] = 255;
+  }
+
+  context.putImageData(imageData, 0, 0);
+  return canvas.toDataURL("image/png");
+};
+
+const buildPrintableQrDataUrl = async (member: BadgeMember): Promise<string> => {
+  try {
+    const scanUrl = buildBadgeScanUrl({
+      badgeId: member.badgeId,
+      originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
+    });
+    const generatedQr = await QRCode.toDataURL(scanUrl, {
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: QR_IMAGE_SIZE_PX,
+      color: {
+        dark: "#000000FF",
+        light: "#FFFFFFFF",
+      },
+    });
+    return normalizeQrDataUrl(generatedQr);
+  } catch {
+    return normalizeQrDataUrl(member.qrCodeDataUrl);
+  }
+};
+
 const createCircularPhotoDataUrl = async (sourceDataUrl: string, size = 900): Promise<string> => {
   const image = await loadImageElement(sourceDataUrl);
   const canvas = document.createElement("canvas");
@@ -135,21 +195,52 @@ const createCircularPhotoDataUrl = async (sourceDataUrl: string, size = 900): Pr
   const sourceWidth = image.width || 1;
   const sourceHeight = image.height || 1;
 
-  // Cover the full circle area with the photo.
-  const ratio = Math.max(size / sourceWidth, size / sourceHeight);
-  const drawWidth = sourceWidth * ratio;
-  const drawHeight = sourceHeight * ratio;
-  const drawX = (size - drawWidth) / 2;
-  // Positive offset moves the visible face slightly downward in the circle.
-  const verticalOffsetPx = size * 0.09;
-  const drawY = (size - drawHeight) / 2 + verticalOffsetPx;
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+  let cropSize = Math.min(sourceWidth, sourceHeight);
+  let cropX = (sourceWidth - cropSize) / 2;
+  let cropY = (sourceHeight - cropSize) / 2;
+
+  type FaceDetectorLike = {
+    detect: (image: CanvasImageSource) => Promise<Array<{ boundingBox: { x: number; y: number; width: number; height: number } }>>;
+  };
+
+  const maybeFaceDetector = (globalThis as { FaceDetector?: new (options?: Record<string, unknown>) => FaceDetectorLike })
+    .FaceDetector;
+
+  if (maybeFaceDetector) {
+    try {
+      const detector = new maybeFaceDetector({ maxDetectedFaces: 1, fastMode: true });
+      const faces = await detector.detect(image);
+      const primaryFace = faces?.[0];
+
+      if (primaryFace?.boundingBox) {
+        const face = primaryFace.boundingBox;
+        const faceCenterX = face.x + face.width / 2;
+        const faceCenterY = face.y + face.height * 0.62;
+
+        cropSize = Math.min(Math.max(face.width * 2.6, face.height * 3), Math.min(sourceWidth, sourceHeight));
+        cropX = faceCenterX - cropSize / 2;
+        cropY = faceCenterY - cropSize / 2;
+
+        cropX = clamp(cropX, 0, sourceWidth - cropSize);
+        cropY = clamp(cropY, 0, sourceHeight - cropSize);
+      }
+    } catch {
+      // Fallback to centered crop below.
+    }
+  }
+
+  // Slight downward shift so forehead doesn't sit too close to the top edge.
+  if (!maybeFaceDetector) {
+    cropY = clamp(cropY + cropSize * 0.08, 0, sourceHeight - cropSize);
+  }
 
   context.save();
   context.beginPath();
   context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
   context.closePath();
   context.clip();
-  context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+  context.drawImage(image, cropX, cropY, cropSize, cropSize, 0, 0, size, size);
   context.restore();
 
   return canvas.toDataURL("image/png");
@@ -277,7 +368,7 @@ function BadgesPageContent() {
             },
             cache: "no-store",
           }),
-          fetch("/Badge%20Granpanpan%20n.C.pdf"),
+          fetch(BADGE_TEMPLATE_URL),
           fetch("/Montserrat-Regular.ttf"),
           fetch("/Montserrat-Bold.ttf"),
           fetch("/Montserrat-SemiBold.ttf"),
@@ -317,7 +408,7 @@ function BadgesPageContent() {
           throw new Error(membersResult?.error || "Unable to fetch members for badges.");
         }
         if (!templateResult.ok) {
-          throw new Error("Template PDF (Badge Granpanpan n.C.pdf) could not be loaded.");
+          throw new Error(`Template PDF (${BADGE_TEMPLATE_FILENAME}) could not be loaded.`);
         }
         if (!montserratResult.ok) {
           throw new Error("Montserrat-Regular.ttf could not be loaded.");
@@ -342,6 +433,7 @@ function BadgesPageContent() {
             subtitle: row.subtitle,
             photoUrl: row.photoUrl as string,
             qrCodeDataUrl: row.qrCodeDataUrl as string,
+            qrPayload: row.qrPayload,
           }));
         const templateBytes = await templateResult.arrayBuffer();
         const montserratBytes = await montserratResult.arrayBuffer();
@@ -408,11 +500,12 @@ function BadgesPageContent() {
         const badgeBlue = rgb(0.03, 0.07, 0.36);
 
         const photoDataUrl = await createCircularPhotoDataUrl(selectedMember.photoUrl);
+        const printableQrDataUrl = await buildPrintableQrDataUrl(selectedMember);
         const photoBytes = dataUrlToUint8Array(photoDataUrl);
-        const qrBytes = dataUrlToUint8Array(selectedMember.qrCodeDataUrl);
+        const qrBytes = dataUrlToUint8Array(printableQrDataUrl);
 
         const photoImage = await pdfDoc.embedPng(photoBytes);
-        const qrImage = selectedMember.qrCodeDataUrl.startsWith("data:image/jpeg")
+        const qrImage = printableQrDataUrl.startsWith("data:image/jpeg")
           ? await pdfDoc.embedJpg(qrBytes)
           : await pdfDoc.embedPng(qrBytes);
 
@@ -719,7 +812,7 @@ function BadgesPageContent() {
               Badge PDF Template
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[#004AD3]/78 md:text-base">
-              This page uses the exact original file <strong>Badge Granpanpan n.C.pdf</strong> and only injects real photo, name,
+              This page uses the exact original file <strong>{BADGE_TEMPLATE_FILENAME}</strong> and only injects real photo, name,
               title, ID, and QR data.
             </p>
 

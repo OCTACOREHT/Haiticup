@@ -16,6 +16,7 @@ type RegistereStaffRow = {
   role: string | null;
   photo_url: string | null;
   qr_code_data_url: string | null;
+  qr_payload: Record<string, unknown> | null;
 };
 
 type RegisterePlayerRow = {
@@ -26,6 +27,7 @@ type RegisterePlayerRow = {
   position: string | null;
   photo_url: string | null;
   qr_code_data_url: string | null;
+  qr_payload: Record<string, unknown> | null;
 };
 
 type ApiMember = {
@@ -39,6 +41,7 @@ type ApiMember = {
   subtitle: string;
   photoUrl: string | null;
   qrCodeDataUrl: string | null;
+  qrPayload: Record<string, unknown> | null;
 };
 
 const toCleanText = (value: string | null | undefined, fallback: string) => {
@@ -59,10 +62,10 @@ export async function GET(request: Request) {
       supabase.from("registere").select("id, team_name"),
       supabase
         .from("registere_staff")
-        .select("id, registere_id, badge_id, full_name, role, photo_url, qr_code_data_url"),
+        .select("id, registere_id, badge_id, full_name, role, photo_url, qr_code_data_url, qr_payload"),
       supabase
         .from("registere_players")
-        .select("id, registere_id, badge_id, full_name, position, photo_url, qr_code_data_url"),
+        .select("id, registere_id, badge_id, full_name, position, photo_url, qr_code_data_url, qr_payload"),
     ]);
 
     if (teamsResult.error) {
@@ -93,6 +96,7 @@ export async function GET(request: Request) {
         subtitle: toCleanText(row.role, "Staff"),
         photoUrl: row.photo_url,
         qrCodeDataUrl: row.qr_code_data_url,
+        qrPayload: row.qr_payload,
       }));
 
     const playerMembers: ApiMember[] = (playersResult.data as RegisterePlayerRow[])
@@ -108,6 +112,7 @@ export async function GET(request: Request) {
         subtitle: toCleanText(row.position, "Player"),
         photoUrl: row.photo_url,
         qrCodeDataUrl: row.qr_code_data_url,
+        qrPayload: row.qr_payload,
       }));
 
     const members = [...staffMembers, ...playerMembers].sort((a, b) => a.fullName.localeCompare(b.fullName));
