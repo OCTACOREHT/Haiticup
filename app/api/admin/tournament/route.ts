@@ -101,6 +101,16 @@ type AssignTeamToGroupAction = {
   seed?: number | null;
 };
 
+type DeleteGroupAction = {
+  action: "DELETE_GROUP";
+  groupId: string;
+};
+
+type DeleteBadgeAction = {
+  action: "DELETE_BADGE";
+  memberKey: string;
+};
+
 type CreateMatchAction = {
   action: "CREATE_MATCH";
   stage: string;
@@ -150,14 +160,21 @@ type DeleteMatchAction = {
   matchId: string;
 };
 
+type PurgeRegistrationsAction = {
+  action: "PURGE_REGISTRATIONS";
+};
+
 type TournamentAction =
   | CreateGroupAction
   | AssignTeamToGroupAction
+  | DeleteGroupAction
+  | DeleteBadgeAction
   | CreateMatchAction
   | SaveMatchResultAction
   | AutoDraw8TeamsAction
   | UpdateMatchAction
-  | DeleteMatchAction;
+  | DeleteMatchAction
+  | PurgeRegistrationsAction;
 
 const STAGES = new Set([
   "GROUP",
@@ -544,6 +561,96 @@ export async function POST(request: Request) {
       return Response.json({ ok: true }, { status: 200 });
     }
 
+    if (payload.action === "DELETE_GROUP") {
+      if (!isNonEmptyString(payload.groupId)) {
+        return Response.json({ error: "groupId is required." }, { status: 400 });
+      }
+
+      const groupId = payload.groupId.trim();
+
+      const { data: matches, error: matchesError } = await supabase
+        .from("tournament_matches")
+        .select("id")
+        .eq("group_id", groupId);
+
+      if (matchesError) {
+        return Response.json({ error: matchesError.message }, { status: 400 });
+      }
+
+      const matchIds = (matches ?? [])
+        .map((row) => (typeof row.id === "string" ? row.id : ""))
+        .filter((id) => id.length > 0);
+
+      if (matchIds.length > 0) {
+        const { error: goalsError } = await supabase
+          .from("tournament_match_goals")
+          .delete()
+          .in("match_id", matchIds);
+
+        if (goalsError) {
+          return Response.json({ error: goalsError.message }, { status: 400 });
+        }
+
+        const { error: deleteMatchesError } = await supabase
+          .from("tournament_matches")
+          .delete()
+          .eq("group_id", groupId);
+
+        if (deleteMatchesError) {
+          return Response.json({ error: deleteMatchesError.message }, { status: 400 });
+        }
+      }
+
+      const { error: entriesError } = await supabase
+        .from("tournament_group_entries")
+        .delete()
+        .eq("group_id", groupId);
+
+      if (entriesError) {
+        return Response.json({ error: entriesError.message }, { status: 400 });
+      }
+
+      const { error: groupError } = await supabase
+        .from("tournament_groups")
+        .delete()
+        .eq("id", groupId);
+
+      if (groupError) {
+        return Response.json({ error: groupError.message }, { status: 400 });
+      }
+
+      return Response.json({ ok: true }, { status: 200 });
+    }
+
+    if (payload.action === "DELETE_BADGE") {
+      if (!isNonEmptyString(payload.memberKey)) {
+        return Response.json({ error: "memberKey is required." }, { status: 400 });
+      }
+
+      const match = payload.memberKey.trim().match(/^(staff|player)-(\d+)$/i);
+      if (!match) {
+        return Response.json({ error: "Invalid memberKey format." }, { status: 400 });
+      }
+
+      const memberType = match[1].toLowerCase();
+      const memberId = Number.parseInt(match[2], 10);
+      if (!Number.isFinite(memberId) || memberId <= 0) {
+        return Response.json({ error: "Invalid member id." }, { status: 400 });
+      }
+
+      const tableName = memberType === "staff" ? "registere_staff" : "registere_players";
+      const { error } = await supabase
+        .from(tableName)
+        .update({ badge_id: null, qr_code_data_url: null, qr_payload: null })
+        .eq("id", memberId);
+
+      if (error) {
+        return Response.json({ error: error.message }, { status: 400 });
+      }
+
+      return Response.json({ ok: true }, { status: 200 });
+    }
+
     if (payload.action === "CREATE_MATCH") {
       if (!STAGES.has(payload.stage)) {
         return Response.json({ error: "Invalid stage value." }, { status: 400 });
@@ -773,6 +880,34 @@ export async function POST(request: Request) {
 
       if (error) {
         return Response.json({ error: error.message }, { status: 400 });
+      }
+
+      return Response.json({ ok: true }, { status: 200 });
+    }
+
+    if (payload.action === "PURGE_REGISTRATIONS") {
+      const tableOrder = [
+        "tournament_match_goals",
+        "tournament_matches",
+        "tournament_group_entries",
+        "tournament_groups",
+        "registere_players",
+        "registere_staff",
+        "registere",
+      ] as const;
+
+      for (const tableName of tableOrder) {
+        const { error } = await supabase
+          .from(tableName)
+          .delete()
+          .not("id", "is", null);
+
+        if (error) {
+          return Response.json(
+            { error: `Failed to purge ${tableName}: ${error.message}` },
+            { status: 400 },
+          );
+        }
       }
 
       return Response.json({ ok: true }, { status: 200 });

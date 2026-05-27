@@ -61,6 +61,7 @@ const getServiceClient = () => {
 };
 
 const isNonEmptyString = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
+const normalizeTeamName = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
 
 export async function POST(request: Request) {
   try {
@@ -80,11 +81,36 @@ export async function POST(request: Request) {
     }
 
     const supabase = getServiceClient();
+    const teamName = payload.team_name.trim().replace(/\s+/g, " ");
+    const normalizedTeamName = normalizeTeamName(teamName);
+
+    const { data: existingTeams, error: existingTeamsError } = await supabase
+      .from("registere")
+      .select("id, team_name")
+      .ilike("team_name", teamName);
+
+    if (existingTeamsError) {
+      return Response.json(
+        { error: existingTeamsError.message || "Unable to verify team uniqueness." },
+        { status: 500 },
+      );
+    }
+
+    const alreadyRegistered = (existingTeams ?? []).some((row) =>
+      isNonEmptyString(row.team_name) && normalizeTeamName(row.team_name) === normalizedTeamName,
+    );
+
+    if (alreadyRegistered) {
+      return Response.json(
+        { error: `Team "${teamName}" is already registered and cannot be submitted twice.` },
+        { status: 409 },
+      );
+    }
 
     const { data: registrationData, error: registrationError } = await supabase
       .from("registere")
       .insert({
-        team_name: payload.team_name.trim(),
+        team_name: teamName,
         manager_name: payload.manager_name.trim(),
         phone_number: payload.phone_number.trim(),
         contact_email: payload.contact_email.trim(),
@@ -150,7 +176,7 @@ export async function POST(request: Request) {
 
     const mailResult = await sendRegistrationEmails({
       registrationId,
-      teamName: payload.team_name.trim(),
+      teamName,
       managerName: payload.manager_name.trim(),
       phoneNumber: payload.phone_number.trim(),
       contactEmail: payload.contact_email.trim(),

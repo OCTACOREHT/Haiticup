@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import fontkit from "@pdf-lib/fontkit";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import {
   BadgeCheckIcon,
@@ -33,7 +33,7 @@ import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
 import { clearAdminServerSession } from "@/lib/supabase/admin-session-client";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ? Types ?
 
 type Team = { id: string; teamName: string; logoUrl: string | null };
 type Player = { id: string; registereId: string; teamName: string; fullName: string; position: string; jerseyNumber: string; badgeId: string | null };
@@ -69,7 +69,7 @@ type StatusTone = "info" | "success" | "error";
 type GoalInputRow = { id: string; teamRegistereId: string; scorerPlayerId: string; minute: string; isOwnGoal: boolean };
 type AdminSection = "overview" | "poules" | "matches" | "results" | "teams" | "players" | "badges" | "scorers";
 
-// ─── Badge generation helpers ─────────────────────────────────────────────────
+// ? Badge generation helpers ?
 
 const BADGE_QR_SIZE = 1400;
 
@@ -161,10 +161,12 @@ const fitText = (font: import("pdf-lib").PDFFont, text: string, start: number, m
   return Math.max(s, min);
 };
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ? Constants ?
 
 const stageOptions = ["GROUP", "ROUND_OF_16", "QUARTERFINAL", "SEMIFINAL", "THIRD_PLACE", "FINAL"];
 const ADMIN_IDLE_TIMEOUT_MS = 7 * 60 * 1000;
+const MAX_PLAYER_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_PLAYER_PHOTO_SIZE_LABEL = "5 MB";
 
 const sectionItems: Array<{ id: AdminSection; label: string; icon: React.ReactNode }> = [
   { id: "overview", label: "Dashboard", icon: <LayoutDashboardIcon className="size-4" /> },
@@ -177,7 +179,7 @@ const sectionItems: Array<{ id: AdminSection; label: string; icon: React.ReactNo
   { id: "scorers", label: "Meilleurs Buteurs", icon: <TargetIcon className="size-4" /> },
 ];
 
-// ─── CSS helpers ──────────────────────────────────────────────────────────────
+// ? CSS helpers ?
 
 const toIsoFromLocal = (v: string) => { if (!v.trim()) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d.toISOString(); };
 const formatDateTime = (v: string | null) => { if (!v) return "—"; const d = new Date(v); return isNaN(d.getTime()) ? "—" : d.toLocaleString(); };
@@ -191,13 +193,13 @@ const cardCls = "rounded-xl border border-gray-200 dark:border-slate-700 bg-whit
 const thCls = "px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-900";
 const tdCls = "px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300";
 
-// ─── Spinner ──────────────────────────────────────────────────────────────────
+// ? Spinner ?
 
 function Spinner({ size = "sm" }: { size?: "sm" | "md" }) {
   return <span className={`animate-spin rounded-full border-2 border-current border-t-transparent ${size === "sm" ? "size-3" : "size-5"}`} />;
 }
 
-// ─── Badge Modal ──────────────────────────────────────────────────────────────
+// ? Badge Modal ?
 
 function BadgeModal({ memberKey, onClose }: { memberKey: string; onClose: () => void }) {
   useEffect(() => {
@@ -231,7 +233,7 @@ function BadgeModal({ memberKey, onClose }: { memberKey: string; onClose: () => 
   );
 }
 
-// ─── Edit Player Modal ────────────────────────────────────────────────────────
+// ? Edit Player Modal ?
 
 function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { player: PlayerFull; teams: Array<{ id: string; teamName: string }>; accessToken: string; onClose: () => void; onSaved: () => void }) {
   const [fullName, setFullName] = useState(player.fullName);
@@ -239,6 +241,10 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
   const [jerseyNumber, setJerseyNumber] = useState(player.jerseyNumber);
   const [age, setAge] = useState(String(player.age ?? ""));
   const [registereId, setRegistereId] = useState(player.registereId);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(player.photoUrl);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [photoSizeBytes, setPhotoSizeBytes] = useState<number | null>(null);
+  const [photoFileName, setPhotoFileName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -248,6 +254,38 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (!selectedFile.type.startsWith("image/")) {
+      setError("Veuillez sélectionner une image valide.");
+      e.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > MAX_PLAYER_PHOTO_SIZE_BYTES) {
+      setError(`La photo doit faire ${MAX_PLAYER_PHOTO_SIZE_LABEL} maximum.`);
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        setError("Impossible de lire la photo sélectionnée.");
+        return;
+      }
+      setPhotoPreview(reader.result);
+      setPhotoDataUrl(reader.result);
+      setPhotoSizeBytes(selectedFile.size);
+      setPhotoFileName(selectedFile.name);
+      setError(null);
+    };
+    reader.onerror = () => setError("Impossible de lire la photo sélectionnée.");
+    reader.readAsDataURL(selectedFile);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const ageNum = parseInt(age, 10);
@@ -255,7 +293,36 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
     setIsSaving(true); setError(null);
     try {
       const selectedTeam = teams.find((t) => t.id === registereId);
-      const res = await fetch("/api/admin/players", { method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ id: player.id, registereId, teamName: selectedTeam?.teamName, fullName: fullName.trim(), position: position.trim(), jerseyNumber: jerseyNumber.trim(), age: ageNum }) });
+      const payload: {
+        id: string;
+        registereId: string;
+        teamName: string | undefined;
+        fullName: string;
+        position: string;
+        jerseyNumber: string;
+        age: number;
+        photoUrl?: string;
+        photoSizeBytes?: number;
+      } = {
+        id: player.id,
+        registereId,
+        teamName: selectedTeam?.teamName,
+        fullName: fullName.trim(),
+        position: position.trim(),
+        jerseyNumber: jerseyNumber.trim(),
+        age: ageNum,
+      };
+
+      if (photoDataUrl && photoSizeBytes) {
+        payload.photoUrl = photoDataUrl;
+        payload.photoSizeBytes = photoSizeBytes;
+      }
+
+      const res = await fetch("/api/admin/players", {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Erreur de sauvegarde."); }
       onSaved(); onClose();
     } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur inconnue."); } finally { setIsSaving(false); }
@@ -264,18 +331,35 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-4">
           <div className="flex items-center gap-2"><PencilIcon className="size-4 text-blue-600" /><span className="text-sm font-semibold text-gray-900">Modifier le joueur</span></div>
           <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 transition-colors cursor-pointer"><XIcon className="size-4" /></button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4 p-5">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto p-5">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <label className={labelCls}>Photo</label>
+            <div className="mt-1 flex flex-col items-center gap-3">
+              <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white">
+                {photoPreview ? (
+                  <Image src={photoPreview} alt={fullName} width={96} height={96} unoptimized className="size-full object-cover" />
+                ) : (
+                  <span className="text-xs font-bold text-gray-400">{fullName.slice(0, 2).toUpperCase()}</span>
+                )}
+              </div>
+              <div className="w-full">
+                <input type="file" accept="image/*" className={inputCls} onChange={handlePhotoChange} />
+                <p className="mt-1 text-[11px] text-gray-500">JPG/PNG, max {MAX_PLAYER_PHOTO_SIZE_LABEL}.</p>
+                {photoFileName ? <p className="mt-1 truncate text-[11px] text-gray-600">{photoFileName}</p> : null}
+              </div>
+            </div>
+          </div>
           <div><label className={labelCls}>Équipe</label><select className={selectCls} value={registereId} onChange={(e) => setRegistereId(e.target.value)}>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
           <div><label className={labelCls}>Nom complet</label><input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
           <div className="grid grid-cols-3 gap-3">
             <div><label className={labelCls}>Position</label><input className={inputCls} value={position} onChange={(e) => setPosition(e.target.value)} placeholder="GK…" required /></div>
             <div><label className={labelCls}>Maillot</label><input className={inputCls} value={jerseyNumber} onChange={(e) => setJerseyNumber(e.target.value)} required /></div>
-            <div><label className={labelCls}>Âge</label><input className={inputCls} type="number" min={10} max={80} value={age} onChange={(e) => setAge(e.target.value)} required /></div>
+            <div><label className={labelCls}>Age</label><input className={inputCls} type="number" min={10} max={80} value={age} onChange={(e) => setAge(e.target.value)} required /></div>
           </div>
           {error && <p className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">{error}</p>}
           <div className="flex gap-2 pt-1">
@@ -288,7 +372,7 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
   );
 }
 
-// ─── Delete Confirm Dialog ────────────────────────────────────────────────────
+// ? Delete Confirm Dialog ?
 
 function DeleteConfirmDialog({ player, accessToken, onClose, onDeleted }: { player: PlayerFull; accessToken: string; onClose: () => void; onDeleted: () => void }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -330,7 +414,7 @@ function DeleteConfirmDialog({ player, accessToken, onClose, onDeleted }: { play
   );
 }
 
-// ─── Edit Match Modal ─────────────────────────────────────────────────────────
+// ? Edit Match Modal ?
 
 function EditMatchModal({ match, teams, groups, accessToken, onClose, onSaved }: { match: Match; teams: Team[]; groups: Group[]; accessToken: string; onClose: () => void; onSaved: () => void }) {
   const [stage, setStage] = useState(match.stage);
@@ -391,7 +475,7 @@ function EditMatchModal({ match, teams, groups, accessToken, onClose, onSaved }:
   );
 }
 
-// ─── Delete Match Dialog ──────────────────────────────────────────────────────
+// ? Delete Match Dialog ?
 
 function DeleteMatchDialog({ match, teamNameById, accessToken, onClose, onDeleted }: { match: Match; teamNameById: Map<string, string>; accessToken: string; onClose: () => void; onDeleted: () => void }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -433,7 +517,7 @@ function DeleteMatchDialog({ match, teamNameById, accessToken, onClose, onDelete
   );
 }
 
-// ─── Btn ──────────────────────────────────────────────────────────────────────
+// ? Btn ?
 
 function Btn({ isLoading, children, className = "", variant = "primary", size = "md", disabled, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { isLoading?: boolean; variant?: "primary" | "outline" | "ghost" | "danger"; size?: "sm" | "md" }) {
   const base = "inline-flex items-center justify-center gap-1.5 font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed rounded-lg";
@@ -447,7 +531,7 @@ function Btn({ isLoading, children, className = "", variant = "primary", size = 
   );
 }
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+// ? Stat Card ?
 
 function StatCard({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
   return (
@@ -463,7 +547,7 @@ function StatCard({ label, value, icon }: { label: string; value: number | strin
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ? Main Component ?
 
 export default function AdminPage() {
   const router = useRouter();
@@ -471,7 +555,11 @@ export default function AdminPage() {
   const logoutInProgressRef = useRef(false);
   const badgeResourcesRef = useRef<{ template: ArrayBuffer; bold: ArrayBuffer; semiBold: ArrayBuffer } | null>(null);
 
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const saved = window.localStorage.getItem("admin-theme");
+    return saved === "dark" || saved === "light" ? saved : "light";
+  });
   const [activeSection, setActiveSection] = useState<AdminSection>("overview");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -500,6 +588,7 @@ export default function AdminPage() {
   const [expandedTeamIds, setExpandedTeamIds] = useState<Set<string>>(new Set());
   const [badgeModalKey, setBadgeModalKey] = useState<string | null>(null);
   const [downloadingBadgeKey, setDownloadingBadgeKey] = useState<string | null>(null);
+  const [downloadingRosterKey, setDownloadingRosterKey] = useState<string | null>(null);
 
   const [groupCode, setGroupCode] = useState(""); const [groupName, setGroupName] = useState(""); const [groupOrder, setGroupOrder] = useState("1");
   const [assignGroupId, setAssignGroupId] = useState(""); const [assignTeamId, setAssignTeamId] = useState(""); const [assignSeed, setAssignSeed] = useState("");
@@ -511,8 +600,6 @@ export default function AdminPage() {
 
   const isDark = theme === "dark";
   const toggleTheme = () => setTheme((t) => { const n = t === "dark" ? "light" : "dark"; localStorage.setItem("admin-theme", n); return n; });
-
-  useEffect(() => { const s = localStorage.getItem("admin-theme"); if (s === "dark" || s === "light") setTheme(s); }, []);
 
   const teamNameById = useMemo(() => { const m = new Map<string, string>(); (tournament?.teams ?? []).forEach((t) => m.set(t.id, t.teamName)); return m; }, [tournament?.teams]);
   const playerCountByTeamId = useMemo(() => { const m = new Map<string, number>(); (tournament?.players ?? []).forEach((p) => m.set(p.registereId, (m.get(p.registereId) ?? 0) + 1)); return m; }, [tournament?.players]);
@@ -533,7 +620,7 @@ export default function AdminPage() {
     return playersData.filter((p) => p.fullName.toLowerCase().includes(q) || p.teamName.toLowerCase().includes(q) || p.position.toLowerCase().includes(q) || (p.jerseyNumber ?? "").toLowerCase().includes(q));
   }, [playersData, playerSearch]);
 
-  // ── Logout ───────────────────────────────────────────────────────────────────
+  // ? Logout ?
 
   const logoutToLogin = useCallback(async (reason?: "timeout") => {
     if (logoutInProgressRef.current) return;
@@ -543,7 +630,7 @@ export default function AdminPage() {
     router.replace(reason === "timeout" ? "/admin/login?next=/admin&reason=timeout" : "/admin/login?next=/admin");
   }, [router]);
 
-  // ── Sync result form ──────────────────────────────────────────────────────────
+  // ? Sync result form ?
 
   const syncResultForm = useCallback((source: TournamentResponse | null, matchId: string) => {
     if (!source) { setGoalRows([]); setResultHomeScore("0"); setResultAwayScore("0"); return; }
@@ -554,7 +641,7 @@ export default function AdminPage() {
     setGoalRows(source.goals.filter((g) => g.match_id === matchId).map((g) => ({ id: crypto.randomUUID(), teamRegistereId: g.team_registere_id, scorerPlayerId: g.scorer_player_id ?? "", minute: g.minute === null ? "" : String(g.minute), isOwnGoal: g.is_own_goal })));
   }, []);
 
-  // ── Load main data ────────────────────────────────────────────────────────────
+  // ? Load main data ?
 
   const loadData = useCallback(async (token: string, options?: { quiet?: boolean }) => {
     if (!options?.quiet) { setStatusMessage("Chargement..."); setStatusTone("info"); }
@@ -585,7 +672,7 @@ export default function AdminPage() {
     if (!options?.quiet) setStatusMessage(null);
   }, [logoutToLogin, resultMatchId, syncResultForm]);
 
-  // ── Load players data ─────────────────────────────────────────────────────────
+  // ? Load players data ?
 
   const loadPlayersData = useCallback(async (token: string) => {
     setIsLoadingPlayers(true);
@@ -598,7 +685,7 @@ export default function AdminPage() {
     } catch { /**/ } finally { setIsLoadingPlayers(false); }
   }, []);
 
-  // ── Badge resource loading ────────────────────────────────────────────────────
+  // ? Badge resource loading ?
 
   const loadBadgeResources = async () => {
     if (badgeResourcesRef.current) return badgeResourcesRef.current;
@@ -611,7 +698,7 @@ export default function AdminPage() {
     return badgeResourcesRef.current;
   };
 
-  // ── Direct badge download ─────────────────────────────────────────────────────
+  // ? Direct badge download ?
 
   const handleDirectBadgeDownload = async (memberKey: string) => {
     const member = badgeMembers.find((m) => m.key === memberKey);
@@ -696,7 +783,7 @@ export default function AdminPage() {
     }
   };
 
-  // ── Boot ──────────────────────────────────────────────────────────────────────
+  // ? Boot ?
 
   useEffect(() => {
     let active = true;
@@ -727,14 +814,17 @@ export default function AdminPage() {
     return () => { if (idleTimeoutRef.current) { clearTimeout(idleTimeoutRef.current); idleTimeoutRef.current = null; } events.forEach((ev) => window.removeEventListener(ev, reset)); };
   }, [accessToken, isLoading, logoutToLogin]);
 
-  useEffect(() => {
-    if (activeSection === "players" && accessToken && playersData === null) void loadPlayersData(accessToken);
-  }, [activeSection, accessToken, playersData, loadPlayersData]);
+  const handleSectionChange = (section: AdminSection) => {
+    setActiveSection(section);
+    if (section === "players" && accessToken && playersData === null) {
+      void loadPlayersData(accessToken);
+    }
+  };
 
-  // ── Tournament actions ────────────────────────────────────────────────────────
+  // ? Tournament actions ?
 
-  const postAction = async (payload: Record<string, unknown>, success: string) => {
-    if (!accessToken) { await logoutToLogin(); return; }
+  const postAction = async (payload: Record<string, unknown>, success: string): Promise<boolean> => {
+    if (!accessToken) { await logoutToLogin(); return false; }
     setIsSaving(true); setStatusMessage("Sauvegarde..."); setStatusTone("info");
     try {
       const res = await fetch("/api/admin/tournament", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -742,7 +832,8 @@ export default function AdminPage() {
       if (!res.ok) throw new Error(result?.error || "Requête échouée.");
       await loadData(accessToken, { quiet: true });
       setStatusMessage(success); setStatusTone("success");
-    } catch (err: unknown) { setStatusMessage(err instanceof Error ? err.message : "Action échouée."); setStatusTone("error"); } finally { setIsSaving(false); }
+      return true;
+    } catch (err: unknown) { setStatusMessage(err instanceof Error ? err.message : "Action échouée."); setStatusTone("error"); return false; } finally { setIsSaving(false); }
   };
 
   const handleRefresh = async () => {
@@ -751,28 +842,297 @@ export default function AdminPage() {
     try { await loadData(accessToken); if (activeSection === "players") { setPlayersData(null); await loadPlayersData(accessToken); } } catch { /**/ } finally { setIsRefreshing(false); }
   };
 
-  const handleCreateGroup = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "CREATE_GROUP", code: groupCode, name: groupName, orderIndex: Number(groupOrder) || 1 }, "Groupe créé."); setGroupCode(""); setGroupName(""); setGroupOrder("1"); };
-  const handleAssignTeam = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "ASSIGN_TEAM_TO_GROUP", groupId: effectiveAssignGroupId, registereId: effectiveAssignTeamId, seed: assignSeed.trim() ? Number(assignSeed) : null }, "Équipe assignée."); };
-  const handleRunAutoDraw = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); if (drawTeamIds.length !== 8) { setStatusMessage("Sélectionnez exactement 8 équipes."); setStatusTone("error"); return; } await postAction({ action: "AUTO_DRAW_8_TEAMS", teamIds: drawTeamIds, clearExisting: true }, "Tirage terminé."); };
-  const handleCreateMatch = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "CREATE_MATCH", stage: matchStage, groupId: matchStage === "GROUP" ? effectiveMatchGroupId : null, roundLabel: matchRoundLabel || null, homeRegistereId: effectiveMatchHomeId, awayRegistereId: effectiveMatchAwayId, kickoffAt: toIsoFromLocal(matchKickoffLocal), venue: matchVenue || null }, "Match créé."); setMatchRoundLabel(""); setMatchKickoffLocal(""); setMatchVenue(""); };
-  const handleSaveResult = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); const goals = goalRows.filter((r) => r.teamRegistereId.trim()).map((r) => ({ teamRegistereId: r.teamRegistereId, scorerPlayerId: r.scorerPlayerId || null, minute: r.minute.trim() ? Number(r.minute) : null, isOwnGoal: r.isOwnGoal })); await postAction({ action: "SAVE_MATCH_RESULT", matchId: effectiveResultMatchId, homeScore: Number(resultHomeScore), awayScore: Number(resultAwayScore), goals }, "Résultat sauvegardé."); };
+  const handleCreateGroup = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "CREATE_GROUP", code: groupCode, name: groupName, orderIndex: Number(groupOrder) || 1 }, "Groupe cree."); setGroupCode(""); setGroupName(""); setGroupOrder("1"); };
+  const handleAssignTeam = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "ASSIGN_TEAM_TO_GROUP", groupId: effectiveAssignGroupId, registereId: effectiveAssignTeamId, seed: assignSeed.trim() ? Number(assignSeed) : null }, "Equipe assignee."); };
+  const handleDeleteGroup = async (groupId: string, groupLabel: string) => {
+    const confirmed = window.confirm(`Supprimer le groupe ${groupLabel} ? Les matchs et buts de ce groupe seront aussi supprimes.`);
+    if (!confirmed) return;
+    await postAction({ action: "DELETE_GROUP", groupId }, "Groupe supprime.");
+  };
+  const handleDeleteBadge = async (member: AdminBadgeMember) => {
+    const confirmed = window.confirm(`Supprimer le badge de ${member.fullName} ?`);
+    if (!confirmed) return;
+    await postAction({ action: "DELETE_BADGE", memberKey: member.key }, "Badge supprime.");
+  };
+  const handleRunAutoDraw = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); if (drawTeamIds.length !== 8) { setStatusMessage("Selectionnez exactement 8 equipes."); setStatusTone("error"); return; } await postAction({ action: "AUTO_DRAW_8_TEAMS", teamIds: drawTeamIds, clearExisting: true }, "Tirage termine."); };
+  const handleCreateMatch = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "CREATE_MATCH", stage: matchStage, groupId: matchStage === "GROUP" ? effectiveMatchGroupId : null, roundLabel: matchRoundLabel || null, homeRegistereId: effectiveMatchHomeId, awayRegistereId: effectiveMatchAwayId, kickoffAt: toIsoFromLocal(matchKickoffLocal), venue: matchVenue || null }, "Match cree."); setMatchRoundLabel(""); setMatchKickoffLocal(""); setMatchVenue(""); };
+  const handleSaveResult = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); const goals = goalRows.filter((r) => r.teamRegistereId.trim()).map((r) => ({ teamRegistereId: r.teamRegistereId, scorerPlayerId: r.scorerPlayerId || null, minute: r.minute.trim() ? Number(r.minute) : null, isOwnGoal: r.isOwnGoal })); await postAction({ action: "SAVE_MATCH_RESULT", matchId: effectiveResultMatchId, homeScore: Number(resultHomeScore), awayScore: Number(resultAwayScore), goals }, "Resultat sauvegarde."); };
   const handleLogout = async () => { await logoutToLogin(); };
 
-  // ── Team roster download ──────────────────────────────────────────────────────
+  // ? Team roster download ?
 
-  const handleDownloadRoster = () => {
-    const teams = tournament?.teams ?? [], players = tournament?.players ?? [], staff = tournament?.staff ?? [];
-    const date = new Date().toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" });
-    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Liste des Joueurs</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#0F172A;background:#fff;padding:20px}h1{font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#004AD3;margin-bottom:4px}h2{font-size:11px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px}.date{font-size:11px;color:#94A3B8;margin-bottom:30px}.team-section{margin-bottom:32px;break-inside:avoid}.team-header{background:#0F172A;color:#fff;padding:10px 14px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center}.team-name{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px}.team-counts{font-size:11px;color:#94A3B8}.sub-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#004AD3;padding:8px 14px 4px;background:#F8FAFC;border:1px solid #E2E8F0;border-top:none}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F1F5F9;padding:6px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#64748B;border-bottom:2px solid #E2E8F0}td{padding:7px 10px;border-bottom:1px solid #F1F5F9}tr:nth-child(even){background:#FAFAFA}.no-data{padding:10px 14px;font-size:12px;color:#94A3B8;background:#F8FAFC;border:1px solid #E2E8F0;border-top:none}@media print{body{padding:10px}}</style></head><body><h1>GRANPANPAN NATIONS CUP</h1><h2>Liste Officielle des Joueurs &amp; Staff</h2><p class="date">Généré le ${date}</p>${teams.map((team) => { const tp = players.filter((p) => p.registereId === team.id).sort((a, b) => a.fullName.localeCompare(b.fullName)); const ts = staff.filter((s) => s.registereId === team.id).sort((a, b) => a.fullName.localeCompare(b.fullName)); return `<div class="team-section"><div class="team-header"><span class="team-name">${team.teamName}</span><span class="team-counts">Joueurs: ${tp.length} | Staff: ${ts.length}</span></div>${tp.length > 0 ? `<div class="sub-title">Joueurs</div><table><thead><tr><th>#</th><th>Nom</th><th>Position</th><th>Maillot</th><th>Badge ID</th></tr></thead><tbody>${tp.map((p, i) => `<tr><td>${i + 1}</td><td><strong>${p.fullName}</strong></td><td>${p.position}</td><td>${p.jerseyNumber}</td><td style="font-family:monospace;font-size:11px">${p.badgeId ?? "—"}</td></tr>`).join("")}</tbody></table>` : '<div class="no-data">Aucun joueur enregistré.</div>'}${ts.length > 0 ? `<div class="sub-title">Staff</div><table><thead><tr><th>#</th><th>Nom</th><th>Rôle</th><th>Badge ID</th></tr></thead><tbody>${ts.map((s, i) => `<tr><td>${i + 1}</td><td><strong>${s.fullName}</strong></td><td>${s.role}</td><td style="font-family:monospace;font-size:11px">${s.badgeId ?? "—"}</td></tr>`).join("")}</tbody></table>` : ""}</div>`; }).join("")}</body></html>`;
-    const win = window.open("", "_blank");
-    if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 500); }
+  const handleDownloadRoster = async (teamId?: string) => {
+    const teams = (tournament?.teams ?? []).slice().sort((a, b) => a.teamName.localeCompare(b.teamName));
+    const players = tournament?.players ?? [];
+    const staff = tournament?.staff ?? [];
+
+    if (teams.length === 0) {
+      setStatusMessage("Aucune equipe a exporter.");
+      setStatusTone("error");
+      return;
+    }
+
+    const selectedTeams = teamId ? teams.filter((team) => team.id === teamId) : teams;
+    if (selectedTeams.length === 0) {
+      setStatusMessage("Equipe introuvable.");
+      setStatusTone("error");
+      return;
+    }
+
+    setDownloadingRosterKey(teamId ?? "__all__");
+    try {
+      type RosterRow = {
+        teamName: string;
+        memberType: "PLAYER" | "STAFF";
+        fullName: string;
+        roleLabel: string;
+        jerseyLabel: string;
+        badgeId: string;
+      };
+
+      const safe = (value: string | null | undefined) => {
+        const trimmed = value?.trim();
+        return trimmed ? trimmed : "-";
+      };
+
+      const rows: RosterRow[] = [];
+      let totalPlayers = 0;
+      let totalStaff = 0;
+
+      for (const team of selectedTeams) {
+        const teamPlayers = players.filter((p) => p.registereId === team.id).sort((a, b) => a.fullName.localeCompare(b.fullName));
+        const teamStaff = staff.filter((s) => s.registereId === team.id).sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+        totalPlayers += teamPlayers.length;
+        totalStaff += teamStaff.length;
+
+        teamPlayers.forEach((player) => {
+          rows.push({
+            teamName: safe(team.teamName),
+            memberType: "PLAYER",
+            fullName: safe(player.fullName),
+            roleLabel: safe(player.position),
+            jerseyLabel: safe(player.jerseyNumber),
+            badgeId: safe(player.badgeId),
+          });
+        });
+
+        teamStaff.forEach((member) => {
+          rows.push({
+            teamName: safe(team.teamName),
+            memberType: "STAFF",
+            fullName: safe(member.fullName),
+            roleLabel: safe(member.role),
+            jerseyLabel: "-",
+            badgeId: safe(member.badgeId),
+          });
+        });
+      }
+
+      const pdfDoc = await PDFDocument.create();
+      const normalFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const logoBytes = await fetch("/Granpanpan%20Nation%20cupfull.png").then(async (res) => {
+        if (!res.ok) throw new Error("Logo introuvable pour le PDF.");
+        return res.arrayBuffer();
+      });
+      const logoImage = await pdfDoc.embedPng(logoBytes);
+
+      const pageWidth = 842;
+      const pageHeight = 595;
+      const marginX = 28;
+      const marginTop = 22;
+      const marginBottom = 24;
+      const headerGap = 16;
+      const tableHeaderHeight = 20;
+      const rowHeight = 18;
+      const textSize = 9;
+      const tableTopColor = rgb(0.91, 0.94, 0.99);
+      const tableBorderColor = rgb(0.80, 0.84, 0.90);
+      const headerTextColor = rgb(0.11, 0.26, 0.58);
+      const lineTextColor = rgb(0.10, 0.13, 0.20);
+      const altRowColor = rgb(0.98, 0.99, 1);
+
+      const columns: Array<{ label: string; width: number; align?: "left" | "center" | "right" }> = [
+        { label: "#", width: 28, align: "right" },
+        { label: "TEAM", width: 150 },
+        { label: "TYPE", width: 52, align: "center" },
+        { label: "NAME", width: 190 },
+        { label: "POSITION / ROLE", width: 130 },
+        { label: "JERSEY", width: 52, align: "center" },
+        { label: "BADGE ID", width: 140 },
+      ];
+
+      const shorten = (input: string, maxWidth: number) => {
+        if (normalFont.widthOfTextAtSize(input, textSize) <= maxWidth) return input;
+        const ellipsis = "...";
+        const ellipsisWidth = normalFont.widthOfTextAtSize(ellipsis, textSize);
+        let out = input;
+        while (out.length > 0 && normalFont.widthOfTextAtSize(out, textSize) + ellipsisWidth > maxWidth) out = out.slice(0, -1);
+        return out.length > 0 ? `${out}${ellipsis}` : ellipsis;
+      };
+
+      const buildFileSlug = (value: string) => {
+        const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+        return slug || "team";
+      };
+
+      const drawTableHeader = (page: import("pdf-lib").PDFPage, yTop: number) => {
+        let x = marginX;
+        for (const col of columns) {
+          page.drawRectangle({
+            x,
+            y: yTop - tableHeaderHeight,
+            width: col.width,
+            height: tableHeaderHeight,
+            color: tableTopColor,
+            borderColor: tableBorderColor,
+            borderWidth: 0.8,
+          });
+          const textWidth = boldFont.widthOfTextAtSize(col.label, 8);
+          const tx =
+            col.align === "right"
+              ? x + col.width - 4 - textWidth
+              : col.align === "center"
+                ? x + (col.width - textWidth) / 2
+                : x + 4;
+          page.drawText(col.label, { x: tx, y: yTop - tableHeaderHeight + 6, size: 8, font: boldFont, color: headerTextColor });
+          x += col.width;
+        }
+      };
+
+      const reportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+      const subtitle = teamId
+        ? `Official Team Roster - ${selectedTeams[0].teamName}`
+        : "Official Teams Roster";
+      const metaLine = `Generated: ${reportDate} | Teams: ${selectedTeams.length} | Players: ${totalPlayers} | Staff: ${totalStaff}`;
+
+      const drawHeader = (page: import("pdf-lib").PDFPage) => {
+        const logoTargetHeight = 42;
+        const logoScale = logoTargetHeight / logoImage.height;
+        const logoWidth = logoImage.width * logoScale;
+        const topY = pageHeight - marginTop;
+        const logoY = topY - logoTargetHeight;
+        page.drawImage(logoImage, { x: marginX, y: logoY, width: logoWidth, height: logoTargetHeight });
+
+        const titleX = marginX + logoWidth + 12;
+        page.drawText(subtitle, { x: titleX, y: topY - 22, size: 10.5, font: boldFont, color: lineTextColor });
+        page.drawText(metaLine, { x: titleX, y: topY - 36, size: 9, font: normalFont, color: rgb(0.35, 0.40, 0.48) });
+
+        return logoY - headerGap;
+      };
+
+      const drawFooter = (page: import("pdf-lib").PDFPage, pageNum: number, totalPages: number) => {
+        const label = `Page ${pageNum}/${totalPages}`;
+        const textWidth = normalFont.widthOfTextAtSize(label, 8);
+        page.drawText(label, {
+          x: pageWidth - marginX - textWidth,
+          y: 10,
+          size: 8,
+          font: normalFont,
+          color: rgb(0.45, 0.50, 0.58),
+        });
+      };
+
+      let page = pdfDoc.addPage([pageWidth, pageHeight]);
+      let yTop = drawHeader(page);
+      drawTableHeader(page, yTop);
+      let yCursor = yTop - tableHeaderHeight;
+
+      if (rows.length === 0) {
+        page.drawText("No players or staff available for this selection.", {
+          x: marginX + 4,
+          y: yCursor - 16,
+          size: 10,
+          font: normalFont,
+          color: rgb(0.43, 0.47, 0.55),
+        });
+      } else {
+        for (let i = 0; i < rows.length; i++) {
+          if (yCursor - rowHeight < marginBottom) {
+            page = pdfDoc.addPage([pageWidth, pageHeight]);
+            yTop = drawHeader(page);
+            drawTableHeader(page, yTop);
+            yCursor = yTop - tableHeaderHeight;
+          }
+
+          const row = rows[i];
+          const rowBottom = yCursor - rowHeight;
+          let x = marginX;
+          const values = [
+            String(i + 1),
+            row.teamName,
+            row.memberType,
+            row.fullName,
+            row.roleLabel,
+            row.jerseyLabel,
+            row.badgeId,
+          ];
+
+          for (let c = 0; c < columns.length; c++) {
+            const col = columns[c];
+            page.drawRectangle({
+              x,
+              y: rowBottom,
+              width: col.width,
+              height: rowHeight,
+              color: i % 2 === 0 ? rgb(1, 1, 1) : altRowColor,
+              borderColor: tableBorderColor,
+              borderWidth: 0.45,
+            });
+
+            const raw = values[c] ?? "-";
+            const maxTextWidth = col.width - 8;
+            const text = shorten(raw, maxTextWidth);
+            const textWidth = normalFont.widthOfTextAtSize(text, textSize);
+            const tx =
+              col.align === "right"
+                ? x + col.width - 4 - textWidth
+                : col.align === "center"
+                  ? x + (col.width - textWidth) / 2
+                  : x + 4;
+
+            page.drawText(text, {
+              x: tx,
+              y: rowBottom + (rowHeight - textSize) / 2 + 1,
+              size: textSize,
+              font: normalFont,
+              color: lineTextColor,
+            });
+            x += col.width;
+          }
+
+          yCursor -= rowHeight;
+        }
+      }
+
+      const pages = pdfDoc.getPages();
+      for (let i = 0; i < pages.length; i++) drawFooter(pages[i], i + 1, pages.length);
+
+      const bytes = await pdfDoc.save();
+      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const fileName = teamId ? `roster-${buildFileSlug(selectedTeams[0].teamName)}.pdf` : "roster-all-teams.pdf";
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      setStatusMessage(teamId ? `PDF exporte pour ${selectedTeams[0].teamName}.` : "PDF exporte pour toutes les equipes.");
+      setStatusTone("success");
+    } catch (err: unknown) {
+      setStatusMessage(err instanceof Error ? err.message : "Erreur pendant l'export PDF.");
+      setStatusTone("error");
+    } finally {
+      setDownloadingRosterKey(null);
+    }
   };
 
-  // ── Status color ──────────────────────────────────────────────────────────────
+  // ? Status color ?
 
-  const statusBg = statusTone === "success" ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300" : statusTone === "error" ? "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400" : "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400";
 
-  // ── Loading state ─────────────────────────────────────────────────────────────
+  // ? Loading state ?
 
   if (isLoading) {
     return (
@@ -785,7 +1145,7 @@ export default function AdminPage() {
     );
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────────
+  // ? Render ?
 
   return (
     <div className={`flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 ${isDark ? "dark" : ""}`}>
@@ -795,7 +1155,7 @@ export default function AdminPage() {
       {editingMatch && accessToken && <EditMatchModal match={editingMatch} teams={tournament?.teams ?? []} groups={tournament?.groups ?? []} accessToken={accessToken} onClose={() => setEditingMatch(null)} onSaved={() => { if (accessToken) void loadData(accessToken, { quiet: true }); }} />}
       {deletingMatch && accessToken && <DeleteMatchDialog match={deletingMatch} teamNameById={teamNameById} accessToken={accessToken} onClose={() => setDeletingMatch(null)} onDeleted={() => { if (accessToken) void loadData(accessToken, { quiet: true }); }} />}
 
-      {/* ── Sidebar ── */}
+      {/* ? Sidebar ? */}
       <aside className={`${isSidebarOpen ? "w-60" : "w-0 overflow-hidden"} flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-300`}>
         <div className="flex items-center px-4 py-4 border-b border-gray-200 dark:border-slate-700">
           <Image src="/Granpanpan%20Nation%20cupfull.png" alt="Granpanpan Nations Cup" width={398} height={100} unoptimized className="h-9 w-full max-w-[180px] object-contain object-left" priority />
@@ -805,7 +1165,7 @@ export default function AdminPage() {
           {sectionItems.map((item) => {
             const isActive = activeSection === item.id;
             return (
-              <button key={item.id} type="button" onClick={() => setActiveSection(item.id)}
+              <button key={item.id} type="button" onClick={() => handleSectionChange(item.id)}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all cursor-pointer ${isActive ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-l-2 border-blue-600 dark:border-blue-500 pl-[10px]" : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-gray-100 border-l-2 border-transparent"}`}>
                 {item.icon}
                 <span className="truncate">{item.label}</span>
@@ -825,7 +1185,7 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      {/* ── Main ── */}
+      {/* ? Main ? */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 shadow-sm">
           <div className="flex items-center gap-3">
@@ -846,9 +1206,8 @@ export default function AdminPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-5 space-y-5">
-          {statusMessage && <div className={`rounded-xl border px-4 py-3 text-sm ${statusBg}`}>{statusMessage}</div>}
 
-          {/* ── Overview ── */}
+          {/* ? Overview ? */}
           {activeSection === "overview" && (
             <div className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
@@ -881,7 +1240,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ── Poules ── */}
+          {/* ? Poules ? */}
           {activeSection === "poules" && (
             <div className="grid gap-5 xl:grid-cols-2">
               <div className={`${cardCls} xl:col-span-2`}>
@@ -917,9 +1276,60 @@ export default function AdminPage() {
                   <Btn type="submit" isLoading={isSaving}>Sauvegarder</Btn>
                 </form>
               </div>
+              <div className={`${cardCls} xl:col-span-2`}>
+                <div className="border-b border-gray-200 px-5 py-4">
+                  <p className="font-semibold text-gray-900">Groupes existants</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr>
+                        <th className={thCls}>Code</th>
+                        <th className={thCls}>Nom</th>
+                        <th className={thCls}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {(tournament?.groups ?? []).map((group) => (
+                        <tr key={group.id} className="hover:bg-gray-50">
+                          <td className={`${tdCls} font-semibold text-gray-900`}>{group.code}</td>
+                          <td className={tdCls}>{group.name}</td>
+                          <td className={tdCls}>
+                            <button
+                              type="button"
+                              onClick={() => void handleDeleteGroup(group.id, `${group.code} - ${group.name}`)}
+                              disabled={isSaving}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
+                            >
+                              <Trash2Icon className="size-3.5" />
+                              Supprimer
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {(tournament?.groups ?? []).length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="px-5 py-6 text-sm text-gray-400">Aucun groupe cree.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
               {(tournament?.standings ?? []).map((gs) => (
                 <div key={gs.groupId} className={cardCls}>
-                  <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">{gs.groupCode} — {gs.groupName}</p></div>
+                  <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+                    <p className="font-semibold text-gray-900">{gs.groupCode} - {gs.groupName}</p>
+                    <button
+                      type="button"
+                      onClick={() => void handleDeleteGroup(gs.groupId, `${gs.groupCode} - ${gs.groupName}`)}
+                      disabled={isSaving}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
+                    >
+                      <Trash2Icon className="size-3.5" />
+                      Supprimer
+                    </button>
+                  </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full">
                       <thead><tr><th className={thCls}>Équipe</th><th className={`${thCls} text-center`}>Pts</th><th className={`${thCls} text-center`}>J</th><th className={`${thCls} text-center`}>G</th><th className={`${thCls} text-center`}>N</th><th className={`${thCls} text-center`}>P</th><th className={`${thCls} text-center`}>GF</th><th className={`${thCls} text-center`}>GA</th><th className={`${thCls} text-center`}>GD</th></tr></thead>
@@ -933,7 +1343,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ── Matches ── */}
+          {/* ? Matches ? */}
           {activeSection === "matches" && (
             <div className="space-y-5">
               <div className={cardCls}>
@@ -963,7 +1373,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ── Results ── */}
+          {/* ? Results ? */}
           {activeSection === "results" && (
             <div className={cardCls}>
               <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Saisir un résultat</p></div>
@@ -1000,7 +1410,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ── Teams ── */}
+          {/* ? Teams ? */}
           {activeSection === "teams" && (
             <div className="space-y-5">
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -1025,7 +1435,7 @@ export default function AdminPage() {
               <div className={cardCls}>
                 <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
                   <div><p className="font-semibold text-gray-900">Liste officielle des joueurs</p><p className="mt-0.5 text-xs text-gray-500">Cliquez sur l&apos;icône PDF pour prévisualiser ou télécharger directement le badge</p></div>
-                  <Btn variant="outline" size="sm" onClick={handleDownloadRoster}><DownloadIcon className="size-3" />Télécharger la liste</Btn>
+                  <Btn variant="outline" size="sm" isLoading={downloadingRosterKey === "__all__"} onClick={() => void handleDownloadRoster()}><DownloadIcon className="size-3" />PDF toutes les equipes</Btn>
                 </div>
 
                 <div className="divide-y divide-gray-100">
@@ -1035,16 +1445,28 @@ export default function AdminPage() {
                     const isExp = expandedTeamIds.has(team.id);
                     return (
                       <div key={team.id}>
-                        <button type="button" onClick={() => setExpandedTeamIds((prev) => { const n = new Set(prev); isExp ? n.delete(team.id) : n.add(team.id); return n; })} className="flex w-full items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
-                          <div className="flex items-center gap-3">
-                            <div className="flex size-8 items-center justify-center overflow-hidden rounded border border-gray-200 bg-gray-50">
-                              {team.logoUrl ? <img src={team.logoUrl} alt="" className="size-full object-cover" /> : <span className="text-[10px] font-bold text-gray-400">{team.teamName.slice(0, 2).toUpperCase()}</span>}
+                        <div className="flex items-center gap-2 px-3 py-2">
+                          <button type="button" onClick={() => setExpandedTeamIds((prev) => { const n = new Set(prev); if (isExp) { n.delete(team.id); } else { n.add(team.id); } return n; })} className="flex flex-1 items-center justify-between rounded-lg px-2 py-1.5 hover:bg-gray-50 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-8 items-center justify-center overflow-hidden rounded border border-gray-200 bg-gray-50">
+                                {team.logoUrl ? <img src={team.logoUrl} alt="" className="size-full object-cover" /> : <span className="text-[10px] font-bold text-gray-400">{team.teamName.slice(0, 2).toUpperCase()}</span>}
+                              </div>
+                              <span className="font-semibold text-gray-900">{team.teamName}</span>
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{tp.length} joueurs · {ts.length} staff</span>
                             </div>
-                            <span className="font-semibold text-gray-900">{team.teamName}</span>
-                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{tp.length} joueurs · {ts.length} staff</span>
-                          </div>
-                          {isExp ? <ChevronUpIcon className="size-4 text-gray-400" /> : <ChevronDownIcon className="size-4 text-gray-400" />}
-                        </button>
+                            {isExp ? <ChevronUpIcon className="size-4 text-gray-400" /> : <ChevronDownIcon className="size-4 text-gray-400" />}
+                          </button>
+                          <Btn
+                            variant="outline"
+                            size="sm"
+                            isLoading={downloadingRosterKey === team.id}
+                            onClick={() => void handleDownloadRoster(team.id)}
+                            className="shrink-0"
+                          >
+                            <DownloadIcon className="size-3" />
+                            PDF equipe
+                          </Btn>
+                        </div>
 
                         {isExp && (
                           <div className="border-t border-gray-100 bg-gray-50/50">
@@ -1138,7 +1560,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ── Players ── */}
+          {/* ? Players ? */}
           {activeSection === "players" && (
             <div className={cardCls}>
               <div className="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1156,7 +1578,7 @@ export default function AdminPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
-                    <thead><tr><th className={thCls}>#</th><th className={thCls}>Joueur</th><th className={thCls}>Équipe / Club</th><th className={thCls}>Position</th><th className={thCls}>Maillot</th><th className={thCls}>Âge</th><th className={thCls}>Badge ID</th><th className={thCls}>Actions</th></tr></thead>
+                    <thead><tr><th className={thCls}>#</th><th className={thCls}>Joueur</th><th className={thCls}>Equipe / Club</th><th className={thCls}>Position</th><th className={thCls}>Maillot</th><th className={thCls}>Age</th><th className={thCls}>Badge ID</th><th className={thCls}>Actions</th></tr></thead>
                     <tbody className="divide-y divide-gray-100">
                       {filteredPlayers.map((player, idx) => (
                         <tr key={player.id} className="hover:bg-gray-50">
@@ -1192,16 +1614,18 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ── Badges ── */}
+          {/* ? Badges ? */}
           {activeSection === "badges" && (
             <div className={cardCls}>
               <div className="border-b border-gray-200 px-5 py-4">
-                <p className="font-semibold text-gray-900">Badges membres</p>
-                <p className="mt-0.5 text-xs text-gray-500">Visualisez le badge dans une fenêtre ou téléchargez-le directement en PDF.</p>
+                <div>
+                  <p className="font-semibold text-gray-900">Badges membres</p>
+                  <p className="mt-0.5 text-xs text-gray-500">Visualisez le badge dans une fenêtre ou téléchargez-le directement en PDF.</p>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead><tr><th className={thCls}>Type</th><th className={thCls}>Nom complet</th><th className={thCls}>Équipe</th><th className={thCls}>Badge ID</th><th className={thCls}>Visualiser</th><th className={thCls}>Télécharger PDF</th></tr></thead>
+                  <thead><tr><th className={thCls}>Type</th><th className={thCls}>Nom complet</th><th className={thCls}>Equipe</th><th className={thCls}>Badge ID</th><th className={thCls}>Visualiser</th><th className={thCls}>Telecharger PDF</th><th className={thCls}>Actions</th></tr></thead>
                   <tbody className="divide-y divide-gray-100">
                     {badgeMembers.map((member) => {
                       const isDl = downloadingBadgeKey === member.key;
@@ -1221,17 +1645,28 @@ export default function AdminPage() {
                               {isDl ? <><Spinner />Génération…</> : <><DownloadIcon className="size-3" />Télécharger</>}
                             </button>
                           </td>
+                          <td className={tdCls}>
+                            <button
+                              type="button"
+                              onClick={() => void handleDeleteBadge(member)}
+                              disabled={isSaving}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
+                            >
+                              <Trash2Icon className="size-3" />
+                              Supprimer
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
-                    {badgeMembers.length === 0 && <tr><td colSpan={6} className="px-5 py-8 text-center text-sm text-gray-400">Aucun membre avec badge.</td></tr>}
+                    {badgeMembers.length === 0 && <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-gray-400">Aucun membre avec badge.</td></tr>}
                   </tbody>
                 </table>
               </div>
             </div>
           )}
 
-          {/* ── Scorers ── */}
+          {/* ? Scorers ? */}
           {activeSection === "scorers" && (
             <div className={cardCls}>
               <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Meilleurs Buteurs</p></div>
@@ -1259,3 +1694,4 @@ export default function AdminPage() {
     </div>
   );
 }
+
