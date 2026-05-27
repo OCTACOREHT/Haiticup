@@ -7,7 +7,6 @@ import AppIcon from "@/components/AppIcon";
 
 const navLinks = [
   { href: "/match-schedule", label: "Match Schedule" },
-  { href: "/#prizes", label: "Prizes" },
   { href: "/#rules", label: "Rules" },
   { href: "#groups", label: "Groups" },
   { href: "#bracket", label: "Bracket" },
@@ -15,7 +14,6 @@ const navLinks = [
 
 const mobileLinks = [
   { href: "/match-schedule", icon: "calendar_today", label: "Match Schedule", active: true },
-  { href: "/#prizes", icon: "confirmation_number", label: "Prizes" },
   { href: "/#rules", icon: "gavel", label: "Rules" },
   { href: "#groups", icon: "groups", label: "Groups" },
   { href: "#bracket", icon: "account_tree", label: "Bracket" },

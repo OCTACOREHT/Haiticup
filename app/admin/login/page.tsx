@@ -2,28 +2,15 @@
 
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import SiteFooter from "@/components/SiteFooter";
-import SiteNavbar from "@/components/SiteNavbar";
+import Image from "next/image";
+import { clearAdminServerSession, establishAdminServerSession } from "@/lib/supabase/admin-session-client";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const navLinks = [
-  { href: "/match-schedule", label: "Match Schedule" },
-  { href: "/#prizes", label: "Prizes" },
-  { href: "/#rules", label: "Rules" },
-  { href: "/match-schedule#groups", label: "Groups" },
-  { href: "/match-schedule#bracket", label: "Bracket" },
-];
-
-const mobileLinks = [
-  { href: "/match-schedule", icon: "calendar_today", label: "Match Schedule" },
-  { href: "/#prizes", icon: "confirmation_number", label: "Prizes" },
-  { href: "/#rules", icon: "gavel", label: "Rules" },
-  { href: "/match-schedule#groups", icon: "groups", label: "Groups" },
-  { href: "/match-schedule#bracket", icon: "account_tree", label: "Bracket" },
-];
-
 const inputClassName =
-  "w-full rounded-md border border-[#004AD3]/20 bg-white px-3 py-2 text-sm text-[#004AD3] outline-none transition focus:border-[#004AD3] focus:ring-2 focus:ring-[#004AD3]/15";
+  "h-12 w-full rounded-xl border border-[#004AD3]/18 bg-[#f9fbff] px-4 text-[17px] text-[#0037a3] outline-none transition focus:border-[#004AD3] focus:bg-white focus:ring-3 focus:ring-[#004AD3]/15";
+const loginLogoSrc = "/GRANPAPAN%20NATIONS%20CUP.png";
+const panelClassName =
+  "w-full max-w-[560px] rounded-2xl border border-[#004AD3]/14 bg-white px-6 py-8 shadow-[0_18px_44px_rgba(0,74,211,0.12)] md:px-10 md:py-10";
 
 type AccessResponse =
   | {
@@ -57,34 +44,36 @@ const validateAdminAccess = async (accessToken: string) => {
 };
 
 const AdminLoginFallback = () => (
-  <div className="flex min-h-screen flex-col bg-[#ffffff]">
-    <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
-
-    <main className="flex-1 pt-24 pb-16">
-      <section className="mx-auto w-full max-w-[560px] px-4 md:px-10">
-        <div className="rounded-xl border border-[#004AD3]/15 bg-white p-8 shadow-[0_12px_28px_rgba(0,74,211,0.08)]">
-          <p className="text-[11px] font-semibold tracking-[0.14em] text-[#004AD3]/65 uppercase">Admin Access</p>
-          <h1 className="mt-2 text-3xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase">
-            Admin Login
-          </h1>
-          <p className="mt-3 text-sm leading-7 text-[#004AD3]/78">Loading secure login...</p>
-        </div>
-      </section>
-    </main>
-
-    <SiteFooter variant="register" />
+  <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#f4f7ff_0%,#eef3ff_100%)] px-4">
+    <div className={panelClassName}>
+      <Image
+        src={loginLogoSrc}
+        alt="Granpapan Nations Cup"
+        width={460}
+        height={576}
+        priority
+        className="mx-auto mb-8 h-32 w-auto object-contain"
+      />
+      <div className="h-12 w-full animate-pulse rounded-xl bg-[#004AD3]/10" />
+      <div className="mt-4 h-12 w-full animate-pulse rounded-xl bg-[#004AD3]/10" />
+      <div className="mt-5 h-12 w-full animate-pulse rounded-xl bg-[#1AD1D7]/35" />
+    </div>
   </div>
 );
 
 function AdminLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/admin";
+  const requestedNextPath = searchParams.get("next");
+  const nextPath = requestedNextPath && requestedNextPath.startsWith("/") ? requestedNextPath : "/admin";
+  const reason = searchParams.get("reason");
+  const timeoutStatusMessage =
+    reason === "timeout" ? "Session expired after 7 minutes of inactivity. Please login again." : null;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(timeoutStatusMessage);
 
   useEffect(() => {
     let active = true;
@@ -102,12 +91,16 @@ function AdminLoginContent() {
         if (!active) return;
 
         if (accessCheck.ok) {
+          await establishAdminServerSession(session.access_token);
           router.replace(nextPath);
         } else {
           await supabase.auth.signOut();
+          await clearAdminServerSession();
         }
       } catch {
-        // Ignore silent check errors.
+        const supabase = getSupabaseClient();
+        await supabase.auth.signOut();
+        await clearAdminServerSession();
       }
     };
 
@@ -146,9 +139,11 @@ function AdminLoginContent() {
       const accessCheck = await validateAdminAccess(session.access_token);
       if (!accessCheck.ok) {
         await supabase.auth.signOut();
+        await clearAdminServerSession();
         throw new Error("This account is not authorized for admin access.");
       }
 
+      await establishAdminServerSession(session.access_token);
       router.replace(nextPath);
     } catch (error: unknown) {
       const message =
@@ -166,61 +161,58 @@ function AdminLoginContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#ffffff]">
-      <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
+    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#f4f7ff_0%,#eef3ff_100%)] px-4">
+      <section className={panelClassName}>
+        <Image
+          src={loginLogoSrc}
+          alt="Granpapan Nations Cup"
+          width={460}
+          height={576}
+          priority
+          className="mx-auto mb-8 h-32 w-auto object-contain"
+        />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <label className="block space-y-2">
+            <span className="text-xs font-bold tracking-[0.16em] text-[#004AD3]/72 uppercase">Email</span>
+            <input
+              type="email"
+              className={inputClassName}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="admin@email.com"
+              required
+            />
+          </label>
 
-      <main className="flex-1 pt-24 pb-16">
-        <section className="mx-auto w-full max-w-[560px] px-4 md:px-10">
-          <div className="rounded-xl border border-[#004AD3]/15 bg-white p-8 shadow-[0_12px_28px_rgba(0,74,211,0.08)]">
-            <p className="text-[11px] font-semibold tracking-[0.14em] text-[#004AD3]/65 uppercase">Admin Access</p>
-            <h1 className="mt-2 text-3xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase">
-              Admin Login
-            </h1>
-            <p className="mt-3 text-sm leading-7 text-[#004AD3]/78">
-              Connect with your admin email and password. Non-authorized accounts cannot open the admin area.
-            </p>
+          <label className="block space-y-2">
+            <span className="text-xs font-bold tracking-[0.16em] text-[#004AD3]/72 uppercase">Password</span>
+            <input
+              type="password"
+              className={inputClassName}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </label>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <label className="space-y-2">
-                <span className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">Email</span>
-                <input
-                  type="email"
-                  className={inputClassName}
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="admin@email.com"
-                  required
-                />
-              </label>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`inline-flex h-12 w-full items-center justify-center rounded-xl border border-[#0d47b5]/40 text-sm font-extrabold tracking-[0.14em] text-white uppercase shadow-[0_10px_22px_rgba(13,71,181,0.25)] transition ${
+              isLoading
+                ? "cursor-not-allowed bg-[#0D47B5]/70"
+                : "bg-[linear-gradient(90deg,#1AD1D7_0%,#0D47B5_100%)] hover:brightness-105 active:brightness-95"
+            }`}
+          >
+            {isLoading ? (
+              <span className="mr-2 size-4 animate-spin rounded-full border-2 border-white/70 border-t-white" />
+            ) : null}
+            {isLoading ? "Checking..." : "Login"}
+          </button>
+        </form>
 
-              <label className="space-y-2">
-                <span className="text-xs font-semibold tracking-[0.08em] text-[#004AD3]/70 uppercase">Password</span>
-                <input
-                  type="password"
-                  className={inputClassName}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
-              </label>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`rounded-none border border-[#0B6A9B] px-7 py-3 text-sm font-extrabold tracking-[0.08em] text-white uppercase ${
-                  isLoading ? "cursor-not-allowed bg-[#0B6A9B]/70" : "bg-[#1AD1D7] hover:bg-[#0B6A9B]"
-                }`}
-              >
-                {isLoading ? "Checking..." : "Login"}
-              </button>
-            </form>
-
-            {statusMessage ? <p className="mt-4 text-sm text-[#004AD3]/80">{statusMessage}</p> : null}
-          </div>
-        </section>
-      </main>
-
-      <SiteFooter variant="register" />
+        {statusMessage ? <p className="mt-4 text-sm text-[#004AD3]/80">{statusMessage}</p> : null}
+      </section>
     </div>
   );
 }

@@ -11,7 +11,6 @@ import { InfiniteSlider } from "@/components/ui/infinite-slider";
 
 const navLinks = [
   { href: "/match-schedule", label: "Match Schedule" },
-  { href: "#prizes", label: "Prizes" },
   { href: "#rules", label: "Rules" },
   { href: "/match-schedule#groups", label: "Groups" },
   { href: "/match-schedule#bracket", label: "Bracket" },
@@ -27,7 +26,7 @@ const rulesCards = [
   {
     id: "1",
     title: "Team Composition",
-    text: "Max 18 players per squad. All players must be registered with valid ID by July 1st, 2026.",
+    text: "Each club can register up to 20 players and 5 staff members. All members must be registered with valid ID by July 1, 2026.",
     card: "border-black/20 bg-[#1AD1D7] text-black",
     badge: "bg-black text-[#1AD1D7]",
   },
@@ -48,7 +47,7 @@ const rulesCards = [
 ];
 
 const registeredTeams = [
-  { name: "1804 FC", logo: "/Logo ekip/1804 FC.png" },
+  { name: "Klass", logo: "/Logo ekip/Klass.png" },
   { name: "Elite Energy FC", logo: "/Logo ekip/Elite  Energy FC .png" },
   { name: "FC des Vétéran", logo: "/Logo ekip/FC des Vétéran.png" },
   { name: "FC pac", logo: "/Logo ekip/FC pac.png" },
@@ -149,7 +148,6 @@ const individualPrizeCards = [
 
 const mobileLinks = [
   { href: "/match-schedule", icon: "calendar_today", label: "Match Schedule" },
-  { href: "#prizes", icon: "confirmation_number", label: "Prizes" },
   { href: "#rules", icon: "gavel", label: "Rules" },
   { href: "/match-schedule#groups", icon: "groups", label: "Groups" },
   { href: "/match-schedule#bracket", icon: "account_tree", label: "Bracket" },

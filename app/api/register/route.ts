@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { sendRegistrationEmails } from "@/lib/email/registration-emails";
 
 export const runtime = "nodejs";
 
@@ -145,6 +146,20 @@ export async function POST(request: Request) {
         await supabase.from("registere").delete().eq("id", registrationId);
         return Response.json({ error: playersInsertError.message }, { status: 400 });
       }
+    }
+
+    const mailResult = await sendRegistrationEmails({
+      registrationId,
+      teamName: payload.team_name.trim(),
+      managerName: payload.manager_name.trim(),
+      phoneNumber: payload.phone_number.trim(),
+      contactEmail: payload.contact_email.trim(),
+      staffCount: staffRows.length,
+      playerCount: playerRows.length,
+    });
+
+    if (mailResult.errors.length > 0) {
+      console.error("Registration email send issues:", mailResult.errors);
     }
 
     return Response.json({ registration_id: registrationId }, { status: 200 });

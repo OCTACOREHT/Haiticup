@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import AppIcon from "@/components/AppIcon";
 import SiteFooter from "@/components/SiteFooter";
@@ -38,7 +38,6 @@ type StatusTone = "info" | "success" | "error";
 
 const navLinks = [
   { href: "/match-schedule", label: "Match Schedule" },
-  { href: "/#prizes", label: "Prizes" },
   { href: "/#rules", label: "Rules" },
   { href: "/match-schedule#groups", label: "Groups" },
   { href: "/match-schedule#bracket", label: "Bracket" },
@@ -46,11 +45,12 @@ const navLinks = [
 
 const mobileLinks = [
   { href: "/match-schedule", icon: "calendar_today", label: "Match Schedule" },
-  { href: "/#prizes", icon: "confirmation_number", label: "Prizes" },
   { href: "/#rules", icon: "gavel", label: "Rules" },
   { href: "/match-schedule#groups", icon: "groups", label: "Groups" },
   { href: "/match-schedule#bracket", icon: "account_tree", label: "Bracket" },
 ];
+
+const CONTACT_PAGE_HREF = "/contact";
 
 const createPlayer = (id: number): PlayerRow => ({
   id,
@@ -191,6 +191,18 @@ export default function RegisterPage() {
     setStatusMessage(message);
     setStatusTone(tone);
   };
+  const closeStatus = () => {
+    setStatusMessage(null);
+  };
+
+  useEffect(() => {
+    if (!statusMessage) return undefined;
+
+    const timer = window.setTimeout(() => setStatusMessage(null), 5000);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [statusMessage]);
 
   const handleLogoChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -318,7 +330,7 @@ export default function RegisterPage() {
     }
 
     if (staffMembers.length < STAFF_MIN_COUNT) {
-      showStatus(`At least ${STAFF_MIN_COUNT} staff member is required for testing.`, "error");
+      showStatus(`At least ${STAFF_MIN_COUNT} staff member is required.`, "error");
       return;
     }
 
@@ -374,10 +386,8 @@ export default function RegisterPage() {
     }
 
     setIsSubmitting(true);
-    showStatus("Submitting registration...", "info");
 
     try {
-      showStatus("Generating badge IDs and QR codes...", "info");
       const registrationToken = crypto.randomUUID();
       const teamCode = buildTeamCode(teamName, registrationToken);
 
@@ -459,7 +469,6 @@ export default function RegisterPage() {
         }),
       );
 
-      showStatus("Saving registration...", "info");
       const response = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -489,7 +498,7 @@ export default function RegisterPage() {
 
       const registrationId = result?.registration_id ?? "N/A";
       showStatus(
-        `Inscription confirmée. L'équipe ${teamName || "N/A"} est enregistrée avec ${staffMembers.length} staff et ${players.length} joueurs. Référence dossier: ${registrationId}.`,
+        `Registration confirmed for ${teamName || "your team"}. Your club is registered with ${staffMembers.length} staff and ${players.length} players. File reference: ${registrationId}.`,
         "success",
       );
     } catch (error: unknown) {
@@ -666,7 +675,7 @@ export default function RegisterPage() {
                   </h2>
                   <div className="flex items-center gap-3">
                     <p className="text-xs font-bold tracking-[0.08em] text-[#FF6B53] uppercase">
-                      {staffMembers.length}/{STAFF_MAX_COUNT} Staff (Test Mode)
+                      {staffMembers.length}/{STAFF_MAX_COUNT} Staff
                     </p>
                     <button
                       type="button"
@@ -684,7 +693,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-[#004AD3]/68">
-                  Test mode active: minimum {STAFF_MIN_COUNT}, maximum {STAFF_MAX_COUNT} staff.
+                  Minimum {STAFF_MIN_COUNT}, maximum {STAFF_MAX_COUNT} staff members.
                 </p>
 
                 <div className="mt-4 space-y-3">
@@ -964,28 +973,60 @@ export default function RegisterPage() {
                 >
                   {isSubmitting ? "Submitting..." : "Submit Registration"}
                 </button>
+                <a
+                  href={CONTACT_PAGE_HREF}
+                  className="rounded-none border border-[#004AD3] px-7 py-3 text-sm font-extrabold tracking-[0.08em] text-[#004AD3] uppercase hover:bg-[#F8FBFF]"
+                >
+                  Contact
+                </a>
               </div>
 
-              {statusMessage ? (
-                <div
-                  className={`rounded-md border px-4 py-3 text-sm ${
-                    statusTone === "success"
-                      ? "border-[#0D7A39]/35 bg-[#F3FFF8] text-[#0A5A2B]"
-                      : statusTone === "error"
-                        ? "border-[#B3261E]/30 bg-[#FFF5F5] text-[#8A1C18]"
-                        : "border-[#004AD3]/20 bg-[#F8FBFF] text-[#004AD3]/90"
-                  }`}
-                >
-                  <p className="font-bold uppercase">
-                    {statusTone === "success" ? "Confirmation" : statusTone === "error" ? "Action Required" : "Status"}
-                  </p>
-                  <p className="mt-1">{statusMessage}</p>
-                </div>
-              ) : null}
             </form>
           </div>
         </section>
       </main>
+
+      {statusMessage ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#02163D]/45 px-4 backdrop-blur-sm"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeStatus();
+            }
+          }}
+        >
+          <div
+            className={`relative w-full max-w-[760px] rounded-2xl border px-6 py-5 shadow-[0_20px_44px_rgba(0,0,0,0.24)] ${
+              statusTone === "error"
+                ? "border-[#B3261E]/35 bg-[#FFF4F4] text-[#8A1C18]"
+                : "border-[#0D47B5]/35 bg-[#0D47B5] text-white"
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            <button
+              type="button"
+              onClick={closeStatus}
+              aria-label="Close notification"
+              className={`absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                statusTone === "error" ? "text-[#8A1C18] hover:bg-[#8A1C18]/10" : "text-white hover:bg-white/15"
+              }`}
+            >
+              <AppIcon name="close" className="text-[18px]" />
+            </button>
+            <div className="flex items-start gap-3 pr-10">
+              <span
+                className={`inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full ${
+                  statusTone === "error" ? "bg-[#8A1C18]/12 text-[#8A1C18]" : "bg-white/16 text-white"
+                }`}
+              >
+                <AppIcon name={statusTone === "error" ? "error" : "check_circle"} className="text-[18px]" />
+              </span>
+              <p className="text-lg leading-8">{statusMessage}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <SiteFooter variant="register" />
     </div>

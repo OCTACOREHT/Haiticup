@@ -29,6 +29,8 @@ export default function SiteNavbar({
   registerHref,
   registerLabel = "REGISTER NOW",
 }: SiteNavbarProps) {
+  const contactHref = "/contact";
+  const contactLabel = "CONTACT";
   const logoSrc = "/Granpanpan%20Nation%20cupfull.png";
   const logoWidth = 398;
   const logoHeight = 100;
@@ -86,6 +88,13 @@ export default function SiteNavbar({
                 </Link>
               ))}
             </nav>
+
+            <Link
+              href={contactHref}
+              className="rounded-none border border-[#004AD3] px-5 py-2.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase transition-colors hover:bg-[#F8FBFF]"
+            >
+              {contactLabel}
+            </Link>
 
             <Link
               href={registerHref}
@@ -157,20 +166,24 @@ export default function SiteNavbar({
                     key={item.label}
                     href={item.href}
                     onClick={closeDrawer}
-                    className={`group flex min-w-0 items-center gap-3 rounded-md border px-3 py-3 text-base font-bold [font-family:var(--font-nav),sans-serif] transition-colors ${
+                    className={`group flex min-w-0 items-center gap-3 rounded-xl border px-3.5 py-3.5 text-[15px] font-bold [font-family:var(--font-nav),sans-serif] transition-all duration-200 ${
                       isActive
-                        ? "border-black/20 bg-[#ffffff] text-black"
-                        : "border-black/15 text-black hover:bg-[#ffffff]"
+                        ? "border-[#0D47B5]/20 bg-[linear-gradient(135deg,#FFFFFF_0%,#F4F8FF_100%)] text-[#0D47B5] shadow-[0_8px_18px_rgba(13,71,181,0.12)]"
+                        : "border-[#0D47B5]/12 bg-white text-[#0D47B5]/90 hover:border-[#0D47B5]/24 hover:bg-[#F8FBFF] hover:shadow-[0_6px_14px_rgba(13,71,181,0.09)]"
                     }`}
                   >
                     <AppIcon
                       name={item.icon}
-                      className="rounded-sm bg-white p-1.5 text-[18px] text-black shadow-[inset_0_0_0_1px_rgba(0,0,0,0.14)]"
+                      className={`rounded-lg p-2 text-[18px] shadow-[inset_0_0_0_1px_rgba(13,71,181,0.16)] ${
+                        isActive ? "bg-[#0D47B5] text-white" : "bg-[#F2F7FF] text-[#0D47B5]"
+                      }`}
                     />
                     <span className="min-w-0 flex-1 truncate">{item.label}</span>
                     <AppIcon
                       name="chevron_right"
-                      className="ml-auto text-[18px] text-black/38 transition-transform group-hover:translate-x-0.5"
+                      className={`ml-auto text-[20px] transition-transform group-hover:translate-x-0.5 ${
+                        isActive ? "text-[#0D47B5]/70" : "text-[#0D47B5]/40"
+                      }`}
                     />
                   </Link>
                 );
@@ -178,9 +191,17 @@ export default function SiteNavbar({
             </div>
 
             <Link
+              href={contactHref}
+              onClick={closeDrawer}
+              className="mt-5 flex items-center justify-center rounded-md border border-[#004AD3] bg-white px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] text-[#004AD3] uppercase transition-colors hover:bg-[#F8FBFF]"
+            >
+              {contactLabel}
+            </Link>
+
+            <Link
               href={registerHref}
               onClick={closeDrawer}
-              className="mt-5 flex items-center justify-center rounded-md border-0 bg-[#1AD1D7] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase shadow-[0_10px_18px_rgba(26,209,215,0.28)] transition-colors hover:bg-[#0B6A9B]"
+              className="mt-3 flex items-center justify-center rounded-md border-0 bg-[#1AD1D7] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase shadow-[0_10px_18px_rgba(26,209,215,0.28)] transition-colors hover:bg-[#0B6A9B]"
               style={{ color: "#ffffff" }}
             >
               {registerLabel}

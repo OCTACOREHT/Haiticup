@@ -6,6 +6,7 @@ export const runtime = "nodejs";
 type TeamRow = {
   id: string;
   team_name: string | null;
+  club_logo_url: string | null;
 };
 
 type PlayerRow = {
@@ -14,6 +15,14 @@ type PlayerRow = {
   full_name: string | null;
   position: string | null;
   jersey_number: string | null;
+  badge_id: string | null;
+};
+
+type StaffRow = {
+  id: number;
+  registere_id: string;
+  full_name: string | null;
+  role: string | null;
   badge_id: string | null;
 };
 
@@ -118,11 +127,37 @@ type SaveMatchResultAction = {
   goals: SaveMatchResultGoal[];
 };
 
+type AutoDraw8TeamsAction = {
+  action: "AUTO_DRAW_8_TEAMS";
+  teamIds: string[];
+  clearExisting?: boolean;
+};
+
+type UpdateMatchAction = {
+  action: "UPDATE_MATCH";
+  matchId: string;
+  stage?: string;
+  groupId?: string | null;
+  roundLabel?: string | null;
+  homeRegistereId?: string;
+  awayRegistereId?: string;
+  kickoffAt?: string | null;
+  venue?: string | null;
+};
+
+type DeleteMatchAction = {
+  action: "DELETE_MATCH";
+  matchId: string;
+};
+
 type TournamentAction =
   | CreateGroupAction
   | AssignTeamToGroupAction
   | CreateMatchAction
-  | SaveMatchResultAction;
+  | SaveMatchResultAction
+  | AutoDraw8TeamsAction
+  | UpdateMatchAction
+  | DeleteMatchAction;
 
 const STAGES = new Set([
   "GROUP",
@@ -310,9 +345,11 @@ const buildTopScorers = ({
 const readTournamentData = async () => {
   const supabase = getServiceSupabaseClient();
 
-  const [teamsResult, playersResult, groupsResult, entriesResult, matchesResult, goalsResult] = await Promise.all([
-    supabase.from("registere").select("id, team_name"),
+  const [teamsResult, playersResult, staffResult, groupsResult, entriesResult, matchesResult, goalsResult] =
+    await Promise.all([
+    supabase.from("registere").select("id, team_name, club_logo_url"),
     supabase.from("registere_players").select("id, registere_id, full_name, position, jersey_number, badge_id"),
+    supabase.from("registere_staff").select("id, registere_id, full_name, role, badge_id"),
     supabase.from("tournament_groups").select("id, code, name, order_index").order("order_index", { ascending: true }),
     supabase
       .from("tournament_group_entries")
@@ -330,10 +367,11 @@ const readTournamentData = async () => {
       .from("tournament_match_goals")
       .select("id, match_id, team_registere_id, scorer_player_id, minute, is_own_goal, created_at")
       .order("created_at", { ascending: true }),
-  ]);
+    ]);
 
   if (teamsResult.error) throw new Error(`registere: ${teamsResult.error.message}`);
   if (playersResult.error) throw new Error(`registere_players: ${playersResult.error.message}`);
+  if (staffResult.error) throw new Error(`registere_staff: ${staffResult.error.message}`);
   if (groupsResult.error) throw new Error(`tournament_groups: ${groupsResult.error.message}`);
   if (entriesResult.error) throw new Error(`tournament_group_entries: ${entriesResult.error.message}`);
   if (matchesResult.error) throw new Error(`tournament_matches: ${matchesResult.error.message}`);
@@ -341,6 +379,7 @@ const readTournamentData = async () => {
 
   const teams = (teamsResult.data ?? []) as TeamRow[];
   const players = (playersResult.data ?? []) as PlayerRow[];
+  const staff = (staffResult.data ?? []) as StaffRow[];
   const groups = (groupsResult.data ?? []) as GroupRow[];
   const entries = (entriesResult.data ?? []) as GroupEntryRow[];
   const matches = (matchesResult.data ?? []) as MatchRow[];
@@ -369,6 +408,7 @@ const readTournamentData = async () => {
     teams: teams.map((team) => ({
       id: team.id,
       teamName: toSafeText(team.team_name, "Unknown Team"),
+      logoUrl: isNonEmptyString(team.club_logo_url) ? team.club_logo_url.trim() : null,
     })),
     players: players.map((player) => ({
       id: player.id,
@@ -378,6 +418,14 @@ const readTournamentData = async () => {
       position: toSafeText(player.position, "Player"),
       jerseyNumber: toSafeText(player.jersey_number, "-"),
       badgeId: player.badge_id,
+    })),
+    staff: staff.map((member) => ({
+      id: String(member.id),
+      registereId: member.registere_id,
+      teamName: teamNameById.get(member.registere_id) ?? "Unknown Team",
+      fullName: toSafeText(member.full_name, "Unknown Staff"),
+      role: toSafeText(member.role, "Staff"),
+      badgeId: member.badge_id,
     })),
     groups,
     groupEntries: entries,
@@ -532,6 +580,29 @@ export async function POST(request: Request) {
       return Response.json({ ok: true }, { status: 200 });
     }
 
+    if (payload.action === "AUTO_DRAW_8_TEAMS") {
+      const rawTeamIds = Array.isArray(payload.teamIds) ? payload.teamIds : [];
+      const teamIds = Array.from(
+        new Set(rawTeamIds.filter((value): value is string => isNonEmptyString(value)).map((value) => value.trim())),
+      );
+
+      if (teamIds.length !== 8) {
+        return Response.json({ error: "Exactly 8 unique teams are required for this draw." }, { status: 400 });
+      }
+
+      const { data, error } = await supabase.rpc("run_tournament_draw_8", {
+        p_team_ids: teamIds,
+        p_created_by: adminAccess.userId,
+        p_clear_existing: payload.clearExisting !== false,
+      });
+
+      if (error) {
+        return Response.json({ error: error.message }, { status: 400 });
+      }
+
+      return Response.json({ ok: true, drawId: data }, { status: 200 });
+    }
+
     if (payload.action === "SAVE_MATCH_RESULT") {
       if (!isNonEmptyString(payload.matchId)) {
         return Response.json({ error: "matchId is required." }, { status: 400 });
@@ -613,6 +684,95 @@ export async function POST(request: Request) {
         if (insertGoalsError) {
           return Response.json({ error: insertGoalsError.message }, { status: 400 });
         }
+      }
+
+      return Response.json({ ok: true }, { status: 200 });
+    }
+
+    if (payload.action === "UPDATE_MATCH") {
+      if (!isNonEmptyString(payload.matchId)) {
+        return Response.json({ error: "matchId is required." }, { status: 400 });
+      }
+
+      const updateData: Record<string, unknown> = {};
+
+      if (payload.stage !== undefined) {
+        if (!STAGES.has(payload.stage)) {
+          return Response.json({ error: "Invalid stage value." }, { status: 400 });
+        }
+        updateData.stage = payload.stage;
+        if (payload.stage !== "GROUP") updateData.group_id = null;
+      }
+
+      if (payload.groupId !== undefined) {
+        updateData.group_id = isNonEmptyString(payload.groupId) ? payload.groupId.trim() : null;
+      }
+
+      if (payload.roundLabel !== undefined) {
+        updateData.round_label = isNonEmptyString(payload.roundLabel) ? payload.roundLabel.trim() : null;
+      }
+
+      if (payload.homeRegistereId !== undefined) {
+        if (!isNonEmptyString(payload.homeRegistereId)) {
+          return Response.json({ error: "homeRegistereId cannot be empty." }, { status: 400 });
+        }
+        updateData.home_registere_id = payload.homeRegistereId.trim();
+      }
+
+      if (payload.awayRegistereId !== undefined) {
+        if (!isNonEmptyString(payload.awayRegistereId)) {
+          return Response.json({ error: "awayRegistereId cannot be empty." }, { status: 400 });
+        }
+        updateData.away_registere_id = payload.awayRegistereId.trim();
+      }
+
+      if (payload.kickoffAt !== undefined) {
+        updateData.kickoff_at = isNonEmptyString(payload.kickoffAt) ? payload.kickoffAt.trim() : null;
+      }
+
+      if (payload.venue !== undefined) {
+        updateData.venue = isNonEmptyString(payload.venue) ? payload.venue.trim() : null;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return Response.json({ error: "No fields to update." }, { status: 400 });
+      }
+
+      const { error } = await supabase
+        .from("tournament_matches")
+        .update(updateData)
+        .eq("id", payload.matchId.trim());
+
+      if (error) {
+        return Response.json({ error: error.message }, { status: 400 });
+      }
+
+      return Response.json({ ok: true }, { status: 200 });
+    }
+
+    if (payload.action === "DELETE_MATCH") {
+      if (!isNonEmptyString(payload.matchId)) {
+        return Response.json({ error: "matchId is required." }, { status: 400 });
+      }
+
+      const matchId = payload.matchId.trim();
+
+      const { error: goalsError } = await supabase
+        .from("tournament_match_goals")
+        .delete()
+        .eq("match_id", matchId);
+
+      if (goalsError) {
+        return Response.json({ error: goalsError.message }, { status: 400 });
+      }
+
+      const { error } = await supabase
+        .from("tournament_matches")
+        .delete()
+        .eq("id", matchId);
+
+      if (error) {
+        return Response.json({ error: error.message }, { status: 400 });
       }
 
       return Response.json({ ok: true }, { status: 200 });

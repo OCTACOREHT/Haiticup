@@ -1,11 +1,18 @@
 import Link from "next/link";
 import AppIcon from "@/components/AppIcon";
 
-type FooterVariant = "home" | "schedule" | "register";
+type FooterVariant = "home" | "schedule" | "register" | "contact";
 
 type FooterLink = {
   href: string;
   label: string;
+};
+
+type FooterContact = {
+  icon: string;
+  label: string;
+  value: string;
+  href?: string;
 };
 
 type SiteFooterProps = {
@@ -37,15 +44,30 @@ const footerNavigation: Record<FooterVariant, FooterLink[]> = {
     { href: "/match-schedule#groups", label: "Groups" },
     { href: "/match-schedule#bracket", label: "Bracket" },
   ],
+  contact: [
+    { href: "/", label: "Home" },
+    { href: "/match-schedule", label: "Match Schedule" },
+    { href: "/register", label: "Register" },
+    { href: "/#rules", label: "Rules" },
+    { href: "/match-schedule#groups", label: "Groups" },
+    { href: "/match-schedule#bracket", label: "Bracket" },
+  ],
 };
 
 const footerResources: FooterLink[] = [
   { href: "/register", label: "Team Registration" },
+  { href: "/contact", label: "Contact Center" },
   { href: "/match-schedule#groups", label: "Group Stage" },
   { href: "/match-schedule#bracket", label: "Knockout Bracket" },
 ];
 
-const footerContacts = [
+const footerContacts: FooterContact[] = [
+  {
+    icon: "mail",
+    label: "Official Email",
+    value: "info@granpanpannationscup.com",
+    href: "mailto:info@granpanpannationscup.com",
+  },
   { icon: "calendar_month", label: "Tournament Window", value: "July - September 2026" },
   { icon: "location_on", label: "Venue", value: "Ezell Hester Community Center" },
   { icon: "call", label: "Operations Desk", value: "+1 (561) 704-4613" },
@@ -118,7 +140,16 @@ export default function SiteFooter({ variant }: SiteFooterProps) {
                       <p className="text-[10px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.1em] text-white/55 uppercase">
                         {item.label}
                       </p>
-                      <p className="text-sm [font-family:var(--font-nav),sans-serif] text-white/90">{item.value}</p>
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          className="text-sm [font-family:var(--font-nav),sans-serif] text-white/90 transition-colors hover:text-[#1AD1D7]"
+                        >
+                          {item.value}
+                        </a>
+                      ) : (
+                        <p className="text-sm [font-family:var(--font-nav),sans-serif] text-white/90">{item.value}</p>
+                      )}
                     </div>
                   </div>
                 ))}
