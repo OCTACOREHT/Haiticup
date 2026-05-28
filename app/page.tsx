@@ -577,6 +577,35 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="bg-white py-14">
+          <div className="mx-auto max-w-[1280px] px-4 md:px-16">
+            <div className="flex flex-col items-center gap-5 text-center">
+              <Image
+                src="/BoyntonBeach.png"
+                alt="Boynton Beach City logo"
+                width={160}
+                height={160}
+                className="h-36 w-auto object-contain"
+                unoptimized
+              />
+              <p className="max-w-2xl text-base leading-8 text-[#030B2E]/75">
+                A special thank you to{" "}
+                <a
+                  href="https://www.boynton-beach.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-extrabold text-[#1AD1D7] uppercase transition-opacity hover:opacity-75"
+                >
+                  Boynton Beach City
+                </a>{" "}
+                for generously providing the field facilities and for their continued support in making this competition
+                possible. Their commitment to the community and to the growth of the sport has been instrumental in
+                bringing the Granpanpan Nations Cup to life.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section id="registration" className="py-[120px]">
           <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 md:px-16 lg:grid-cols-12">
             <Reveal direction="left" className="lg:col-span-7">
