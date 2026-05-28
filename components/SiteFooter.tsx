@@ -23,7 +23,6 @@ const footerNavigation: Record<FooterVariant, FooterLink[]> = {
   home: [
     { href: "/", label: "Home" },
     { href: "/match-schedule", label: "Match Schedule" },
-    { href: "#prizes", label: "Prizes" },
     { href: "#rules", label: "Rules" },
     { href: "/match-schedule#groups", label: "Groups" },
     { href: "/match-schedule#bracket", label: "Bracket" },
@@ -31,7 +30,6 @@ const footerNavigation: Record<FooterVariant, FooterLink[]> = {
   schedule: [
     { href: "/", label: "Home" },
     { href: "#schedule", label: "Match Schedule" },
-    { href: "/#prizes", label: "Prizes" },
     { href: "/#rules", label: "Rules" },
     { href: "#groups", label: "Groups" },
     { href: "#bracket", label: "Bracket" },
@@ -39,7 +37,6 @@ const footerNavigation: Record<FooterVariant, FooterLink[]> = {
   register: [
     { href: "/", label: "Home" },
     { href: "/match-schedule", label: "Match Schedule" },
-    { href: "/#prizes", label: "Prizes" },
     { href: "/#rules", label: "Rules" },
     { href: "/match-schedule#groups", label: "Groups" },
     { href: "/match-schedule#bracket", label: "Bracket" },
