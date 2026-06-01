@@ -8,6 +8,7 @@ import SiteFooter from "@/components/SiteFooter";
 import Reveal from "@/components/Reveal";
 import AppIcon from "@/components/AppIcon";
 import { InfiniteSlider } from "@/components/ui/infinite-slider";
+import granpanSponsorLogo from "@/public/Granpan.png";
 
 const navLinks = [
   { href: "/match-schedule", label: "Match Schedule" },
@@ -699,6 +700,18 @@ export default function Home() {
                 </Reveal>
               ))}
             </div>
+            <Reveal direction="up" delay={250}>
+              <h2 className="font-heading mt-14 text-center text-4xl text-[#0D47B5] uppercase md:text-5xl">OFFICIAL SPONSOR</h2>
+            </Reveal>
+            <Reveal direction="up" delay={300}>
+              <div className="mt-8 flex justify-center">
+                <Image
+                  src={granpanSponsorLogo}
+                  alt="Granpan official sponsor"
+                  className="h-auto w-full max-w-[160px] md:max-w-[210px]"
+                />
+              </div>
+            </Reveal>
           </div>
         </section>
       </main>
