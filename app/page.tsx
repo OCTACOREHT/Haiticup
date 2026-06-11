@@ -49,7 +49,7 @@ const rulesCards = [
 
 const registeredTeams = [
   { name: "Klass", logo: "/Logo ekip/Klass.png" },
-  { name: "Elite Energy FC", logo: "/Logo ekip/Elite  Energy FC .png" },
+  { name: "Elite Energy FC", logo: "/Logo ekip/1804 FC.png" },
   { name: "FC des Vétéran", logo: "/Logo ekip/FC des Vétéran.png" },
   { name: "FC pac", logo: "/Logo ekip/FC pac.png" },
   { name: "Fc Top Notch", logo: "/Logo ekip/Fc Top Notch.png" },
