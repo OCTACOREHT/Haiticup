@@ -220,15 +220,6 @@ const compressImageFile = (file: File, maxBytes: number = UPLOAD_TARGET_BYTES): 
     img.src = objectUrl;
   });
 
-const dataUrlToBlob = (dataUrl: string): Blob => {
-  const [header, base64Data] = dataUrl.split(",");
-  const mimeMatch = header.match(/data:([^;]+)/);
-  const mime = mimeMatch?.[1] || "image/png";
-  const binary = atob(base64Data);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mime });
-};
 
 const uploadToStorage = async (blob: Blob | File, path: string): Promise<string> => {
   const form = new FormData();
@@ -494,8 +485,8 @@ export default function RegisterPage() {
         }),
       );
 
-      // Generate QR codes, upload them, and build staff payload
-      showStatus("Generating and uploading QR codes…", "info");
+      // Generate QR codes and build payloads (QR codes kept as data URLs — small enough for JSON body)
+      showStatus("Generating QR codes…", "info");
       const staffPayload = await Promise.all(
         staffMembers.map(async (staff, index) => {
           const badgeId = buildBadgeId("STAFF", teamCode, index + 1);
@@ -514,9 +505,7 @@ export default function RegisterPage() {
               originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
             }),
           };
-          const qrDataUrl = await buildQrCodeDataUrl(badgeId);
-          const qrBlob = dataUrlToBlob(qrDataUrl);
-          const qrUrl = await uploadToStorage(qrBlob, `${folder}/qr-staff-${String(index + 1).padStart(2, "0")}.png`);
+          const qrCodeDataUrl = await buildQrCodeDataUrl(badgeId);
           return {
             badge_id: badgeId,
             full_name: staff.fullName.trim(),
@@ -526,7 +515,7 @@ export default function RegisterPage() {
             photo_url: staffPhotoUrls[index],
             photo_size_bytes: staff.photoFile!.size,
             qr_payload: qrPayload,
-            qr_code_data_url: qrUrl,
+            qr_code_data_url: qrCodeDataUrl,
           };
         }),
       );
@@ -549,9 +538,7 @@ export default function RegisterPage() {
               originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
             }),
           };
-          const qrDataUrl = await buildQrCodeDataUrl(badgeId);
-          const qrBlob = dataUrlToBlob(qrDataUrl);
-          const qrUrl = await uploadToStorage(qrBlob, `${folder}/qr-player-${String(index + 1).padStart(2, "0")}.png`);
+          const qrCodeDataUrl = await buildQrCodeDataUrl(badgeId);
           return {
             badge_id: badgeId,
             full_name: player.fullName.trim(),
@@ -561,7 +548,7 @@ export default function RegisterPage() {
             photo_url: playerPhotoUrls[index],
             photo_size_bytes: player.photoFile!.size,
             qr_payload: qrPayload,
-            qr_code_data_url: qrUrl,
+            qr_code_data_url: qrCodeDataUrl,
           };
         }),
       );
