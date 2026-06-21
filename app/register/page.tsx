@@ -706,7 +706,7 @@ export default function RegisterPage() {
                         Website
                       </span>
                       <input
-                        type="url"
+                        type="text"
                         className={inputClassName}
                         value={website}
                         onChange={(event) => setWebsite(event.target.value)}
