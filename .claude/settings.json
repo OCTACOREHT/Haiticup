@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls -la)",
+      "Bash(timeout 15 npx next dev --port 3000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST http://localhost:3000/api/register -H \"Content-Type: application/json\" -d '{\"team_name\":\"Test\",\"manager_name\":\"Test Manager\",\"phone_number\":\"12345\",\"contact_email\":\"test@test.com\",\"club_address\":\"123 Street\",\"website\":null,\"club_logo_url\":\"data:image/png;base64,abc\",\"photo_authorization\":true,\"staff_members\":[],\"players\":[]}')",
+      "Bash(curl -s -w '\\\\n---STATUS:%{http_code}---' -X POST http://localhost:3000/api/register -H 'Content-Type: application/json' -d '{\"team_name\":\"TestTeamXYZ999\",\"manager_name\":\"John Doe\",\"phone_number\":\"+509 1234 5678\",\"contact_email\":\"test@example.com\",\"club_address\":\"123 Main Street, Port-au-Prince\",\"website\":null,\"club_logo_url\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\"photo_authorization\":true,\"staff_members\":[{\"badge_id\":\"STF-2026-TESTXX0001-01\",\"full_name\":\"Coach Name\",\"role\":\"Head Coach\",\"phone_number\":\"+509 999 9999\",\"email\":\"coach@test.com\",\"photo_url\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\"photo_size_bytes\":68,\"qr_payload\":{\"badge_id\":\"STF-2026-TEST-01\",\"member_type\":\"STAFF\"},\"qr_code_data_url\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"}],\"players\":[{\"badge_id\":\"PLY-2026-TESTXX0001-01\",\"full_name\":\"Player Name\",\"position\":\"Forward\",\"jersey_number\":\"9\",\"age\":22,\"photo_url\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\"photo_size_bytes\":68,\"qr_payload\":{\"badge_id\":\"PLY-2026-TEST-01\",\"member_type\":\"PLAYER\"},\"qr_code_data_url\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"}]}')",
+      "Bash(# Generate a ~2MB base64 string to simulate a real photo *)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s -o /dev/null -w \"Status: %{http_code}\\\\nURL: %{url_effective}\" --max-time 10 https://www.granpanpannationscup.com/api/register)",
+      "Bash(curl -s -w '\\\\n---STATUS:%{http_code}---' -X POST https://www.granpanpannationscup.com/api/register -H 'Content-Type: application/json' -d '{}' --max-time 15)",
+      "Bash(curl -sI https://www.granpanpannationscup.com/api/register --max-time 10)",
+      "Bash(curl -s -w \"\\\\n---STATUS:%{http_code}---\" -X GET http://localhost:3000/api/upload-photo)",
+      "Bash(curl -s -w \"\\\\n---STATUS:%{http_code}---\" -X POST http://localhost:3000/api/upload-photo -F \"file=@/tmp/test.png;type=image/png\" -F \"path=test-upload/photo.png\")",
+      "Bash(npx tsc *)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

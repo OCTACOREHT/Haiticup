@@ -99,6 +99,7 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_SIZE_LABEL = "5 MB";
 const TOURNAMENT_YEAR = "2026";
 const QR_IMAGE_SIZE_PX = 1400;
+const UPLOAD_TARGET_BYTES = 3.5 * 1024 * 1024;
 
 const inputClassName =
   "w-full rounded-md border border-[#004AD3]/20 bg-white px-3 py-2 text-sm text-[#004AD3] outline-none transition focus:border-[#004AD3] focus:ring-2 focus:ring-[#004AD3]/15";
@@ -162,6 +163,82 @@ const buildQrCodeDataUrl = (badgeId: string) => {
       light: "#FFFFFFFF",
     },
   });
+};
+
+const compressImageFile = (file: File, maxBytes: number = UPLOAD_TARGET_BYTES): Promise<Blob> =>
+  new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new window.Image();
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const canvas = document.createElement("canvas");
+      let { width, height } = img;
+      const maxDim = 1600;
+      if (width > maxDim || height > maxDim) {
+        if (width >= height) {
+          height = Math.round((height / width) * maxDim);
+          width = maxDim;
+        } else {
+          width = Math.round((width / height) * maxDim);
+          height = maxDim;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas 2D context unavailable."));
+        return;
+      }
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const tryQuality = (quality: number) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("Canvas compression failed."));
+              return;
+            }
+            if (blob.size <= maxBytes || quality <= 0.3) {
+              resolve(blob);
+            } else {
+              tryQuality(Math.max(quality - 0.1, 0.3));
+            }
+          },
+          "image/jpeg",
+          quality,
+        );
+      };
+
+      tryQuality(0.92);
+    };
+
+    img.onerror = () => reject(new Error("Failed to load image for compression."));
+    img.src = objectUrl;
+  });
+
+const dataUrlToBlob = (dataUrl: string): Blob => {
+  const [header, base64Data] = dataUrl.split(",");
+  const mimeMatch = header.match(/data:([^;]+)/);
+  const mime = mimeMatch?.[1] || "image/png";
+  const binary = atob(base64Data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+};
+
+const uploadToStorage = async (blob: Blob | File, path: string): Promise<string> => {
+  const form = new FormData();
+  form.append("file", blob, path);
+  form.append("path", path);
+  const res = await fetch("/api/upload-photo", { method: "POST", body: form });
+  const json = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+  if (!res.ok) throw new Error(json?.error || "Photo upload failed.");
+  if (!json?.url) throw new Error("No URL returned from photo upload.");
+  return json.url;
 };
 
 export default function RegisterPage() {
@@ -390,13 +467,37 @@ export default function RegisterPage() {
     try {
       const registrationToken = crypto.randomUUID();
       const teamCode = buildTeamCode(teamName, registrationToken);
+      const folder = `reg-${registrationToken}`;
 
+      // Upload club logo
+      showStatus("Uploading club logo…", "info");
+      const compressedLogo = await compressImageFile(logoFile!);
+      const logoUrl = await uploadToStorage(compressedLogo, `${folder}/logo.jpg`);
+
+      // Upload staff photos
+      showStatus("Uploading staff photos…", "info");
+      const staffPhotoUrls = await Promise.all(
+        staffMembers.map(async (staff, index) => {
+          if (!staff.photoFile) throw new Error(`Missing staff photo for member ${index + 1}.`);
+          const compressed = await compressImageFile(staff.photoFile);
+          return uploadToStorage(compressed, `${folder}/staff-${String(index + 1).padStart(2, "0")}.jpg`);
+        }),
+      );
+
+      // Upload player photos
+      showStatus("Uploading player photos…", "info");
+      const playerPhotoUrls = await Promise.all(
+        players.map(async (player, index) => {
+          if (!player.photoFile) throw new Error(`Missing player photo for member ${index + 1}.`);
+          const compressed = await compressImageFile(player.photoFile);
+          return uploadToStorage(compressed, `${folder}/player-${String(index + 1).padStart(2, "0")}.jpg`);
+        }),
+      );
+
+      // Generate QR codes, upload them, and build staff payload
+      showStatus("Generating and uploading QR codes…", "info");
       const staffPayload = await Promise.all(
         staffMembers.map(async (staff, index) => {
-          if (!staff.photoFile) {
-            throw new Error(`Missing staff photo for member ${index + 1}.`);
-          }
-
           const badgeId = buildBadgeId("STAFF", teamCode, index + 1);
           const qrPayload = {
             badge_id: badgeId,
@@ -413,29 +514,25 @@ export default function RegisterPage() {
               originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
             }),
           };
-
-          const qrCodeDataUrl = await buildQrCodeDataUrl(badgeId);
-
+          const qrDataUrl = await buildQrCodeDataUrl(badgeId);
+          const qrBlob = dataUrlToBlob(qrDataUrl);
+          const qrUrl = await uploadToStorage(qrBlob, `${folder}/qr-staff-${String(index + 1).padStart(2, "0")}.png`);
           return {
             badge_id: badgeId,
             full_name: staff.fullName.trim(),
             role: staff.role.trim(),
             phone_number: staff.phoneNumber.trim(),
             email: staff.email.trim(),
-            photo_url: staff.photoPreview,
-            photo_size_bytes: staff.photoFile.size,
+            photo_url: staffPhotoUrls[index],
+            photo_size_bytes: staff.photoFile!.size,
             qr_payload: qrPayload,
-            qr_code_data_url: qrCodeDataUrl,
+            qr_code_data_url: qrUrl,
           };
         }),
       );
 
       const playersPayload = await Promise.all(
         players.map(async (player, index) => {
-          if (!player.photoFile) {
-            throw new Error(`Missing player photo for member ${index + 1}.`);
-          }
-
           const badgeId = buildBadgeId("PLAYER", teamCode, index + 1);
           const qrPayload = {
             badge_id: badgeId,
@@ -452,23 +549,24 @@ export default function RegisterPage() {
               originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
             }),
           };
-
-          const qrCodeDataUrl = await buildQrCodeDataUrl(badgeId);
-
+          const qrDataUrl = await buildQrCodeDataUrl(badgeId);
+          const qrBlob = dataUrlToBlob(qrDataUrl);
+          const qrUrl = await uploadToStorage(qrBlob, `${folder}/qr-player-${String(index + 1).padStart(2, "0")}.png`);
           return {
             badge_id: badgeId,
             full_name: player.fullName.trim(),
             position: player.position.trim(),
             jersey_number: player.jerseyNumber.trim(),
             age: Number(player.age),
-            photo_url: player.photoPreview,
-            photo_size_bytes: player.photoFile.size,
+            photo_url: playerPhotoUrls[index],
+            photo_size_bytes: player.photoFile!.size,
             qr_payload: qrPayload,
-            qr_code_data_url: qrCodeDataUrl,
+            qr_code_data_url: qrUrl,
           };
         }),
       );
 
+      showStatus("Submitting registration…", "info");
       const response = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -481,7 +579,7 @@ export default function RegisterPage() {
           contact_email: contactEmail.trim(),
           club_address: clubAddress.trim(),
           website: website.trim() || null,
-          club_logo_url: logoPreview,
+          club_logo_url: logoUrl,
           photo_authorization: photoAuthorization,
           staff_members: staffPayload,
           players: playersPayload,
@@ -496,11 +594,24 @@ export default function RegisterPage() {
         throw new Error(result?.error || "Server failed to save registration.");
       }
 
-      const registrationId = result?.registration_id ?? "N/A";
+      const registeredTeamName = teamName.trim() || "your team";
       showStatus(
-        `Registration confirmed for ${teamName || "your team"}. Your club is registered with ${staffMembers.length} staff and ${players.length} players. File reference: ${registrationId}.`,
+        `${registeredTeamName} has been successfully registered for the Granpanpan Nations Cup!`,
         "success",
       );
+
+      setTeamName("");
+      setManagerName("");
+      setPhoneNumber("");
+      setContactEmail("");
+      setClubAddress("");
+      setWebsite("");
+      setLogoPreview(null);
+      setLogoFileName("");
+      setLogoFile(null);
+      setPhotoAuthorization(false);
+      setStaffMembers([createStaff(1)]);
+      setPlayers([createPlayer(1)]);
     } catch (error: unknown) {
       const message =
         typeof error === "object" &&

@@ -517,6 +517,50 @@ function DeleteMatchDialog({ match, teamNameById, accessToken, onClose, onDelete
   );
 }
 
+// ? Delete Team Dialog ?
+
+function DeleteTeamDialog({ team, accessToken, onClose, onDeleted }: { team: Team; accessToken: string; onClose: () => void; onDeleted: () => void }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", h);
+    return () => document.removeEventListener("keydown", h);
+  }, [onClose]);
+
+  const handleDelete = async () => {
+    setIsDeleting(true); setError(null);
+    try {
+      const res = await fetch("/api/admin/teams", { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ id: team.id }) });
+      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error((d as { error?: string } | null)?.error || "Erreur."); }
+      onDeleted(); onClose();
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur."); } finally { setIsDeleting(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start gap-4">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-100"><Trash2Icon className="size-5 text-red-600" /></div>
+          <div className="flex-1">
+            <p className="font-semibold text-gray-900">Supprimer cette équipe ?</p>
+            <p className="mt-1 text-sm text-gray-500">
+              <span className="font-medium text-gray-700">{team.teamName}</span> sera supprimée définitivement avec tous ses joueurs, membres du staff, matchs et buts associés.
+            </p>
+          </div>
+        </div>
+        {error && <p className="mt-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">{error}</p>}
+        <div className="mt-6 flex gap-2">
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">Non</button>
+          <button type="button" onClick={handleDelete} disabled={isDeleting} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer">{isDeleting && <Spinner />} Oui, supprimer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ? Btn ?
 
 function Btn({ isLoading, children, className = "", variant = "primary", size = "md", disabled, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { isLoading?: boolean; variant?: "primary" | "outline" | "ghost" | "danger"; size?: "sm" | "md" }) {
@@ -584,6 +628,7 @@ export default function AdminPage() {
 
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [deletingMatch, setDeletingMatch] = useState<Match | null>(null);
+  const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
 
   const [expandedTeamIds, setExpandedTeamIds] = useState<Set<string>>(new Set());
   const [badgeModalKey, setBadgeModalKey] = useState<string | null>(null);
@@ -1154,6 +1199,7 @@ export default function AdminPage() {
       {deletingPlayer && accessToken && <DeleteConfirmDialog player={deletingPlayer} accessToken={accessToken} onClose={() => setDeletingPlayer(null)} onDeleted={() => { setPlayersData(null); if (accessToken) void loadPlayersData(accessToken); }} />}
       {editingMatch && accessToken && <EditMatchModal match={editingMatch} teams={tournament?.teams ?? []} groups={tournament?.groups ?? []} accessToken={accessToken} onClose={() => setEditingMatch(null)} onSaved={() => { if (accessToken) void loadData(accessToken, { quiet: true }); }} />}
       {deletingMatch && accessToken && <DeleteMatchDialog match={deletingMatch} teamNameById={teamNameById} accessToken={accessToken} onClose={() => setDeletingMatch(null)} onDeleted={() => { if (accessToken) void loadData(accessToken, { quiet: true }); }} />}
+      {deletingTeam && accessToken && <DeleteTeamDialog team={deletingTeam} accessToken={accessToken} onClose={() => setDeletingTeam(null)} onDeleted={() => { if (accessToken) void loadData(accessToken, { quiet: true }); }} />}
 
       {/* ? Sidebar ? */}
       <aside className={`${isSidebarOpen ? "w-60" : "w-0 overflow-hidden"} flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-300`}>
@@ -1422,10 +1468,18 @@ export default function AdminPage() {
                         <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
                           {team.logoUrl ? <img src={team.logoUrl} alt="" className="size-full object-cover" /> : <span className="text-xs font-bold text-gray-400">{initials || "TEAM"}</span>}
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-gray-900">{team.teamName}</p>
                           <p className="text-xs text-gray-500">{playerCountByTeamId.get(team.id) ?? 0} joueurs · {staffCountByTeamId.get(team.id) ?? 0} staff</p>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => setDeletingTeam(team)}
+                          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                          title="Supprimer l'équipe"
+                        >
+                          <Trash2Icon className="size-3.5" />
+                        </button>
                       </div>
                     </div>
                   );
