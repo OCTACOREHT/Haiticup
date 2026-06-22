@@ -30,6 +30,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
+import { toCanvasSafeImageSrc } from "@/lib/badges/canvas-image";
 import { clearAdminServerSession } from "@/lib/supabase/admin-session-client";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -91,9 +92,10 @@ const dataUrlToUint8Array = (dataUrl: string): Uint8Array => {
 
 const loadImg = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
   const img = document.createElement("img") as HTMLImageElement;
+  img.crossOrigin = "anonymous";
   img.onload = () => resolve(img);
   img.onerror = () => reject(new Error("Image load failed"));
-  img.src = src;
+  img.src = toCanvasSafeImageSrc(src, window.location.origin);
 });
 
 const normalizeQr = async (src: string, size = BADGE_QR_SIZE): Promise<string> => {
@@ -118,7 +120,11 @@ const buildQrDataUrl = async (member: AdminBadgeMember): Promise<string> => {
     const qr = await QRCode.toDataURL(url, { errorCorrectionLevel: "M", margin: 2, width: BADGE_QR_SIZE, color: { dark: "#000000FF", light: "#FFFFFFFF" } });
     return normalizeQr(qr);
   } catch {
-    return member.qrCodeDataUrl ? normalizeQr(member.qrCodeDataUrl) : "";
+    if (member.qrCodeDataUrl) {
+      return normalizeQr(member.qrCodeDataUrl);
+    }
+
+    throw new Error("QR code unavailable for this badge.");
   }
 };
 
@@ -748,8 +754,8 @@ export default function AdminPage() {
   const handleDirectBadgeDownload = async (memberKey: string) => {
     const member = badgeMembers.find((m) => m.key === memberKey);
     if (!member) return;
-    if (!member.photoUrl || !member.qrCodeDataUrl) {
-      setStatusMessage("Données incomplètes pour ce badge (photo ou QR code manquant).");
+    if (!member.photoUrl) {
+      setStatusMessage("Données incomplètes pour ce badge (photo manquante).");
       setStatusTone("error");
       return;
     }

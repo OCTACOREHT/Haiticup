@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
+import { canRenderBadgeMember } from "@/lib/badges/admin-badge-members";
+import { toCanvasSafeImageSrc } from "@/lib/badges/canvas-image";
 import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
 import { clearAdminServerSession } from "@/lib/supabase/admin-session-client";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -19,7 +21,7 @@ type BadgeMember = {
   title: string;
   subtitle: string;
   photoUrl: string;
-  qrCodeDataUrl: string;
+  qrCodeDataUrl: string | null;
   qrPayload: Record<string, unknown> | null;
 };
 
@@ -101,9 +103,10 @@ const dataUrlToUint8Array = (dataUrl: string): Uint8Array => {
 const loadImageElement = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
+    image.crossOrigin = "anonymous";
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error("Could not load image source."));
-    image.src = src;
+    image.src = toCanvasSafeImageSrc(src, window.location.origin);
   });
 
 const normalizeQrDataUrl = async (sourceDataUrl: string, size = QR_IMAGE_SIZE_PX): Promise<string> => {
@@ -139,7 +142,11 @@ const buildPrintableQrDataUrl = async (member: BadgeMember): Promise<string> => 
     });
     return normalizeQrDataUrl(generatedQr);
   } catch {
-    return normalizeQrDataUrl(member.qrCodeDataUrl);
+    if (member.qrCodeDataUrl) {
+      return normalizeQrDataUrl(member.qrCodeDataUrl);
+    }
+
+    throw new Error("QR code unavailable for this badge.");
   }
 };
 
@@ -261,8 +268,8 @@ function BadgesPageContent() {
         if (!templateResult.ok) throw new Error(`Template PDF introuvable.`);
         if (!montserratResult.ok || !montserratBoldResult.ok || !montserratSemiBoldResult.ok) throw new Error("Fonts introuvables.");
         const combinedMembers: BadgeMember[] = (membersResult?.members ?? [])
-          .filter((row) => Boolean(row.photoUrl) && Boolean(row.qrCodeDataUrl) && Boolean(row.badgeId))
-          .map((row) => ({ key: row.key, memberType: row.memberType, registereId: row.registereId, teamName: row.teamName, badgeId: row.badgeId, fullName: row.fullName, title: row.title, subtitle: row.subtitle, photoUrl: row.photoUrl as string, qrCodeDataUrl: row.qrCodeDataUrl as string, qrPayload: row.qrPayload }));
+          .filter(canRenderBadgeMember)
+          .map((row) => ({ key: row.key, memberType: row.memberType, registereId: row.registereId, teamName: row.teamName, badgeId: row.badgeId, fullName: row.fullName, title: row.title, subtitle: row.subtitle, photoUrl: row.photoUrl as string, qrCodeDataUrl: row.qrCodeDataUrl, qrPayload: row.qrPayload }));
         if (!isMounted) return;
         setMembers(combinedMembers);
         setTemplatePdfBytes(await templateResult.arrayBuffer());
