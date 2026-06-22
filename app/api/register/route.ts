@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { sendRegistrationEmails } from "@/lib/email/registration-emails";
+import { findDuplicateNormalizedValue, normalizeEmail } from "@/lib/registration-validation";
 
 export const runtime = "nodejs";
 
@@ -107,13 +108,25 @@ export async function POST(request: Request) {
       );
     }
 
+    const duplicateStaffEmail = findDuplicateNormalizedValue(payload.staff_members.map((staff) => staff.email));
+    if (duplicateStaffEmail) {
+      return Response.json(
+        {
+          error: `Each staff member must use a unique email address. Duplicate email: ${duplicateStaffEmail.value}.`,
+        },
+        { status: 409 },
+      );
+    }
+
+    const normalizedContactEmail = normalizeEmail(payload.contact_email);
+
     const { data: registrationData, error: registrationError } = await supabase
       .from("registere")
       .insert({
         team_name: teamName,
         manager_name: payload.manager_name.trim(),
         phone_number: payload.phone_number.trim(),
-        contact_email: payload.contact_email.trim(),
+        contact_email: normalizedContactEmail,
         club_address: payload.club_address.trim(),
         website: payload.website?.trim() || null,
         club_logo_url: payload.club_logo_url,
@@ -131,18 +144,21 @@ export async function POST(request: Request) {
 
     const registrationId = registrationData.id as string;
 
-    const staffRows = payload.staff_members.map((staff) => ({
-      registere_id: registrationId,
-      badge_id: staff.badge_id,
-      full_name: staff.full_name,
-      role: staff.role,
-      phone_number: staff.phone_number,
-      email: staff.email,
-      photo_url: staff.photo_url,
-      photo_size_bytes: staff.photo_size_bytes,
-      qr_payload: staff.qr_payload,
-      qr_code_data_url: staff.qr_code_data_url,
-    }));
+    const staffRows = payload.staff_members.map((staff) => {
+      const email = normalizeEmail(staff.email);
+      return {
+        registere_id: registrationId,
+        badge_id: staff.badge_id,
+        full_name: staff.full_name,
+        role: staff.role,
+        phone_number: staff.phone_number,
+        email,
+        photo_url: staff.photo_url,
+        photo_size_bytes: staff.photo_size_bytes,
+        qr_payload: staff.qr_payload,
+        qr_code_data_url: staff.qr_code_data_url,
+      };
+    });
 
     const playerRows = payload.players.map((player) => ({
       registere_id: registrationId,
@@ -161,6 +177,15 @@ export async function POST(request: Request) {
       const { error: staffInsertError } = await supabase.from("registere_staff").insert(staffRows);
       if (staffInsertError) {
         await supabase.from("registere").delete().eq("id", registrationId);
+        if (
+          staffInsertError.code === "23505" &&
+          staffInsertError.message.includes("registere_staff_registere_id_email")
+        ) {
+          return Response.json(
+            { error: "Each staff member must use a unique email address." },
+            { status: 409 },
+          );
+        }
         return Response.json({ error: staffInsertError.message }, { status: 400 });
       }
     }
@@ -179,7 +204,7 @@ export async function POST(request: Request) {
       teamName,
       managerName: payload.manager_name.trim(),
       phoneNumber: payload.phone_number.trim(),
-      contactEmail: payload.contact_email.trim(),
+      contactEmail: normalizedContactEmail,
       staffCount: staffRows.length,
       playerCount: playerRows.length,
     });

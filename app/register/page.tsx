@@ -7,6 +7,7 @@ import AppIcon from "@/components/AppIcon";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
 import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
+import { findDuplicateNormalizedValue, normalizeEmail } from "@/lib/registration-validation";
 
 type PlayerRow = {
   id: number;
@@ -432,6 +433,15 @@ export default function RegisterPage() {
       return;
     }
 
+    const duplicateStaffEmail = findDuplicateNormalizedValue(staffMembers.map((staff) => staff.email));
+    if (duplicateStaffEmail) {
+      showStatus(
+        `Each staff member must use a unique email address. Duplicate email: ${duplicateStaffEmail.value}.`,
+        "error",
+      );
+      return;
+    }
+
     const hasInvalidPlayers = players.some(
       (player) =>
         !player.fullName.trim() ||
@@ -490,6 +500,7 @@ export default function RegisterPage() {
       const staffPayload = await Promise.all(
         staffMembers.map(async (staff, index) => {
           const badgeId = buildBadgeId("STAFF", teamCode, index + 1);
+          const email = normalizeEmail(staff.email);
           const qrPayload = {
             badge_id: badgeId,
             member_type: "STAFF",
@@ -499,7 +510,7 @@ export default function RegisterPage() {
             full_name: staff.fullName.trim(),
             role: staff.role.trim(),
             phone_number: staff.phoneNumber.trim(),
-            email: staff.email.trim(),
+            email,
             scan_url: buildBadgeScanUrl({
               badgeId,
               originFallback: typeof window !== "undefined" ? window.location.origin : undefined,
@@ -511,7 +522,7 @@ export default function RegisterPage() {
             full_name: staff.fullName.trim(),
             role: staff.role.trim(),
             phone_number: staff.phoneNumber.trim(),
-            email: staff.email.trim(),
+            email,
             photo_url: staffPhotoUrls[index],
             photo_size_bytes: staff.photoFile!.size,
             qr_payload: qrPayload,
@@ -563,7 +574,7 @@ export default function RegisterPage() {
           team_name: teamName.trim(),
           manager_name: managerName.trim(),
           phone_number: phoneNumber.trim(),
-          contact_email: contactEmail.trim(),
+          contact_email: normalizeEmail(contactEmail),
           club_address: clubAddress.trim(),
           website: website.trim() || null,
           club_logo_url: logoUrl,
@@ -791,7 +802,8 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-[#004AD3]/68">
-                  Minimum {STAFF_MIN_COUNT}, maximum {STAFF_MAX_COUNT} staff members.
+                  Minimum {STAFF_MIN_COUNT}, maximum {STAFF_MAX_COUNT} staff members. Each staff member must use a
+                  unique email address.
                 </p>
 
                 <div className="mt-4 space-y-3">
