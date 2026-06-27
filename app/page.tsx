@@ -54,7 +54,7 @@ const registeredTeams = [
   { name: "FC pac", logo: "/Logo ekip/FC pac.png" },
   { name: "Fc Top Notch", logo: "/Logo ekip/Fc Top Notch.png" },
   { name: "Galaxy Fc", logo: "/Logo ekip/Galaxy Fc.png" },
-  { name: "Haitian Team FC", logo: "/Logo ekip/Haitian Team FC.png" },
+  { name: "Elite Energy", logo: "/Logo ekip/Elite Energy.png" },
   { name: "Island united FC", logo: "/Logo ekip/Island united FC.png" },
 ];
 
