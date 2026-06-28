@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   findDuplicateNormalizedValue,
   normalizeEmail,
+  normalizeTrimmedValue,
 } from "../lib/registration-validation";
 
 test("normalizeEmail trims whitespace and lowercases addresses", () => {
@@ -29,4 +30,14 @@ test("findDuplicateNormalizedValue returns null for unique addresses", () => {
     findDuplicateNormalizedValue(["staff1@club.com", "staff2@club.com", "staff3@club.com"]),
     null,
   );
+});
+
+test("findDuplicateNormalizedValue detects duplicate player jersey numbers after trimming", () => {
+  const duplicate = findDuplicateNormalizedValue([" 10 ", "11", "10"], normalizeTrimmedValue);
+
+  assert.deepEqual(duplicate, {
+    value: "10",
+    firstIndex: 0,
+    duplicateIndex: 2,
+  });
 });

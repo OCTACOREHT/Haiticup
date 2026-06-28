@@ -7,7 +7,11 @@ import AppIcon from "@/components/AppIcon";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
 import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
-import { findDuplicateNormalizedValue, normalizeEmail } from "@/lib/registration-validation";
+import {
+  findDuplicateNormalizedValue,
+  normalizeEmail,
+  normalizeTrimmedValue,
+} from "@/lib/registration-validation";
 
 type PlayerRow = {
   id: number;
@@ -455,6 +459,18 @@ export default function RegisterPage() {
 
     if (hasInvalidPlayers) {
       showStatus("Please complete all player fields and upload each player photo.", "error");
+      return;
+    }
+
+    const duplicateJerseyNumber = findDuplicateNormalizedValue(
+      players.map((player) => player.jerseyNumber),
+      normalizeTrimmedValue,
+    );
+    if (duplicateJerseyNumber) {
+      showStatus(
+        `Each player must use a unique jersey number. Duplicate jersey number: ${duplicateJerseyNumber.value}.`,
+        "error",
+      );
       return;
     }
 

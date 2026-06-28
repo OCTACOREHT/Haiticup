@@ -1,6 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { sendRegistrationEmails } from "@/lib/email/registration-emails";
-import { findDuplicateNormalizedValue, normalizeEmail } from "@/lib/registration-validation";
+import {
+  findDuplicateNormalizedValue,
+  normalizeEmail,
+  normalizeTrimmedValue,
+} from "@/lib/registration-validation";
 
 export const runtime = "nodejs";
 
@@ -63,6 +67,14 @@ const getServiceClient = () => {
 
 const isNonEmptyString = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
 const normalizeTeamName = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
+const isDuplicatePlayerJerseyNumberError = (
+  error: { code?: string | null; message?: string | null } | null | undefined,
+) => {
+  const code = String(error?.code ?? "").trim();
+  const message = String(error?.message ?? "").toLowerCase();
+
+  return code === "23505" && message.includes("registere_players") && message.includes("jersey");
+};
 
 export async function POST(request: Request) {
   try {
@@ -113,6 +125,19 @@ export async function POST(request: Request) {
       return Response.json(
         {
           error: `Each staff member must use a unique email address. Duplicate email: ${duplicateStaffEmail.value}.`,
+        },
+        { status: 409 },
+      );
+    }
+
+    const duplicatePlayerJerseyNumber = findDuplicateNormalizedValue(
+      payload.players.map((player) => player.jersey_number),
+      normalizeTrimmedValue,
+    );
+    if (duplicatePlayerJerseyNumber) {
+      return Response.json(
+        {
+          error: `Each player must use a unique jersey number. Duplicate jersey number: ${duplicatePlayerJerseyNumber.value}.`,
         },
         { status: 409 },
       );
@@ -195,6 +220,12 @@ export async function POST(request: Request) {
       if (playersInsertError) {
         await supabase.from("registere_staff").delete().eq("registere_id", registrationId);
         await supabase.from("registere").delete().eq("id", registrationId);
+        if (isDuplicatePlayerJerseyNumberError(playersInsertError)) {
+          return Response.json(
+            { error: "Each player must use a unique jersey number." },
+            { status: 409 },
+          );
+        }
         return Response.json({ error: playersInsertError.message }, { status: 400 });
       }
     }
