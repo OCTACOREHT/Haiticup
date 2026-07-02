@@ -37,6 +37,20 @@ type DeletePlayerPayload = {
   id: string;
 };
 
+type CreatePlayerPayload = {
+  registereId: string;
+  teamName: string;
+  fullName: string;
+  position: string;
+  jerseyNumber: string;
+  age: number;
+  photoUrl: string;
+  photoSizeBytes: number;
+  badgeId: string;
+  qrPayload: any;
+  qrCodeDataUrl: string;
+};
+
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 const isNonEmptyString = (value: unknown): value is string =>
@@ -243,6 +257,69 @@ export async function DELETE(request: Request) {
 
     const supabase = getServiceSupabaseClient();
     const { error } = await supabase.from("registere_players").delete().eq("id", payload.id.trim());
+
+    if (error) {
+      return Response.json({ error: error.message }, { status: 400 });
+    }
+
+    return Response.json({ ok: true }, { status: 200 });
+  } catch (error: unknown) {
+    const message =
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error &&
+      typeof error.message === "string"
+        ? error.message
+        : "Unexpected server error.";
+
+    return Response.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const access = await verifyAdminAccess(getBearerToken(request));
+    if (!access.ok) {
+      return Response.json({ error: access.error }, { status: access.status });
+    }
+
+    const payload = (await request.json()) as CreatePlayerPayload;
+
+    if (
+      !isNonEmptyString(payload.registereId) ||
+      !isNonEmptyString(payload.teamName) ||
+      !isNonEmptyString(payload.fullName) ||
+      !isNonEmptyString(payload.position) ||
+      !isNonEmptyString(payload.jerseyNumber) ||
+      typeof payload.age !== "number" ||
+      !Number.isFinite(payload.age) ||
+      !Number.isInteger(payload.age) ||
+      payload.age < 10 ||
+      payload.age > 80 ||
+      !isNonEmptyString(payload.photoUrl) ||
+      typeof payload.photoSizeBytes !== "number" ||
+      !isNonEmptyString(payload.badgeId) ||
+      !isNonEmptyString(payload.qrCodeDataUrl) ||
+      !payload.qrPayload
+    ) {
+      return Response.json({ error: "Invalid player creation payload." }, { status: 400 });
+    }
+
+    const insertPayload = {
+      registere_id: payload.registereId.trim(),
+      full_name: payload.fullName.trim(),
+      position: payload.position.trim(),
+      jersey_number: payload.jerseyNumber.trim(),
+      age: payload.age,
+      photo_url: payload.photoUrl,
+      photo_size_bytes: payload.photoSizeBytes,
+      badge_id: payload.badgeId.trim(),
+      qr_payload: payload.qrPayload,
+      qr_code_data_url: payload.qrCodeDataUrl,
+    };
+
+    const supabase = getServiceSupabaseClient();
+    const { error } = await supabase.from("registere_players").insert([insertPayload]);
 
     if (error) {
       return Response.json({ error: error.message }, { status: 400 });

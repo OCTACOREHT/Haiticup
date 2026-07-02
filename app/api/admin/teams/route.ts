@@ -110,3 +110,43 @@ export async function DELETE(request: Request) {
     return Response.json({ error: message }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const access = await verifyAdminAccess(getBearerToken(request));
+    if (!access.ok) {
+      return Response.json({ error: access.error }, { status: access.status });
+    }
+
+    const payload = (await request.json()) as { id?: string; clubLogoUrl?: string };
+    if (!isNonEmptyString(payload.id)) {
+      return Response.json({ error: "Team id is required." }, { status: 400 });
+    }
+
+    if (!isNonEmptyString(payload.clubLogoUrl)) {
+      return Response.json({ error: "clubLogoUrl is required." }, { status: 400 });
+    }
+
+    const supabase = getServiceSupabaseClient();
+    const { error } = await supabase
+      .from("registere")
+      .update({ club_logo_url: payload.clubLogoUrl.trim() })
+      .eq("id", payload.id.trim());
+
+    if (error) {
+      return Response.json({ error: error.message }, { status: 500 });
+    }
+
+    return Response.json({ ok: true }, { status: 200 });
+  } catch (error: unknown) {
+    const message =
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error &&
+      typeof error.message === "string"
+        ? error.message
+        : "Unexpected server error.";
+
+    return Response.json({ error: message }, { status: 500 });
+  }
+}

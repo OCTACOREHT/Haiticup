@@ -12,6 +12,13 @@ import {
   normalizeEmail,
   normalizeTrimmedValue,
 } from "@/lib/registration-validation";
+import {
+  compressImageFile,
+  readImageAsDataUrl,
+  uploadToStorage,
+  validateImageUpload,
+} from "@/lib/image-upload";
+import { buildBadgeId, buildTeamCode, type BadgeMemberType } from "@/lib/badges/utils";
 
 type PlayerRow = {
   id: number;
@@ -38,7 +45,6 @@ type StaffRow = {
 };
 
 type StaffField = "fullName" | "role" | "phoneNumber" | "email";
-type BadgeMemberType = "STAFF" | "PLAYER";
 type StatusTone = "info" | "success" | "error";
 
 const navLinks = [
@@ -109,50 +115,6 @@ const UPLOAD_TARGET_BYTES = 3.5 * 1024 * 1024;
 const inputClassName =
   "w-full rounded-md border border-[#004AD3]/20 bg-white px-3 py-2 text-sm text-[#004AD3] outline-none transition focus:border-[#004AD3] focus:ring-2 focus:ring-[#004AD3]/15";
 
-const readImageAsDataUrl = (
-  file: File,
-  onSuccess: (dataUrl: string) => void,
-  onError: () => void,
-) => {
-  const reader = new FileReader();
-
-  reader.onload = () => {
-    if (typeof reader.result === "string") {
-      onSuccess(reader.result);
-      return;
-    }
-    onError();
-  };
-
-  reader.onerror = () => onError();
-  reader.readAsDataURL(file);
-};
-
-const validateImageUpload = (file: File, label: string) => {
-  if (!file.type.startsWith("image/")) {
-    return `${label}: please upload a valid image file.`;
-  }
-
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return `${label}: image must be ${MAX_IMAGE_SIZE_LABEL} or less.`;
-  }
-
-  return null;
-};
-
-const toUpperAlphaNumeric = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-
-const buildTeamCode = (rawTeamName: string, registrationId: string) => {
-  const normalizedTeam = toUpperAlphaNumeric(rawTeamName).slice(0, 6).padEnd(6, "X");
-  const registrationChunk = toUpperAlphaNumeric(registrationId).slice(-4).padStart(4, "0");
-  return `${normalizedTeam}${registrationChunk}`;
-};
-
-const buildBadgeId = (memberType: BadgeMemberType, teamCode: string, serial: number) => {
-  const prefix = memberType === "STAFF" ? "STF" : "PLY";
-  return `${prefix}-${TOURNAMENT_YEAR}-${teamCode}-${String(serial).padStart(2, "0")}`;
-};
-
 const buildQrCodeDataUrl = (badgeId: string) => {
   const scanUrl = buildBadgeScanUrl({
     badgeId,
@@ -168,73 +130,6 @@ const buildQrCodeDataUrl = (badgeId: string) => {
       light: "#FFFFFFFF",
     },
   });
-};
-
-const compressImageFile = (file: File, maxBytes: number = UPLOAD_TARGET_BYTES): Promise<Blob> =>
-  new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const img = new window.Image();
-
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      const canvas = document.createElement("canvas");
-      let { width, height } = img;
-      const maxDim = 1600;
-      if (width > maxDim || height > maxDim) {
-        if (width >= height) {
-          height = Math.round((height / width) * maxDim);
-          width = maxDim;
-        } else {
-          width = Math.round((width / height) * maxDim);
-          height = maxDim;
-        }
-      }
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Canvas 2D context unavailable."));
-        return;
-      }
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0, width, height);
-
-      const tryQuality = (quality: number) => {
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              reject(new Error("Canvas compression failed."));
-              return;
-            }
-            if (blob.size <= maxBytes || quality <= 0.3) {
-              resolve(blob);
-            } else {
-              tryQuality(Math.max(quality - 0.1, 0.3));
-            }
-          },
-          "image/jpeg",
-          quality,
-        );
-      };
-
-      tryQuality(0.92);
-    };
-
-    img.onerror = () => reject(new Error("Failed to load image for compression."));
-    img.src = objectUrl;
-  });
-
-
-const uploadToStorage = async (blob: Blob | File, path: string): Promise<string> => {
-  const form = new FormData();
-  form.append("file", blob, path);
-  form.append("path", path);
-  const res = await fetch("/api/upload-photo", { method: "POST", body: form });
-  const json = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
-  if (!res.ok) throw new Error(json?.error || "Photo upload failed.");
-  if (!json?.url) throw new Error("No URL returned from photo upload.");
-  return json.url;
 };
 
 export default function RegisterPage() {
