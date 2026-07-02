@@ -1151,40 +1151,7 @@ export default function AdminPage() {
         return trimmed ? trimmed : "-";
       };
 
-      const rows: RosterRow[] = [];
-      let totalPlayers = 0;
-      let totalStaff = 0;
-
-      for (const team of selectedTeams) {
-        const teamPlayers = players.filter((p) => p.registereId === team.id).sort((a, b) => a.fullName.localeCompare(b.fullName));
-        const teamStaff = staff.filter((s) => s.registereId === team.id).sort((a, b) => a.fullName.localeCompare(b.fullName));
-
-        totalPlayers += teamPlayers.length;
-        totalStaff += teamStaff.length;
-
-        teamPlayers.forEach((player) => {
-          rows.push({
-            teamName: safe(team.teamName),
-            memberType: "PLAYER",
-            fullName: safe(player.fullName),
-            roleLabel: safe(player.position),
-            jerseyLabel: safe(player.jerseyNumber),
-            badgeId: safe(player.badgeId),
-          });
-        });
-
-        teamStaff.forEach((member) => {
-          rows.push({
-            teamName: safe(team.teamName),
-            memberType: "STAFF",
-            fullName: safe(member.fullName),
-            roleLabel: safe(member.role),
-            jerseyLabel: "-",
-            badgeId: safe(member.badgeId),
-          });
-        });
-      }
-
+      
       const pdfDoc = await PDFDocument.create();
       const normalFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -1258,25 +1225,152 @@ export default function AdminPage() {
       };
 
       const reportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-      const subtitle = teamId
-        ? `Official Team Roster - ${selectedTeams[0].teamName}`
-        : "Official Teams Roster";
-      const metaLine = `Generated: ${reportDate} | Teams: ${selectedTeams.length} | Players: ${totalPlayers} | Staff: ${totalStaff}`;
 
-      const drawHeader = (page: import("pdf-lib").PDFPage) => {
-        const logoTargetHeight = 42;
-        const logoScale = logoTargetHeight / logoImage.height;
-        const logoWidth = logoImage.width * logoScale;
-        const topY = pageHeight - marginTop;
-        const logoY = topY - logoTargetHeight;
-        page.drawImage(logoImage, { x: marginX, y: logoY, width: logoWidth, height: logoTargetHeight });
+      for (const team of selectedTeams) {
+        const teamPlayers = players.filter((p) => p.registereId === team.id).sort((a, b) => a.fullName.localeCompare(b.fullName));
+        const teamStaff = staff.filter((s) => s.registereId === team.id).sort((a, b) => a.fullName.localeCompare(b.fullName));
 
-        const titleX = marginX + logoWidth + 12;
-        page.drawText(subtitle, { x: titleX, y: topY - 22, size: 10.5, font: boldFont, color: lineTextColor });
-        page.drawText(metaLine, { x: titleX, y: topY - 36, size: 9, font: normalFont, color: rgb(0.35, 0.40, 0.48) });
+        const teamRows: RosterRow[] = [];
+        
+        teamPlayers.forEach((player) => {
+          teamRows.push({
+            teamName: safe(team.teamName),
+            memberType: "PLAYER",
+            fullName: safe(player.fullName),
+            roleLabel: safe(player.position),
+            jerseyLabel: safe(player.jerseyNumber),
+            badgeId: safe(player.badgeId),
+          });
+        });
 
-        return logoY - headerGap;
-      };
+        teamStaff.forEach((member) => {
+          teamRows.push({
+            teamName: safe(team.teamName),
+            memberType: "STAFF",
+            fullName: safe(member.fullName),
+            roleLabel: safe(member.role),
+            jerseyLabel: "-",
+            badgeId: safe(member.badgeId),
+          });
+        });
+
+        let teamLogoImage = null;
+        if (team.logoUrl) {
+          try {
+            const res = await fetch(team.logoUrl);
+            if (res.ok) {
+              const bytes = await res.arrayBuffer();
+              try {
+                teamLogoImage = await pdfDoc.embedPng(bytes);
+              } catch {
+                try {
+                  teamLogoImage = await pdfDoc.embedJpg(bytes);
+                } catch {
+                  console.warn("Could not embed team logo for", team.teamName);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn("Could not fetch team logo for", team.teamName);
+          }
+        }
+
+        const subtitle = `Official Team Roster - ${team.teamName}`;
+        const metaLine = `Generated: ${reportDate} | Players: ${teamPlayers.length} | Staff: ${teamStaff.length}`;
+
+        const drawHeader = (page: import("pdf-lib").PDFPage) => {
+          const logoTargetHeight = 42;
+          const logoScale = logoTargetHeight / logoImage.height;
+          const logoWidth = logoImage.width * logoScale;
+          const topY = pageHeight - marginTop;
+          const logoY = topY - logoTargetHeight;
+          page.drawImage(logoImage, { x: marginX, y: logoY, width: logoWidth, height: logoTargetHeight });
+
+          if (teamLogoImage) {
+            const tLogoScale = logoTargetHeight / teamLogoImage.height;
+            const tLogoWidth = teamLogoImage.width * tLogoScale;
+            page.drawImage(teamLogoImage, { x: pageWidth - marginX - tLogoWidth, y: logoY, width: tLogoWidth, height: logoTargetHeight });
+          }
+
+          const titleX = marginX + logoWidth + 12;
+          page.drawText(subtitle, { x: titleX, y: topY - 22, size: 10.5, font: boldFont, color: lineTextColor });
+          page.drawText(metaLine, { x: titleX, y: topY - 36, size: 9, font: normalFont, color: rgb(0.35, 0.40, 0.48) });
+
+          return logoY - headerGap;
+        };
+
+        let page = pdfDoc.addPage([pageWidth, pageHeight]);
+        let yTop = drawHeader(page);
+        drawTableHeader(page, yTop);
+        let yCursor = yTop - tableHeaderHeight;
+
+        if (teamRows.length === 0) {
+          page.drawText("No players or staff available for this team.", {
+            x: marginX + 4,
+            y: yCursor - 16,
+            size: 10,
+            font: normalFont,
+            color: rgb(0.43, 0.47, 0.55),
+          });
+        } else {
+          for (let i = 0; i < teamRows.length; i++) {
+            if (yCursor - rowHeight < marginBottom) {
+              page = pdfDoc.addPage([pageWidth, pageHeight]);
+              yTop = drawHeader(page);
+              drawTableHeader(page, yTop);
+              yCursor = yTop - tableHeaderHeight;
+            }
+
+            const row = teamRows[i];
+            const rowBottom = yCursor - rowHeight;
+            let x = marginX;
+            const values = [
+              String(i + 1),
+              row.teamName,
+              row.memberType,
+              row.fullName,
+              row.roleLabel,
+              row.jerseyLabel,
+              row.badgeId,
+            ];
+
+            for (let c = 0; c < columns.length; c++) {
+              const col = columns[c];
+              page.drawRectangle({
+                x,
+                y: rowBottom,
+                width: col.width,
+                height: rowHeight,
+                color: i % 2 === 0 ? rgb(1, 1, 1) : altRowColor,
+                borderColor: tableBorderColor,
+                borderWidth: 0.45,
+              });
+
+              const raw = values[c] ?? "-";
+              const maxTextWidth = col.width - 8;
+              const text = shorten(raw, maxTextWidth);
+              const textWidth = normalFont.widthOfTextAtSize(text, textSize);
+              const tx =
+                col.align === "right"
+                  ? x + col.width - 4 - textWidth
+                  : col.align === "center"
+                    ? x + (col.width - textWidth) / 2
+                    : x + 4;
+
+              page.drawText(text, {
+                x: tx,
+                y: rowBottom + (rowHeight - textSize) / 2 + 1,
+                size: textSize,
+                font: normalFont,
+                color: lineTextColor,
+              });
+
+              x += col.width;
+            }
+            yCursor -= rowHeight;
+          }
+        }
+      }
 
       const drawFooter = (page: import("pdf-lib").PDFPage, pageNum: number, totalPages: number) => {
         const label = `Page ${pageNum}/${totalPages}`;
@@ -1289,78 +1383,6 @@ export default function AdminPage() {
           color: rgb(0.45, 0.50, 0.58),
         });
       };
-
-      let page = pdfDoc.addPage([pageWidth, pageHeight]);
-      let yTop = drawHeader(page);
-      drawTableHeader(page, yTop);
-      let yCursor = yTop - tableHeaderHeight;
-
-      if (rows.length === 0) {
-        page.drawText("No players or staff available for this selection.", {
-          x: marginX + 4,
-          y: yCursor - 16,
-          size: 10,
-          font: normalFont,
-          color: rgb(0.43, 0.47, 0.55),
-        });
-      } else {
-        for (let i = 0; i < rows.length; i++) {
-          if (yCursor - rowHeight < marginBottom) {
-            page = pdfDoc.addPage([pageWidth, pageHeight]);
-            yTop = drawHeader(page);
-            drawTableHeader(page, yTop);
-            yCursor = yTop - tableHeaderHeight;
-          }
-
-          const row = rows[i];
-          const rowBottom = yCursor - rowHeight;
-          let x = marginX;
-          const values = [
-            String(i + 1),
-            row.teamName,
-            row.memberType,
-            row.fullName,
-            row.roleLabel,
-            row.jerseyLabel,
-            row.badgeId,
-          ];
-
-          for (let c = 0; c < columns.length; c++) {
-            const col = columns[c];
-            page.drawRectangle({
-              x,
-              y: rowBottom,
-              width: col.width,
-              height: rowHeight,
-              color: i % 2 === 0 ? rgb(1, 1, 1) : altRowColor,
-              borderColor: tableBorderColor,
-              borderWidth: 0.45,
-            });
-
-            const raw = values[c] ?? "-";
-            const maxTextWidth = col.width - 8;
-            const text = shorten(raw, maxTextWidth);
-            const textWidth = normalFont.widthOfTextAtSize(text, textSize);
-            const tx =
-              col.align === "right"
-                ? x + col.width - 4 - textWidth
-                : col.align === "center"
-                  ? x + (col.width - textWidth) / 2
-                  : x + 4;
-
-            page.drawText(text, {
-              x: tx,
-              y: rowBottom + (rowHeight - textSize) / 2 + 1,
-              size: textSize,
-              font: normalFont,
-              color: lineTextColor,
-            });
-            x += col.width;
-          }
-
-          yCursor -= rowHeight;
-        }
-      }
 
       const pages = pdfDoc.getPages();
       for (let i = 0; i < pages.length; i++) drawFooter(pages[i], i + 1, pages.length);
