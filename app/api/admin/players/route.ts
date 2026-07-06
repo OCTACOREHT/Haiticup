@@ -29,8 +29,8 @@ type UpdatePlayerPayload = {
   position: string;
   jerseyNumber: string;
   age: number;
-  photoUrl?: string;
-  photoSizeBytes?: number;
+  photoUrl?: string | null;
+  photoSizeBytes?: number | null;
 };
 
 type DeletePlayerPayload = {
@@ -183,21 +183,26 @@ export async function PATCH(request: Request) {
     }
 
     if (payload.photoUrl !== undefined) {
-      if (!isNonEmptyString(payload.photoUrl)) {
-        return Response.json({ error: "photoUrl cannot be empty." }, { status: 400 });
-      }
+      if (payload.photoUrl === null || payload.photoUrl === "") {
+        updatePayload.photo_url = null;
+        updatePayload.photo_size_bytes = null;
+      } else {
+        if (!isNonEmptyString(payload.photoUrl)) {
+          return Response.json({ error: "photoUrl cannot be empty." }, { status: 400 });
+        }
 
-      if (
-        typeof payload.photoSizeBytes !== "number" ||
-        !Number.isFinite(payload.photoSizeBytes) ||
-        payload.photoSizeBytes <= 0 ||
-        payload.photoSizeBytes > MAX_IMAGE_SIZE_BYTES
-      ) {
-        return Response.json({ error: "photoSizeBytes must be between 1 byte and 5 MB." }, { status: 400 });
-      }
+        if (
+          typeof payload.photoSizeBytes !== "number" ||
+          !Number.isFinite(payload.photoSizeBytes) ||
+          payload.photoSizeBytes <= 0 ||
+          payload.photoSizeBytes > MAX_IMAGE_SIZE_BYTES
+        ) {
+          return Response.json({ error: "photoSizeBytes must be between 1 byte and 5 MB." }, { status: 400 });
+        }
 
-      updatePayload.photo_url = payload.photoUrl;
-      updatePayload.photo_size_bytes = Math.trunc(payload.photoSizeBytes);
+        updatePayload.photo_url = payload.photoUrl;
+        updatePayload.photo_size_bytes = Math.trunc(payload.photoSizeBytes);
+      }
     }
 
     const supabase = getServiceSupabaseClient();

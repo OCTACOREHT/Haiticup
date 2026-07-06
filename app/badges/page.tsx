@@ -6,7 +6,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { canRenderBadgeMember } from "@/lib/badges/admin-badge-members";
-import { toCanvasSafeImageSrc } from "@/lib/badges/canvas-image";
+import { toCanvasSafeImageSrc, generateSilhouetteDataUrl } from "@/lib/badges/canvas-image";
 import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
 import { clearAdminServerSession } from "@/lib/supabase/admin-session-client";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -20,7 +20,7 @@ type BadgeMember = {
   fullName: string;
   title: string;
   subtitle: string;
-  photoUrl: string;
+  photoUrl: string | null;
   qrCodeDataUrl: string | null;
   qrPayload: Record<string, unknown> | null;
 };
@@ -150,47 +150,55 @@ const buildPrintableQrDataUrl = async (member: BadgeMember): Promise<string> => 
   }
 };
 
-const createCircularPhotoDataUrl = async (sourceDataUrl: string, size = 900): Promise<string> => {
-  const image = await loadImageElement(sourceDataUrl);
-  const canvas = document.createElement("canvas");
-  canvas.width = size; canvas.height = size;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Canvas context is unavailable.");
-  context.clearRect(0, 0, size, size);
-  const sourceWidth = image.width || 1;
-  const sourceHeight = image.height || 1;
-  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-  let cropSize = Math.min(sourceWidth, sourceHeight);
-  let cropX = (sourceWidth - cropSize) / 2;
-  let cropY = (sourceHeight - cropSize) / 2;
-  type FaceDetectorLike = { detect: (image: CanvasImageSource) => Promise<Array<{ boundingBox: { x: number; y: number; width: number; height: number } }>> };
-  const maybeFaceDetector = (globalThis as { FaceDetector?: new (options?: Record<string, unknown>) => FaceDetectorLike }).FaceDetector;
-  if (maybeFaceDetector) {
-    try {
-      const detector = new maybeFaceDetector({ maxDetectedFaces: 1, fastMode: true });
-      const faces = await detector.detect(image);
-      const primaryFace = faces?.[0];
-      if (primaryFace?.boundingBox) {
-        const face = primaryFace.boundingBox;
-        const faceCenterX = face.x + face.width / 2;
-        const faceCenterY = face.y + face.height * 0.62;
-        cropSize = Math.min(Math.max(face.width * 2.6, face.height * 3), Math.min(sourceWidth, sourceHeight));
-        cropX = faceCenterX - cropSize / 2;
-        cropY = faceCenterY - cropSize / 2;
-        cropX = clamp(cropX, 0, sourceWidth - cropSize);
-        cropY = clamp(cropY, 0, sourceHeight - cropSize);
-      }
-    } catch { /* fallback */ }
+const createCircularPhotoDataUrl = async (sourceDataUrl: string | null | undefined, size = 900): Promise<string> => {
+  if (!sourceDataUrl || !sourceDataUrl.trim()) {
+    return generateSilhouetteDataUrl(size);
   }
-  if (!maybeFaceDetector) cropY = clamp(cropY + cropSize * 0.08, 0, sourceHeight - cropSize);
-  context.save();
-  context.beginPath();
-  context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  context.closePath();
-  context.clip();
-  context.drawImage(image, cropX, cropY, cropSize, cropSize, 0, 0, size, size);
-  context.restore();
-  return canvas.toDataURL("image/png");
+  try {
+    const image = await loadImageElement(sourceDataUrl);
+    const canvas = document.createElement("canvas");
+    canvas.width = size; canvas.height = size;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas context is unavailable.");
+    context.clearRect(0, 0, size, size);
+    const sourceWidth = image.width || 1;
+    const sourceHeight = image.height || 1;
+    const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+    let cropSize = Math.min(sourceWidth, sourceHeight);
+    let cropX = (sourceWidth - cropSize) / 2;
+    let cropY = (sourceHeight - cropSize) / 2;
+    type FaceDetectorLike = { detect: (image: CanvasImageSource) => Promise<Array<{ boundingBox: { x: number; y: number; width: number; height: number } }>> };
+    const maybeFaceDetector = (globalThis as { FaceDetector?: new (options?: Record<string, unknown>) => FaceDetectorLike }).FaceDetector;
+    if (maybeFaceDetector) {
+      try {
+        const detector = new maybeFaceDetector({ maxDetectedFaces: 1, fastMode: true });
+        const faces = await detector.detect(image);
+        const primaryFace = faces?.[0];
+        if (primaryFace?.boundingBox) {
+          const face = primaryFace.boundingBox;
+          const faceCenterX = face.x + face.width / 2;
+          const faceCenterY = face.y + face.height * 0.62;
+          cropSize = Math.min(Math.max(face.width * 2.6, face.height * 3), Math.min(sourceWidth, sourceHeight));
+          cropX = faceCenterX - cropSize / 2;
+          cropY = faceCenterY - cropSize / 2;
+          cropX = clamp(cropX, 0, sourceWidth - cropSize);
+          cropY = clamp(cropY, 0, sourceHeight - cropSize);
+        }
+      } catch { /* fallback */ }
+    }
+    if (!maybeFaceDetector) cropY = clamp(cropY + cropSize * 0.08, 0, sourceHeight - cropSize);
+    context.save();
+    context.beginPath();
+    context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    context.closePath();
+    context.clip();
+    context.drawImage(image, cropX, cropY, cropSize, cropSize, 0, 0, size, size);
+    context.restore();
+    return canvas.toDataURL("image/png");
+  } catch (error) {
+    console.error("Failed to load player image, using silhouette:", error);
+    return generateSilhouetteDataUrl(size);
+  }
 };
 
 const drawStrongBlackText = ({ page, text, x, y, size, font, color = rgb(0, 0, 0) }: {
@@ -269,7 +277,7 @@ function BadgesPageContent() {
         if (!montserratResult.ok || !montserratBoldResult.ok || !montserratSemiBoldResult.ok) throw new Error("Fonts introuvables.");
         const combinedMembers: BadgeMember[] = (membersResult?.members ?? [])
           .filter(canRenderBadgeMember)
-          .map((row) => ({ key: row.key, memberType: row.memberType, registereId: row.registereId, teamName: row.teamName, badgeId: row.badgeId, fullName: row.fullName, title: row.title, subtitle: row.subtitle, photoUrl: row.photoUrl as string, qrCodeDataUrl: row.qrCodeDataUrl, qrPayload: row.qrPayload }));
+          .map((row) => ({ key: row.key, memberType: row.memberType, registereId: row.registereId, teamName: row.teamName, badgeId: row.badgeId, fullName: row.fullName, title: row.title, subtitle: row.subtitle, photoUrl: row.photoUrl, qrCodeDataUrl: row.qrCodeDataUrl, qrPayload: row.qrPayload }));
         if (!isMounted) return;
         setMembers(combinedMembers);
         setTemplatePdfBytes(await templateResult.arrayBuffer());

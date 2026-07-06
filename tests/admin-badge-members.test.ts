@@ -13,7 +13,7 @@ test("canRenderBadgeMember allows badges without stored QR data", () => {
   );
 });
 
-test("canRenderBadgeMember rejects rows without a badge id or photo", () => {
+test("canRenderBadgeMember rejects rows without a badge id", () => {
   assert.equal(
     canRenderBadgeMember({
       badgeId: null,
@@ -21,12 +21,14 @@ test("canRenderBadgeMember rejects rows without a badge id or photo", () => {
     }),
     false,
   );
+});
 
+test("canRenderBadgeMember allows rows with a badge id but without photo", () => {
   assert.equal(
     canRenderBadgeMember({
       badgeId: "STF-2026-GRNPAN0001",
       photoUrl: null,
     }),
-    false,
+    true,
   );
 });

@@ -27,10 +27,11 @@ import {
   TargetIcon,
   Trash2Icon,
   UsersRoundIcon,
+  UserIcon,
   XIcon,
 } from "lucide-react";
 import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
-import { toCanvasSafeImageSrc } from "@/lib/badges/canvas-image";
+import { toCanvasSafeImageSrc, generateSilhouetteDataUrl } from "@/lib/badges/canvas-image";
 import { clearAdminServerSession } from "@/lib/supabase/admin-session-client";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { compressImageFile, readImageAsDataUrl, uploadToStorage, validateImageUpload } from "@/lib/image-upload";
@@ -125,42 +126,51 @@ const buildQrDataUrl = async (member: AdminBadgeMember): Promise<string> => {
     if (member.qrCodeDataUrl) {
       return normalizeQr(member.qrCodeDataUrl);
     }
-
     throw new Error("QR code unavailable for this badge.");
   }
 };
 
-const circularPhoto = async (src: string, size = 900): Promise<string> => {
-  const img = await loadImg(src);
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  ctx.clearRect(0, 0, size, size);
-  const sw = img.width || 1, sh = img.height || 1;
-  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-  let cropSize = Math.min(sw, sh);
-  let cropX = (sw - cropSize) / 2;
-  let cropY = (sh - cropSize) / 2;
-  type FD = { detect: (el: CanvasImageSource) => Promise<Array<{ boundingBox: { x: number; y: number; width: number; height: number } }>> };
-  const FaceDetector = (globalThis as { FaceDetector?: new (o?: Record<string, unknown>) => FD }).FaceDetector;
-  if (FaceDetector) {
-    try {
-      const d = new FaceDetector({ maxDetectedFaces: 1, fastMode: true });
-      const faces = await d.detect(img);
-      const f = faces?.[0]?.boundingBox;
-      if (f) {
-        const cx = f.x + f.width / 2, cy = f.y + f.height * 0.62;
-        cropSize = Math.min(Math.max(f.width * 2.6, f.height * 3), Math.min(sw, sh));
-        cropX = clamp(cx - cropSize / 2, 0, sw - cropSize);
-        cropY = clamp(cy - cropSize / 2, 0, sh - cropSize);
-      }
-    } catch { /**/ }
-  } else {
-    cropY = clamp(cropY + cropSize * 0.08, 0, sh - cropSize);
+const stageOptions = ["GROUP", "ROUND_OF_16", "QUARTERFINAL", "SEMIFINAL", "THIRD_PLACE", "FINAL"];
+
+const circularPhoto = async (src: string | null | undefined, size = 900): Promise<string> => {
+  if (!src || !src.trim()) {
+    return generateSilhouetteDataUrl(size);
   }
-  ctx.save(); ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip();
-  ctx.drawImage(img, cropX, cropY, cropSize, cropSize, 0, 0, size, size); ctx.restore();
-  return canvas.toDataURL("image/png");
+  try {
+    const img = await loadImg(src);
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, size, size);
+    const sw = img.width || 1, sh = img.height || 1;
+    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+    let cropSize = Math.min(sw, sh);
+    let cropX = (sw - cropSize) / 2;
+    let cropY = (sh - cropSize) / 2;
+    type FD = { detect: (el: CanvasImageSource) => Promise<Array<{ boundingBox: { x: number; y: number; width: number; height: number } }>> };
+    const FaceDetector = (globalThis as { FaceDetector?: new (o?: Record<string, unknown>) => FD }).FaceDetector;
+    if (FaceDetector) {
+      try {
+        const d = new FaceDetector({ maxDetectedFaces: 1, fastMode: true });
+        const faces = await d.detect(img);
+        const f = faces?.[0]?.boundingBox;
+        if (f) {
+          const cx = f.x + f.width / 2, cy = f.y + f.height * 0.62;
+          cropSize = Math.min(Math.max(f.width * 2.6, f.height * 3), Math.min(sw, sh));
+          cropX = clamp(cx - cropSize / 2, 0, sw - cropSize);
+          cropY = clamp(cy - cropSize / 2, 0, sh - cropSize);
+        }
+      } catch { /**/ }
+    } else {
+      cropY = clamp(cropY + cropSize * 0.08, 0, sh - cropSize);
+    }
+    ctx.save(); ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip();
+    ctx.drawImage(img, cropX, cropY, cropSize, cropSize, 0, 0, size, size); ctx.restore();
+    return canvas.toDataURL("image/png");
+  } catch (err) {
+    console.error("Failed to load player image for direct badge download, using silhouette:", err);
+    return generateSilhouetteDataUrl(size);
+  }
 };
 
 const fitText = (font: import("pdf-lib").PDFFont, text: string, start: number, min: number, maxW: number) => {
@@ -169,12 +179,16 @@ const fitText = (font: import("pdf-lib").PDFFont, text: string, start: number, m
   return Math.max(s, min);
 };
 
-// ? Constants ?
-
-const stageOptions = ["GROUP", "ROUND_OF_16", "QUARTERFINAL", "SEMIFINAL", "THIRD_PLACE", "FINAL"];
 const ADMIN_IDLE_TIMEOUT_MS = 7 * 60 * 1000;
 const MAX_PLAYER_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_PLAYER_PHOTO_SIZE_LABEL = "5 MB";
+
+const getInitials = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
 
 const sectionItems: Array<{ id: AdminSection; label: string; icon: React.ReactNode }> = [
   { id: "overview", label: "Dashboard", icon: <LayoutDashboardIcon className="size-4" /> },
@@ -510,8 +524,8 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
         position: string;
         jerseyNumber: string;
         age: number;
-        photoUrl?: string;
-        photoSizeBytes?: number;
+        photoUrl?: string | null;
+        photoSizeBytes?: number | null;
       } = {
         id: player.id,
         registereId,
@@ -522,9 +536,9 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
         age: ageNum,
       };
 
-      if (photoDataUrl && photoSizeBytes) {
-        payload.photoUrl = photoDataUrl;
-        payload.photoSizeBytes = photoSizeBytes;
+      if (photoDataUrl !== null) {
+        payload.photoUrl = photoDataUrl === "" ? null : photoDataUrl;
+        payload.photoSizeBytes = photoDataUrl === "" ? null : photoSizeBytes;
       }
 
       const res = await fetch("/api/admin/players", {
@@ -553,12 +567,28 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
                 {photoPreview ? (
                   <Image src={photoPreview} alt={fullName} width={96} height={96} unoptimized className="size-full object-cover" />
                 ) : (
-                  <span className="text-xs font-bold text-gray-400">{fullName.slice(0, 2).toUpperCase()}</span>
+                  <UserIcon className="size-1/2 text-gray-400" />
                 )}
               </div>
-              <div className="w-full">
+              <div className="w-full flex flex-col gap-2">
                 <input type="file" accept="image/*" className={inputCls} onChange={handlePhotoChange} />
-                <p className="mt-1 text-[11px] text-gray-500">JPG/PNG, max {MAX_PLAYER_PHOTO_SIZE_LABEL}.</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-gray-500">JPG/PNG, max {MAX_PLAYER_PHOTO_SIZE_LABEL}.</p>
+                  {photoPreview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhotoPreview(null);
+                        setPhotoDataUrl("");
+                        setPhotoSizeBytes(null);
+                        setPhotoFileName("");
+                      }}
+                      className="text-xs font-semibold text-red-600 hover:text-red-800 transition-colors cursor-pointer"
+                    >
+                      Supprimer la photo
+                    </button>
+                  )}
+                </div>
                 {photoFileName ? <p className="mt-1 truncate text-[11px] text-gray-600">{photoFileName}</p> : null}
               </div>
             </div>
@@ -831,6 +861,7 @@ export default function AdminPage() {
   const [playersData, setPlayersData] = useState<PlayerFull[] | null>(null);
   const [playerTeams, setPlayerTeams] = useState<Array<{ id: string; teamName: string; clubLogoUrl: string | null }>>([]);
   const [playerSearch, setPlayerSearch] = useState("");
+  const [badgeSearch, setBadgeSearch] = useState("");
   const [editingPlayer, setEditingPlayer] = useState<PlayerFull | null>(null);
   const [addingPlayer, setAddingPlayer] = useState(false);
   const [editingTeamLogo, setEditingTeamLogo] = useState<Team | null>(null);
@@ -954,77 +985,79 @@ export default function AdminPage() {
     return badgeResourcesRef.current;
   };
 
+  // ? Badge PDF filling helper ?
+
+  const fillBadgeDocument = async (member: AdminBadgeMember, template: ArrayBuffer, bold: ArrayBuffer, semiBold: ArrayBuffer) => {
+    const pdfDoc = await PDFDocument.load(template);
+    pdfDoc.registerFontkit(fontkit);
+    const page = pdfDoc.getPages()[0];
+    const { width, height } = page.getSize();
+    const boldFont = await pdfDoc.embedFont(bold, { subset: false });
+    const semiBoldFont = await pdfDoc.embedFont(semiBold, { subset: false });
+    const L = defaultBadgeLayout;
+    const badgeBlue = rgb(0.03, 0.07, 0.36);
+
+    const photoData = await circularPhoto(member.photoUrl);
+    const qrData = await buildQrDataUrl(member);
+    const photoImg = await pdfDoc.embedPng(dataUrlToUint8Array(photoData));
+    const qrImg = qrData.startsWith("data:image/jpeg") ? await pdfDoc.embedJpg(dataUrlToUint8Array(qrData)) : await pdfDoc.embedPng(dataUrlToUint8Array(qrData));
+
+    const ps = width * L.photoSize, px = width * L.photoX, py = height - height * L.photoYTop - ps;
+    const qs = width * L.qrSize, qx = width * L.qrX, qy = height - height * L.qrYTop - qs;
+    page.drawImage(photoImg, { x: px, y: py, width: ps, height: ps });
+    page.drawImage(qrImg, { x: qx, y: qy, width: qs, height: qs });
+
+    const resolve = (text: string, sp: number, mwp: number, font: import("pdf-lib").PDFFont, ms = 0.55) => {
+      const s = fitText(font, text, width * sp, Math.max(7, width * sp * ms), width * mwp);
+      return { s, lh: font.heightAtSize(s), tw: font.widthOfTextAtSize(text, s) };
+    };
+    const drawCentered = (text: string, font: import("pdf-lib").PDFFont, topPx: number, s: number, lh: number, tw: number) => {
+      page.drawText(text, { x: width * 0.5 - tw / 2, y: height - topPx - lh, size: s, font, color: badgeBlue });
+      return topPx + lh;
+    };
+
+    const typeText = member.memberType.toUpperCase();
+    const nameText = member.fullName;
+    const roleText = member.subtitle || member.title;
+    const idText = `ID N : ${member.badgeId}`;
+    const inter = width * 0.0045, gap = width * 0.006;
+    const nameTop = height * L.nameYTop;
+    const typeInfo = resolve(typeText, 0.038, 0.5, boldFont, 0.7);
+    drawCentered(typeText, boldFont, nameTop - typeInfo.lh - gap, typeInfo.s, typeInfo.lh, typeInfo.tw);
+    const nameInfo = resolve(nameText, L.nameSize, 0.78, boldFont, 0.42);
+    const afterName = drawCentered(nameText, boldFont, nameTop, nameInfo.s, nameInfo.lh, nameInfo.tw);
+    const roleInfo = resolve(roleText, L.titleSize, 0.78, semiBoldFont, 0.5);
+    const afterRole = drawCentered(roleText, semiBoldFont, afterName + inter, roleInfo.s, roleInfo.lh, roleInfo.tw);
+    const idInfo = resolve(idText, L.idSize, 0.88, semiBoldFont, 0.42);
+    drawCentered(idText, semiBoldFont, afterRole + inter, idInfo.s, idInfo.lh, idInfo.tw);
+
+    const scanText = "SCAN ME";
+    const scanS = fitText(boldFont, scanText, width * 0.052, width * 0.04, qs + width * 0.12);
+    page.drawText(scanText, { x: qx + qs / 2 - boldFont.widthOfTextAtSize(scanText, scanS) / 2, y: qy - width * 0.055, size: scanS, font: boldFont, color: badgeBlue });
+    const validText = "VALID UNTIL: 12/2026";
+    const validS = width * 0.03;
+    page.drawText(validText, { x: qx + qs / 2 - semiBoldFont.widthOfTextAtSize(validText, validS) / 2, y: qy - width * 0.11, size: validS, font: semiBoldFont, color: badgeBlue });
+
+    const p2 = pdfDoc.getPages()[1];
+    if (p2) {
+      const { width: w2, height: h2 } = p2.getSize();
+      const wt = "www.granpanpannationscup.com";
+      const ws = fitText(boldFont, wt, w2 * 0.028, w2 * 0.02, w2 * 0.82);
+      p2.drawText(wt, { x: w2 / 2 - boldFont.widthOfTextAtSize(wt, ws) / 2, y: h2 - h2 * 0.66 - boldFont.heightAtSize(ws), size: ws, font: boldFont, color: badgeBlue });
+    }
+    
+    return pdfDoc;
+  };
+
   // ? Direct badge download ?
 
   const handleDirectBadgeDownload = async (memberKey: string) => {
     const member = badgeMembers.find((m) => m.key === memberKey);
     if (!member) return;
-    if (!member.photoUrl) {
-      setStatusMessage("Données incomplètes pour ce badge (photo manquante).");
-      setStatusTone("error");
-      return;
-    }
     setDownloadingBadgeKey(memberKey);
     try {
       const { template, bold, semiBold } = await loadBadgeResources();
-      const pdfDoc = await PDFDocument.load(template);
-      pdfDoc.registerFontkit(fontkit);
-      const page = pdfDoc.getPages()[0];
-      const { width, height } = page.getSize();
-      const boldFont = await pdfDoc.embedFont(bold, { subset: false });
-      const semiBoldFont = await pdfDoc.embedFont(semiBold, { subset: false });
-      const L = defaultBadgeLayout;
-      const badgeBlue = rgb(0.03, 0.07, 0.36);
-
-      const photoData = await circularPhoto(member.photoUrl);
-      const qrData = await buildQrDataUrl(member);
-      const photoImg = await pdfDoc.embedPng(dataUrlToUint8Array(photoData));
-      const qrImg = qrData.startsWith("data:image/jpeg") ? await pdfDoc.embedJpg(dataUrlToUint8Array(qrData)) : await pdfDoc.embedPng(dataUrlToUint8Array(qrData));
-
-      const ps = width * L.photoSize, px = width * L.photoX, py = height - height * L.photoYTop - ps;
-      const qs = width * L.qrSize, qx = width * L.qrX, qy = height - height * L.qrYTop - qs;
-      page.drawImage(photoImg, { x: px, y: py, width: ps, height: ps });
-      page.drawImage(qrImg, { x: qx, y: qy, width: qs, height: qs });
-
-      const resolve = (text: string, sp: number, mwp: number, font: import("pdf-lib").PDFFont, ms = 0.55) => {
-        const s = fitText(font, text, width * sp, Math.max(7, width * sp * ms), width * mwp);
-        return { s, lh: font.heightAtSize(s), tw: font.widthOfTextAtSize(text, s) };
-      };
-      const drawCentered = (text: string, font: import("pdf-lib").PDFFont, topPx: number, s: number, lh: number, tw: number) => {
-        page.drawText(text, { x: width * 0.5 - tw / 2, y: height - topPx - lh, size: s, font, color: badgeBlue });
-        return topPx + lh;
-      };
-
-      const typeText = member.memberType.toUpperCase();
-      const nameText = member.fullName;
-      const roleText = member.subtitle || member.title;
-      const idText = `ID N : ${member.badgeId}`;
-      const inter = width * 0.0045, gap = width * 0.006;
-      const nameTop = height * L.nameYTop;
-      const typeInfo = resolve(typeText, 0.038, 0.5, boldFont, 0.7);
-      drawCentered(typeText, boldFont, nameTop - typeInfo.lh - gap, typeInfo.s, typeInfo.lh, typeInfo.tw);
-      const nameInfo = resolve(nameText, L.nameSize, 0.78, boldFont, 0.42);
-      const afterName = drawCentered(nameText, boldFont, nameTop, nameInfo.s, nameInfo.lh, nameInfo.tw);
-      const roleInfo = resolve(roleText, L.titleSize, 0.78, semiBoldFont, 0.5);
-      const afterRole = drawCentered(roleText, semiBoldFont, afterName + inter, roleInfo.s, roleInfo.lh, roleInfo.tw);
-      const idInfo = resolve(idText, L.idSize, 0.88, semiBoldFont, 0.42);
-      drawCentered(idText, semiBoldFont, afterRole + inter, idInfo.s, idInfo.lh, idInfo.tw);
-
-      const scanText = "SCAN ME";
-      const scanS = fitText(boldFont, scanText, width * 0.052, width * 0.04, qs + width * 0.12);
-      page.drawText(scanText, { x: qx + qs / 2 - boldFont.widthOfTextAtSize(scanText, scanS) / 2, y: qy - width * 0.055, size: scanS, font: boldFont, color: badgeBlue });
-      const validText = "VALID UNTIL: 12/2026";
-      const validS = width * 0.03;
-      page.drawText(validText, { x: qx + qs / 2 - semiBoldFont.widthOfTextAtSize(validText, validS) / 2, y: qy - width * 0.11, size: validS, font: semiBoldFont, color: badgeBlue });
-
-      const p2 = pdfDoc.getPages()[1];
-      if (p2) {
-        const { width: w2, height: h2 } = p2.getSize();
-        const wt = "www.granpanpannationscup.com";
-        const ws = fitText(boldFont, wt, w2 * 0.028, w2 * 0.02, w2 * 0.82);
-        p2.drawText(wt, { x: w2 / 2 - boldFont.widthOfTextAtSize(wt, ws) / 2, y: h2 - h2 * 0.66 - boldFont.heightAtSize(ws), size: ws, font: boldFont, color: badgeBlue });
-      }
-
+      const pdfDoc = await fillBadgeDocument(member, template, bold, semiBold);
       const bytes = await pdfDoc.save();
       const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -1036,6 +1069,68 @@ export default function AdminPage() {
       setStatusTone("error");
     } finally {
       setDownloadingBadgeKey(null);
+    }
+  };
+
+  const handleDownloadTeamBadges = async (teamId: string, teamName: string) => {
+    const teamMembers = badgeMembers.filter(m => m.registereId === teamId);
+    if (teamMembers.length === 0) {
+      setStatusMessage("Aucun badge disponible pour cette équipe.");
+      setStatusTone("info");
+      return;
+    }
+    setDownloadingBadgeKey(`team-${teamId}`);
+    try {
+      const { template, bold, semiBold } = await loadBadgeResources();
+      const finalPdf = await PDFDocument.create();
+
+      for (const member of teamMembers) {
+        const doc = await fillBadgeDocument(member, template, bold, semiBold);
+        const pageCount = doc.getPages().length;
+        const indices = Array.from({ length: pageCount }, (_, i) => i);
+        const copiedPages = await finalPdf.copyPages(doc, indices);
+        copiedPages.forEach(p => finalPdf.addPage(p));
+      }
+
+      const bytes = await finalPdf.save();
+      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `Badges_${teamName.replace(/\s+/g, "_")}.pdf`; a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      setStatusMessage(err instanceof Error ? err.message : "Erreur de génération des badges de l'équipe.");
+      setStatusTone("error");
+    } finally {
+      setDownloadingBadgeKey(null);
+    }
+  };
+
+  const handleDeleteMemberPhoto = async (memberKey: string, fullName: string) => {
+    const confirmed = window.confirm(`Supprimer la photo de ${fullName} ?`);
+    if (!confirmed) return;
+    setIsSaving(true);
+    setStatusMessage("Suppression de la photo...");
+    setStatusTone("info");
+    try {
+      const res = await fetch("/api/admin/tournament", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "DELETE_MEMBER_PHOTO", memberKey }),
+      });
+      const result = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(result?.error || "La suppression a échoué.");
+      
+      setBadgeMembers((prev) => prev.map(m => m.key === memberKey ? { ...m, photoUrl: null } : m));
+      setPlayersData((prev) => prev ? prev.map(p => `player-${p.id}` === memberKey ? { ...p, photoUrl: null, photoSizeBytes: null } : p) : null);
+
+      setStatusMessage("Photo supprimée avec succès.");
+      setStatusTone("success");
+    } catch (err: unknown) {
+      setStatusMessage(err instanceof Error ? err.message : "Erreur de suppression.");
+      setStatusTone("error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1746,7 +1841,7 @@ export default function AdminPage() {
                           <button type="button" onClick={() => setExpandedTeamIds((prev) => { const n = new Set(prev); if (isExp) { n.delete(team.id); } else { n.add(team.id); } return n; })} className="flex flex-1 items-center justify-between rounded-lg px-2 py-1.5 hover:bg-gray-50 transition-colors cursor-pointer">
                             <div className="flex items-center gap-3">
                               <div className="flex size-8 items-center justify-center overflow-hidden rounded border border-gray-200 bg-gray-50">
-                                {team.logoUrl ? <img src={team.logoUrl} alt="" className="size-full object-cover" /> : <span className="text-[10px] font-bold text-gray-400">{team.teamName.slice(0, 2).toUpperCase()}</span>}
+                                {team.logoUrl ? <img src={team.logoUrl} alt="" className="size-full object-cover" /> : <span className="text-[10px] font-bold text-gray-400">{getInitials(team.teamName)}</span>}
                               </div>
                               <span className="font-semibold text-gray-900">{team.teamName}</span>
                               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{tp.length} joueurs · {ts.length} staff</span>
@@ -1767,12 +1862,24 @@ export default function AdminPage() {
 
                         {isExp && (
                           <div className="border-t border-gray-100 bg-gray-50/50">
+                            <div className="px-5 py-4 flex items-center justify-between border-b border-gray-200 bg-white">
+                              <h4 className="font-semibold text-gray-900">Membres de l'équipe</h4>
+                              <button
+                                type="button"
+                                onClick={() => void handleDownloadTeamBadges(team.id, team.teamName)}
+                                disabled={downloadingBadgeKey === `team-${team.id}`}
+                                className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-colors cursor-pointer"
+                              >
+                                {downloadingBadgeKey === `team-${team.id}` ? <Spinner /> : <DownloadIcon className="size-3.5" />}
+                                Télécharger tous les badges (PDF)
+                              </button>
+                            </div>
                             {tp.length > 0 && (
                               <div>
                                 <div className="px-5 py-2 border-b border-gray-100"><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Joueurs ({tp.length})</p></div>
                                 <div className="overflow-x-auto">
                                   <table className="min-w-full">
-                                    <thead><tr><th className={thCls}>#</th><th className={thCls}>Nom</th><th className={thCls}>Position</th><th className={thCls}>Maillot</th><th className={thCls}>Badge ID</th><th className={thCls}>Visualiser</th><th className={thCls}>Télécharger</th></tr></thead>
+                                    <thead><tr><th className={thCls}>#</th><th className={thCls}>Nom / Photo</th><th className={thCls}>Position</th><th className={thCls}>Maillot</th><th className={thCls}>Badge ID</th><th className={thCls} style={{ minWidth: "120px" }}>Actions</th></tr></thead>
                                     <tbody className="divide-y divide-gray-100">
                                       {tp.map((player, idx) => {
                                         const member = badgeMembers.find((m) => m.badgeId === player.badgeId);
@@ -1780,24 +1887,39 @@ export default function AdminPage() {
                                         return (
                                           <tr key={player.id} className="hover:bg-white">
                                             <td className={`${tdCls} text-gray-400`}>{idx + 1}</td>
-                                            <td className={`${tdCls} font-medium text-gray-900`}>{player.fullName}</td>
+                                            <td className={tdCls}>
+                                              <div className="flex items-center gap-2.5">
+                                                <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 border border-gray-200">
+                                                  {member?.photoUrl ? (
+                                                    <img src={member.photoUrl} alt="" className="size-full object-cover" />
+                                                  ) : (
+                                                    <UserIcon className="size-4 text-gray-400" />
+                                                  )}
+                                                </div>
+                                                <span className="font-medium text-gray-900">{player.fullName}</span>
+                                              </div>
+                                            </td>
                                             <td className={tdCls}>{player.position}</td>
                                             <td className={tdCls}>{player.jerseyNumber}</td>
                                             <td className={`${tdCls} font-mono text-xs text-gray-400`}>{player.badgeId ?? "—"}</td>
                                             <td className={tdCls}>
-                                              {member ? (
-                                                <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex size-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Visualiser le badge">
-                                                  <FileTextIcon className="size-3.5" />
-                                                </button>
-                                              ) : <span className="text-xs text-gray-300">—</span>}
-                                            </td>
-                                            <td className={tdCls}>
-                                              {member ? (
-                                                <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex items-center gap-1 rounded-lg bg-green-50 border border-green-200 px-2.5 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer" title="Télécharger le badge PDF">
-                                                  {isDl ? <Spinner /> : <DownloadIcon className="size-3" />}
-                                                  {isDl ? "..." : "PDF"}
-                                                </button>
-                                              ) : <span className="text-xs text-gray-300">—</span>}
+                                              <div className="flex items-center gap-1.5">
+                                                {member ? (
+                                                  <>
+                                                    <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex size-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Visualiser le badge">
+                                                      <FileTextIcon className="size-3.5" />
+                                                    </button>
+                                                    <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex size-7 items-center justify-center rounded-lg bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer" title="Télécharger le badge PDF">
+                                                      {isDl ? <Spinner /> : <DownloadIcon className="size-3.5" />}
+                                                    </button>
+                                                    {member.photoUrl && (
+                                                      <button type="button" onClick={() => void handleDeleteMemberPhoto(member.key, player.fullName)} className="flex size-7 items-center justify-center rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors cursor-pointer" title="Supprimer la photo">
+                                                        <Trash2Icon className="size-3.5" />
+                                                      </button>
+                                                    )}
+                                                  </>
+                                                ) : <span className="text-xs text-gray-300">—</span>}
+                                              </div>
                                             </td>
                                           </tr>
                                         );
@@ -1812,7 +1934,7 @@ export default function AdminPage() {
                                 <div className="px-5 py-2 border-t border-b border-gray-100"><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Staff ({ts.length})</p></div>
                                 <div className="overflow-x-auto">
                                   <table className="min-w-full">
-                                    <thead><tr><th className={thCls}>#</th><th className={thCls}>Nom</th><th className={thCls}>Rôle</th><th className={thCls}>Badge ID</th><th className={thCls}>Visualiser</th><th className={thCls}>Télécharger</th></tr></thead>
+                                    <thead><tr><th className={thCls}>#</th><th className={thCls}>Nom / Photo</th><th className={thCls}>Rôle</th><th className={thCls}>Badge ID</th><th className={thCls} style={{ minWidth: "120px" }}>Actions</th></tr></thead>
                                     <tbody className="divide-y divide-gray-100">
                                       {ts.map((ms, idx) => {
                                         const member = badgeMembers.find((m) => m.badgeId === ms.badgeId);
@@ -1820,23 +1942,38 @@ export default function AdminPage() {
                                         return (
                                           <tr key={ms.id} className="hover:bg-white">
                                             <td className={`${tdCls} text-gray-400`}>{idx + 1}</td>
-                                            <td className={`${tdCls} font-medium text-gray-900`}>{ms.fullName}</td>
+                                            <td className={tdCls}>
+                                              <div className="flex items-center gap-2.5">
+                                                <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 border border-gray-200">
+                                                  {member?.photoUrl ? (
+                                                    <img src={member.photoUrl} alt="" className="size-full object-cover" />
+                                                  ) : (
+                                                    <UserIcon className="size-4 text-gray-400" />
+                                                  )}
+                                                </div>
+                                                <span className="font-medium text-gray-900">{ms.fullName}</span>
+                                              </div>
+                                            </td>
                                             <td className={tdCls}>{ms.role}</td>
                                             <td className={`${tdCls} font-mono text-xs text-gray-400`}>{ms.badgeId ?? "—"}</td>
                                             <td className={tdCls}>
-                                              {member ? (
-                                                <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex size-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Visualiser le badge">
-                                                  <FileTextIcon className="size-3.5" />
-                                                </button>
-                                              ) : <span className="text-xs text-gray-300">—</span>}
-                                            </td>
-                                            <td className={tdCls}>
-                                              {member ? (
-                                                <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex items-center gap-1 rounded-lg bg-green-50 border border-green-200 px-2.5 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer" title="Télécharger le badge PDF">
-                                                  {isDl ? <Spinner /> : <DownloadIcon className="size-3" />}
-                                                  {isDl ? "..." : "PDF"}
-                                                </button>
-                                              ) : <span className="text-xs text-gray-300">—</span>}
+                                              <div className="flex items-center gap-1.5">
+                                                {member ? (
+                                                  <>
+                                                    <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex size-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Visualiser le badge">
+                                                      <FileTextIcon className="size-3.5" />
+                                                    </button>
+                                                    <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex size-7 items-center justify-center rounded-lg bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer" title="Télécharger le badge PDF">
+                                                      {isDl ? <Spinner /> : <DownloadIcon className="size-3.5" />}
+                                                    </button>
+                                                    {member.photoUrl && (
+                                                      <button type="button" onClick={() => void handleDeleteMemberPhoto(member.key, ms.fullName)} className="flex size-7 items-center justify-center rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors cursor-pointer" title="Supprimer la photo">
+                                                        <Trash2Icon className="size-3.5" />
+                                                      </button>
+                                                    )}
+                                                  </>
+                                                ) : <span className="text-xs text-gray-300">—</span>}
+                                              </div>
                                             </td>
                                           </tr>
                                         );
@@ -1886,7 +2023,7 @@ export default function AdminPage() {
                           <td className={tdCls}>
                             <div className="flex items-center gap-2.5">
                               <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 border border-gray-200">
-                                {player.photoUrl ? <img src={player.photoUrl} alt="" className="size-full object-cover" /> : <span className="text-[10px] font-bold text-gray-400">{player.fullName.slice(0, 2).toUpperCase()}</span>}
+                                {player.photoUrl ? <img src={player.photoUrl} alt="" className="size-full object-cover" /> : <UserIcon className="size-4 text-gray-400" />}
                               </div>
                               <span className="font-medium text-gray-900">{player.fullName}</span>
                             </div>
@@ -1917,20 +2054,41 @@ export default function AdminPage() {
           {/* ? Badges ? */}
           {activeSection === "badges" && (
             <div className={cardCls}>
-              <div className="border-b border-gray-200 px-5 py-4">
+              <div className="border-b border-gray-200 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <p className="font-semibold text-gray-900">Badges membres</p>
                   <p className="mt-0.5 text-xs text-gray-500">Visualisez le badge dans une fenêtre ou téléchargez-le directement en PDF.</p>
+                </div>
+                <div className="relative w-full sm:w-72">
+                  <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher (nom, ID, équipe)..."
+                    value={badgeSearch}
+                    onChange={(e) => setBadgeSearch(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  />
                 </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead><tr><th className={thCls}>Type</th><th className={thCls}>Nom complet</th><th className={thCls}>Equipe</th><th className={thCls}>Badge ID</th><th className={thCls}>Visualiser</th><th className={thCls}>Telecharger PDF</th><th className={thCls}>Actions</th></tr></thead>
                   <tbody className="divide-y divide-gray-100">
-                    {badgeMembers.map((member) => {
-                      const isDl = downloadingBadgeKey === member.key;
+                    {(() => {
+                      const lowerSearch = badgeSearch.toLowerCase().trim();
+                      const filtered = badgeMembers.filter(m => 
+                        !lowerSearch || 
+                        m.fullName.toLowerCase().includes(lowerSearch) || 
+                        m.teamName.toLowerCase().includes(lowerSearch) || 
+                        m.badgeId.toLowerCase().includes(lowerSearch)
+                      );
+                      
                       return (
-                        <tr key={member.key} className="hover:bg-gray-50">
+                        <>
+                          {filtered.map((member) => {
+                            const isDl = downloadingBadgeKey === member.key;
+                            return (
+                              <tr key={member.key} className="hover:bg-gray-50">
                           <td className={tdCls}><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${member.memberType === "PLAYER" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}`}>{member.memberType}</span></td>
                           <td className={`${tdCls} font-medium text-gray-900`}>{member.fullName}</td>
                           <td className={tdCls}>{member.teamName}</td>
@@ -1956,10 +2114,13 @@ export default function AdminPage() {
                               Supprimer
                             </button>
                           </td>
-                        </tr>
+                              </tr>
+                            );
+                          })}
+                          {filtered.length === 0 && <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-gray-400">Aucun membre ne correspond à votre recherche.</td></tr>}
+                        </>
                       );
-                    })}
-                    {badgeMembers.length === 0 && <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-gray-400">Aucun membre avec badge.</td></tr>}
+                    })()}
                   </tbody>
                 </table>
               </div>

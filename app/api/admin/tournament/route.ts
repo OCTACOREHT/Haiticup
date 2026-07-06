@@ -111,6 +111,11 @@ type DeleteBadgeAction = {
   memberKey: string;
 };
 
+type DeleteMemberPhotoAction = {
+  action: "DELETE_MEMBER_PHOTO";
+  memberKey: string;
+};
+
 type CreateMatchAction = {
   action: "CREATE_MATCH";
   stage: string;
@@ -169,6 +174,7 @@ type TournamentAction =
   | AssignTeamToGroupAction
   | DeleteGroupAction
   | DeleteBadgeAction
+  | DeleteMemberPhotoAction
   | CreateMatchAction
   | SaveMatchResultAction
   | AutoDraw8TeamsAction
@@ -642,6 +648,35 @@ export async function POST(request: Request) {
       const { error } = await supabase
         .from(tableName)
         .update({ badge_id: null, qr_code_data_url: null, qr_payload: null })
+        .eq("id", memberId);
+
+      if (error) {
+        return Response.json({ error: error.message }, { status: 400 });
+      }
+
+      return Response.json({ ok: true }, { status: 200 });
+    }
+
+    if (payload.action === "DELETE_MEMBER_PHOTO") {
+      if (!isNonEmptyString(payload.memberKey)) {
+        return Response.json({ error: "memberKey is required." }, { status: 400 });
+      }
+
+      const match = payload.memberKey.trim().match(/^(staff|player)-(\d+)$/i);
+      if (!match) {
+        return Response.json({ error: "Invalid memberKey format." }, { status: 400 });
+      }
+
+      const memberType = match[1].toLowerCase();
+      const memberId = Number.parseInt(match[2], 10);
+      if (!Number.isFinite(memberId) || memberId <= 0) {
+        return Response.json({ error: "Invalid member id." }, { status: 400 });
+      }
+
+      const tableName = memberType === "staff" ? "registere_staff" : "registere_players";
+      const { error } = await supabase
+        .from(tableName)
+        .update({ photo_url: null, photo_size_bytes: null })
         .eq("id", memberId);
 
       if (error) {
