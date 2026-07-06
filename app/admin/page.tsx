@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import JSZip from "jszip";
 import QRCode from "qrcode";
 import {
   BadgeCheckIcon,
@@ -1028,8 +1029,11 @@ export default function AdminPage() {
     const afterName = drawCentered(nameText, boldFont, nameTop, nameInfo.s, nameInfo.lh, nameInfo.tw);
     const roleInfo = resolve(roleText, L.titleSize, 0.78, semiBoldFont, 0.5);
     const afterRole = drawCentered(roleText, semiBoldFont, afterName + inter, roleInfo.s, roleInfo.lh, roleInfo.tw);
+    const teamText = member.teamName.toUpperCase();
+    const teamInfo = resolve(teamText, L.titleSize * 0.9, 0.78, boldFont, 0.5);
+    const afterTeam = drawCentered(teamText, boldFont, afterRole + inter, teamInfo.s, teamInfo.lh, teamInfo.tw);
     const idInfo = resolve(idText, L.idSize, 0.88, semiBoldFont, 0.42);
-    drawCentered(idText, semiBoldFont, afterRole + inter, idInfo.s, idInfo.lh, idInfo.tw);
+    drawCentered(idText, semiBoldFont, afterTeam + inter, idInfo.s, idInfo.lh, idInfo.tw);
 
     const scanText = "SCAN ME";
     const scanS = fitText(boldFont, scanText, width * 0.052, width * 0.04, qs + width * 0.12);
@@ -1082,21 +1086,19 @@ export default function AdminPage() {
     setDownloadingBadgeKey(`team-${teamId}`);
     try {
       const { template, bold, semiBold } = await loadBadgeResources();
-      const finalPdf = await PDFDocument.create();
+      const zip = new JSZip();
 
       for (const member of teamMembers) {
         const doc = await fillBadgeDocument(member, template, bold, semiBold);
-        const pageCount = doc.getPages().length;
-        const indices = Array.from({ length: pageCount }, (_, i) => i);
-        const copiedPages = await finalPdf.copyPages(doc, indices);
-        copiedPages.forEach(p => finalPdf.addPage(p));
+        const bytes = await doc.save();
+        const safeName = member.fullName.replace(/[^a-zA-Z0-9À-ÿ_-]/g, "_");
+        zip.file(`${safeName}_${member.badgeId}.pdf`, bytes);
       }
 
-      const bytes = await finalPdf.save();
-      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
-      a.href = url; a.download = `Badges_${teamName.replace(/\s+/g, "_")}.pdf`; a.click();
+      a.href = url; a.download = `Badges_${teamName.replace(/\s+/g, "_")}.zip`; a.click();
       URL.revokeObjectURL(url);
     } catch (err: unknown) {
       setStatusMessage(err instanceof Error ? err.message : "Erreur de génération des badges de l'équipe.");
