@@ -193,13 +193,13 @@ const getInitials = (name: string) => {
 
 const sectionItems: Array<{ id: AdminSection; label: string; icon: React.ReactNode }> = [
   { id: "overview", label: "Dashboard", icon: <LayoutDashboardIcon className="size-4" /> },
-  { id: "poules", label: "Poules", icon: <SplitSquareHorizontalIcon className="size-4" /> },
+  { id: "poules", label: "Groups", icon: <SplitSquareHorizontalIcon className="size-4" /> },
   { id: "matches", label: "Match Schedule", icon: <CalendarDaysIcon className="size-4" /> },
-  { id: "results", label: "Résultats", icon: <SwordsIcon className="size-4" /> },
-  { id: "teams", label: "Équipes", icon: <ShieldCheckIcon className="size-4" /> },
-  { id: "players", label: "Joueurs", icon: <UsersRoundIcon className="size-4" /> },
+  { id: "results", label: "Results", icon: <SwordsIcon className="size-4" /> },
+  { id: "teams", label: "Teams", icon: <ShieldCheckIcon className="size-4" /> },
+  { id: "players", label: "Players", icon: <UsersRoundIcon className="size-4" /> },
   { id: "badges", label: "Badges", icon: <BadgeCheckIcon className="size-4" /> },
-  { id: "scorers", label: "Meilleurs Buteurs", icon: <TargetIcon className="size-4" /> },
+  { id: "scorers", label: "Top Scorers", icon: <TargetIcon className="size-4" /> },
 ];
 
 // ? CSS helpers ?
@@ -242,9 +242,9 @@ function BadgeModal({ memberKey, onClose }: { memberKey: string; onClose: () => 
         <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-3">
           <div className="flex items-center gap-2">
             <BadgeCheckIcon className="size-4 text-blue-600" />
-            <span className="text-sm font-semibold text-gray-900">Générateur de Badge PDF</span>
+            <span className="text-sm font-semibold text-gray-900">PDF Badge Generator</span>
           </div>
-          <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer" aria-label="Fermer">
+          <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer" aria-label="Close">
             <XIcon className="size-4" />
           </button>
         </div>
@@ -293,12 +293,12 @@ function AddPlayerModal({ teams, accessToken, onClose, onSaved }: { teams: Array
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const ageNum = parseInt(age, 10);
-    if (!fullName.trim() || !position.trim() || !jerseyNumber.trim() || isNaN(ageNum) || ageNum < 10 || ageNum > 80) { setError("Vérifiez les champs (âge entre 10 et 80)."); return; }
-    if (!photoFile || !photoPreview) { setError("La photo est obligatoire."); return; }
+    if (!fullName.trim() || !position.trim() || !jerseyNumber.trim() || isNaN(ageNum) || ageNum < 10 || ageNum > 80) { setError("Please verify fields (age must be between 10 and 80)."); return; }
+    if (!photoFile || !photoPreview) { setError("Photo is required."); return; }
     setIsSaving(true); setError(null);
     try {
       const selectedTeam = teams.find((t) => t.id === registereId);
-      if (!selectedTeam) throw new Error("Équipe introuvable");
+      if (!selectedTeam) throw new Error("Team not found");
       
       const compressed = await compressImageFile(photoFile);
       const uuid = crypto.randomUUID();
@@ -307,7 +307,7 @@ function AddPlayerModal({ teams, accessToken, onClose, onSaved }: { teams: Array
       const teamCode = buildTeamCode(selectedTeam.teamName, uuid);
       const serial = Math.floor(Math.random() * 99) + 1;
       const badgeId = buildBadgeId("PLAYER", teamCode, serial);
-
+ 
       const qrPayload = {
         badge_id: badgeId,
         member_type: "PLAYER",
@@ -320,9 +320,9 @@ function AddPlayerModal({ teams, accessToken, onClose, onSaved }: { teams: Array
         age: ageNum,
         scan_url: buildBadgeScanUrl({ badgeId, originFallback: window.location.origin }),
       };
-
+ 
       const qrCodeDataUrl = await QRCode.toDataURL(qrPayload.scan_url, { errorCorrectionLevel: "M", margin: 2, width: BADGE_QR_SIZE, color: { dark: "#000000FF", light: "#FFFFFFFF" } });
-
+ 
       const payload = {
         registereId,
         teamName: selectedTeam.teamName,
@@ -336,19 +336,19 @@ function AddPlayerModal({ teams, accessToken, onClose, onSaved }: { teams: Array
         qrPayload,
         qrCodeDataUrl,
       };
-
+ 
       const res = await fetch("/api/admin/players", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Erreur de sauvegarde."); }
+      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Error saving player."); }
       onSaved(); onClose();
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur inconnue."); } finally { setIsSaving(false); }
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Unknown error."); } finally { setIsSaving(false); }
   };
-
+ 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
       <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-4">
-          <div className="flex items-center gap-2"><span className="text-sm font-semibold text-gray-900">Ajouter un joueur</span></div>
+          <div className="flex items-center gap-2"><span className="text-sm font-semibold text-gray-900">Add Player</span></div>
           <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 transition-colors cursor-pointer"><XIcon className="size-4" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto p-5">
@@ -369,17 +369,17 @@ function AddPlayerModal({ teams, accessToken, onClose, onSaved }: { teams: Array
               </div>
             </div>
           </div>
-          <div><label className={labelCls}>Équipe</label><select className={selectCls} value={registereId} onChange={(e) => setRegistereId(e.target.value)}>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
-          <div><label className={labelCls}>Nom complet</label><input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
+          <div><label className={labelCls}>Team</label><select className={selectCls} value={registereId} onChange={(e) => setRegistereId(e.target.value)}>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
+          <div><label className={labelCls}>Full Name</label><input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
           <div className="grid grid-cols-3 gap-3">
             <div><label className={labelCls}>Position</label><select className={selectCls} value={position} onChange={(e) => setPosition(e.target.value)} required><option value="">-</option><option value="Goalkeeper">Goalkeeper</option><option value="Defender">Defender</option><option value="Midfielder">Midfielder</option><option value="Forward">Forward</option></select></div>
-            <div><label className={labelCls}>Maillot</label><input className={inputCls} value={jerseyNumber} onChange={(e) => setJerseyNumber(e.target.value)} required /></div>
+            <div><label className={labelCls}>Jersey</label><input className={inputCls} value={jerseyNumber} onChange={(e) => setJerseyNumber(e.target.value)} required /></div>
             <div><label className={labelCls}>Age</label><input className={inputCls} type="number" min={10} max={80} value={age} onChange={(e) => setAge(e.target.value)} required /></div>
           </div>
           {error && <p className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">{error}</p>}
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">Annuler</button>
-            <button type="submit" disabled={isSaving} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer">{isSaving && <Spinner />} Ajouter</button>
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" disabled={isSaving} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer">{isSaving && <Spinner />} Add</button>
           </div>
         </form>
       </div>
@@ -394,30 +394,30 @@ function EditTeamLogoModal({ team, accessToken, onClose, onSaved }: { team: Team
   const [photoFileName, setPhotoFileName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+ 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
-
+ 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
     const validationError = validateImageUpload(selectedFile, "Logo");
     if (validationError) { setError(validationError); e.target.value = ""; return; }
-
+ 
     readImageAsDataUrl(selectedFile, (dataUrl) => {
       setPhotoPreview(dataUrl);
       setPhotoFile(selectedFile);
       setPhotoFileName(selectedFile.name);
       setError(null);
-    }, () => setError("Impossible de lire l'image."));
+    }, () => setError("Failed to read image."));
   };
-
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!photoFile || !photoPreview) { setError("Veuillez sélectionner un nouveau logo."); return; }
+    if (!photoFile || !photoPreview) { setError("Please select a new logo."); return; }
     setIsSaving(true); setError(null);
     try {
       const compressed = await compressImageFile(photoFile);
@@ -426,17 +426,17 @@ function EditTeamLogoModal({ team, accessToken, onClose, onSaved }: { team: Team
       
       const payload = { id: team.id, clubLogoUrl: logoUrl };
       const res = await fetch("/api/admin/teams", { method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Erreur de sauvegarde."); }
+      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Error saving logo."); }
       onSaved(); onClose();
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur inconnue."); } finally { setIsSaving(false); }
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Unknown error."); } finally { setIsSaving(false); }
   };
-
+ 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
       <div className="relative z-10 w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
-          <p className="font-semibold text-gray-900">Modifier le logo de {team.teamName}</p>
+          <p className="font-semibold text-gray-900">Edit Logo for {team.teamName}</p>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600"><XIcon className="size-4" /></button>
         </div>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -448,8 +448,8 @@ function EditTeamLogoModal({ team, accessToken, onClose, onSaved }: { team: Team
           </div>
           {error && <p className="text-red-600 text-xs">{error}</p>}
           <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700">Annuler</button>
-            <button type="submit" disabled={isSaving} className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white">{isSaving && <Spinner />} Enregistrer</button>
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700">Cancel</button>
+            <button type="submit" disabled={isSaving} className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white">{isSaving && <Spinner />} Save</button>
           </div>
         </form>
       </div>
@@ -471,33 +471,33 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
   const [photoFileName, setPhotoFileName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+ 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
-
+ 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
-
+ 
     if (!selectedFile.type.startsWith("image/")) {
-      setError("Veuillez sélectionner une image valide.");
+      setError("Please select a valid image.");
       e.target.value = "";
       return;
     }
-
+ 
     if (selectedFile.size > MAX_PLAYER_PHOTO_SIZE_BYTES) {
-      setError(`La photo doit faire ${MAX_PLAYER_PHOTO_SIZE_LABEL} maximum.`);
+      setError(`Photo must be maximum ${MAX_PLAYER_PHOTO_SIZE_LABEL}.`);
       e.target.value = "";
       return;
     }
-
+ 
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result !== "string") {
-        setError("Impossible de lire la photo sélectionnée.");
+        setError("Failed to read selected photo.");
         return;
       }
       setPhotoPreview(reader.result);
@@ -506,14 +506,14 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
       setPhotoFileName(selectedFile.name);
       setError(null);
     };
-    reader.onerror = () => setError("Impossible de lire la photo sélectionnée.");
+    reader.onerror = () => setError("Failed to read selected photo.");
     reader.readAsDataURL(selectedFile);
   };
-
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const ageNum = parseInt(age, 10);
-    if (!fullName.trim() || !position.trim() || !jerseyNumber.trim() || isNaN(ageNum) || ageNum < 10 || ageNum > 80) { setError("Vérifiez les champs (âge entre 10 et 80)."); return; }
+    if (!fullName.trim() || !position.trim() || !jerseyNumber.trim() || isNaN(ageNum) || ageNum < 10 || ageNum > 80) { setError("Verify fields (age between 10 and 80)."); return; }
     setIsSaving(true); setError(null);
     try {
       const selectedTeam = teams.find((t) => t.id === registereId);
@@ -536,28 +536,28 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
         jerseyNumber: jerseyNumber.trim(),
         age: ageNum,
       };
-
+ 
       if (photoDataUrl !== null) {
         payload.photoUrl = photoDataUrl === "" ? null : photoDataUrl;
         payload.photoSizeBytes = photoDataUrl === "" ? null : photoSizeBytes;
       }
-
+ 
       const res = await fetch("/api/admin/players", {
         method: "PATCH",
         headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Erreur de sauvegarde."); }
+      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Error saving player."); }
       onSaved(); onClose();
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur inconnue."); } finally { setIsSaving(false); }
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Unknown error."); } finally { setIsSaving(false); }
   };
-
+ 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
       <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-4">
-          <div className="flex items-center gap-2"><PencilIcon className="size-4 text-blue-600" /><span className="text-sm font-semibold text-gray-900">Modifier le joueur</span></div>
+          <div className="flex items-center gap-2"><PencilIcon className="size-4 text-blue-600" /><span className="text-sm font-semibold text-gray-900">Edit Player</span></div>
           <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 transition-colors cursor-pointer"><XIcon className="size-4" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto p-5">
@@ -586,7 +586,7 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
                       }}
                       className="text-xs font-semibold text-red-600 hover:text-red-800 transition-colors cursor-pointer"
                     >
-                      Supprimer la photo
+                      Remove photo
                     </button>
                   )}
                 </div>
@@ -594,17 +594,17 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
               </div>
             </div>
           </div>
-          <div><label className={labelCls}>Équipe</label><select className={selectCls} value={registereId} onChange={(e) => setRegistereId(e.target.value)}>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
-          <div><label className={labelCls}>Nom complet</label><input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
+          <div><label className={labelCls}>Team</label><select className={selectCls} value={registereId} onChange={(e) => setRegistereId(e.target.value)}>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
+          <div><label className={labelCls}>Full Name</label><input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
           <div className="grid grid-cols-3 gap-3">
             <div><label className={labelCls}>Position</label><input className={inputCls} value={position} onChange={(e) => setPosition(e.target.value)} placeholder="GK…" required /></div>
-            <div><label className={labelCls}>Maillot</label><input className={inputCls} value={jerseyNumber} onChange={(e) => setJerseyNumber(e.target.value)} required /></div>
+            <div><label className={labelCls}>Jersey</label><input className={inputCls} value={jerseyNumber} onChange={(e) => setJerseyNumber(e.target.value)} required /></div>
             <div><label className={labelCls}>Age</label><input className={inputCls} type="number" min={10} max={80} value={age} onChange={(e) => setAge(e.target.value)} required /></div>
           </div>
           {error && <p className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">{error}</p>}
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">Annuler</button>
-            <button type="submit" disabled={isSaving} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer">{isSaving && <Spinner />} Sauvegarder</button>
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" disabled={isSaving} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer">{isSaving && <Spinner />} Save</button>
           </div>
         </form>
       </div>
@@ -617,22 +617,22 @@ function EditPlayerModal({ player, teams, accessToken, onClose, onSaved }: { pla
 function DeleteConfirmDialog({ player, accessToken, onClose, onDeleted }: { player: PlayerFull; accessToken: string; onClose: () => void; onDeleted: () => void }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+ 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
-
+ 
   const handleDelete = async () => {
     setIsDeleting(true); setError(null);
     try {
       const res = await fetch("/api/admin/players", { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ id: player.id }) });
-      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Erreur."); }
+      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error(d?.error || "Error."); }
       onDeleted(); onClose();
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur."); } finally { setIsDeleting(false); }
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Error."); } finally { setIsDeleting(false); }
   };
-
+ 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
@@ -640,14 +640,14 @@ function DeleteConfirmDialog({ player, accessToken, onClose, onDeleted }: { play
         <div className="flex items-start gap-4">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-100"><Trash2Icon className="size-5 text-red-600" /></div>
           <div className="flex-1">
-            <p className="font-semibold text-gray-900">Supprimer ce joueur ?</p>
-            <p className="mt-1 text-sm text-gray-500"><span className="font-medium text-gray-700">{player.fullName}</span> ({player.teamName}) sera supprimé définitivement.</p>
+            <p className="font-semibold text-gray-900">Delete this player?</p>
+            <p className="mt-1 text-sm text-gray-500"><span className="font-medium text-gray-700">{player.fullName}</span> ({player.teamName}) will be permanently deleted.</p>
           </div>
         </div>
         {error && <p className="mt-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">{error}</p>}
         <div className="mt-6 flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">Annuler</button>
-          <button type="button" onClick={handleDelete} disabled={isDeleting} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer">{isDeleting && <Spinner />} Supprimer</button>
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">Cancel</button>
+          <button type="button" onClick={handleDelete} disabled={isDeleting} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer">{isDeleting && <Spinner />} Delete</button>
         </div>
       </div>
     </div>
@@ -666,48 +666,48 @@ function EditMatchModal({ match, teams, groups, accessToken, onClose, onSaved }:
   const [venue, setVenue] = useState(match.venue ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+ 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
-
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (homeId === awayId) { setError("Les deux équipes doivent être différentes."); return; }
+    if (homeId === awayId) { setError("Both teams must be different."); return; }
     setIsSaving(true); setError(null);
     try {
       const res = await fetch("/api/admin/tournament", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ action: "UPDATE_MATCH", matchId: match.id, stage, groupId: stage === "GROUP" ? (groupId || null) : null, roundLabel: roundLabel.trim() || null, homeRegistereId: homeId, awayRegistereId: awayId, kickoffAt: toIsoFromLocal(kickoffLocal), venue: venue.trim() || null }) });
-      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error((d as { error?: string } | null)?.error || "Erreur de sauvegarde."); }
+      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error((d as { error?: string } | null)?.error || "Error saving match."); }
       onSaved(); onClose();
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur inconnue."); } finally { setIsSaving(false); }
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Unknown error."); } finally { setIsSaving(false); }
   };
-
+ 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
       <div className="relative z-10 w-full max-w-lg rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 px-5 py-4">
-          <div className="flex items-center gap-2"><CalendarDaysIcon className="size-4 text-blue-600" /><span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Modifier le match</span></div>
+          <div className="flex items-center gap-2"><CalendarDaysIcon className="size-4 text-blue-600" /><span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Edit Match</span></div>
           <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"><XIcon className="size-4" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 p-5">
           <div className={`grid gap-3 ${stage === "GROUP" ? "grid-cols-2" : "grid-cols-1"}`}>
             <div><label className={labelCls}>Stage</label><select className={selectCls} value={stage} onChange={(e) => setStage(e.target.value)} required>{stageOptions.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
-            {stage === "GROUP" && <div><label className={labelCls}>Groupe</label><select className={selectCls} value={groupId} onChange={(e) => setGroupId(e.target.value)}><option value="">—</option>{groups.map((g) => <option key={g.id} value={g.id}>{g.code} — {g.name}</option>)}</select></div>}
+            {stage === "GROUP" && <div><label className={labelCls}>Group</label><select className={selectCls} value={groupId} onChange={(e) => setGroupId(e.target.value)}><option value="">—</option>{groups.map((g) => <option key={g.id} value={g.id}>{g.code} — {g.name}</option>)}</select></div>}
           </div>
-          <div><label className={labelCls}>Label du round</label><input className={inputCls} value={roundLabel} onChange={(e) => setRoundLabel(e.target.value)} placeholder="Journée 1…" /></div>
+          <div><label className={labelCls}>Round Label</label><input className={inputCls} value={roundLabel} onChange={(e) => setRoundLabel(e.target.value)} placeholder="MD1..." /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className={labelCls}>Domicile</label><select className={selectCls} value={homeId} onChange={(e) => setHomeId(e.target.value)} required>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
-            <div><label className={labelCls}>Extérieur</label><select className={selectCls} value={awayId} onChange={(e) => setAwayId(e.target.value)} required>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
+            <div><label className={labelCls}>Home</label><select className={selectCls} value={homeId} onChange={(e) => setHomeId(e.target.value)} required>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
+            <div><label className={labelCls}>Away</label><select className={selectCls} value={awayId} onChange={(e) => setAwayId(e.target.value)} required>{teams.map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
           </div>
-          <div><label className={labelCls}>Coup d&apos;envoi</label><input className={inputCls} type="datetime-local" value={kickoffLocal} onChange={(e) => setKickoffLocal(e.target.value)} /></div>
-          <div><label className={labelCls}>Stade</label><input className={inputCls} value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Stade national…" /></div>
+          <div><label className={labelCls}>Kickoff</label><input className={inputCls} type="datetime-local" value={kickoffLocal} onChange={(e) => setKickoffLocal(e.target.value)} /></div>
+          <div><label className={labelCls}>Venue / Stadium</label><input className={inputCls} value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Venue..." /></div>
           {error && <p className="rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors cursor-pointer">Annuler</button>
-            <button type="submit" disabled={isSaving} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer">{isSaving && <Spinner />} Sauvegarder</button>
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" disabled={isSaving} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer">{isSaving && <Spinner />} Save</button>
           </div>
         </form>
       </div>
@@ -720,22 +720,22 @@ function EditMatchModal({ match, teams, groups, accessToken, onClose, onSaved }:
 function DeleteMatchDialog({ match, teamNameById, accessToken, onClose, onDeleted }: { match: Match; teamNameById: Map<string, string>; accessToken: string; onClose: () => void; onDeleted: () => void }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+ 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
-
+ 
   const handleDelete = async () => {
     setIsDeleting(true); setError(null);
     try {
       const res = await fetch("/api/admin/tournament", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ action: "DELETE_MATCH", matchId: match.id }) });
-      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error((d as { error?: string } | null)?.error || "Erreur."); }
+      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error((d as { error?: string } | null)?.error || "Error."); }
       onDeleted(); onClose();
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur."); } finally { setIsDeleting(false); }
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Error."); } finally { setIsDeleting(false); }
   };
-
+ 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
@@ -743,14 +743,14 @@ function DeleteMatchDialog({ match, teamNameById, accessToken, onClose, onDelete
         <div className="flex items-start gap-4">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30"><Trash2Icon className="size-5 text-red-600 dark:text-red-400" /></div>
           <div className="flex-1">
-            <p className="font-semibold text-gray-900 dark:text-gray-100">Supprimer ce match ?</p>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400"><span className="font-medium text-gray-700 dark:text-gray-300">{teamNameById.get(match.home_registere_id) ?? "Home"} vs {teamNameById.get(match.away_registere_id) ?? "Away"}</span> ({match.stage}) sera supprimé définitivement avec tous ses buts.</p>
+            <p className="font-semibold text-gray-900 dark:text-gray-100">Delete this match?</p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400"><span className="font-medium text-gray-700 dark:text-gray-300">{teamNameById.get(match.home_registere_id) ?? "Home"} vs {teamNameById.get(match.away_registere_id) ?? "Away"}</span> ({match.stage}) will be permanently deleted with all its goals.</p>
           </div>
         </div>
         {error && <p className="mt-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
         <div className="mt-6 flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors cursor-pointer">Annuler</button>
-          <button type="button" onClick={handleDelete} disabled={isDeleting} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer">{isDeleting && <Spinner />} Supprimer</button>
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors cursor-pointer">Cancel</button>
+          <button type="button" onClick={handleDelete} disabled={isDeleting} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer">{isDeleting && <Spinner />} Delete</button>
         </div>
       </div>
     </div>
@@ -762,22 +762,22 @@ function DeleteMatchDialog({ match, teamNameById, accessToken, onClose, onDelete
 function DeleteTeamDialog({ team, accessToken, onClose, onDeleted }: { team: Team; accessToken: string; onClose: () => void; onDeleted: () => void }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+ 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, [onClose]);
-
+ 
   const handleDelete = async () => {
     setIsDeleting(true); setError(null);
     try {
       const res = await fetch("/api/admin/teams", { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ id: team.id }) });
-      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error((d as { error?: string } | null)?.error || "Erreur."); }
+      if (!res.ok) { const d = await res.json().catch(() => null); throw new Error((d as { error?: string } | null)?.error || "Error."); }
       onDeleted(); onClose();
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Erreur."); } finally { setIsDeleting(false); }
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Error."); } finally { setIsDeleting(false); }
   };
-
+ 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-md bg-black/50" />
@@ -785,16 +785,16 @@ function DeleteTeamDialog({ team, accessToken, onClose, onDeleted }: { team: Tea
         <div className="flex items-start gap-4">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-100"><Trash2Icon className="size-5 text-red-600" /></div>
           <div className="flex-1">
-            <p className="font-semibold text-gray-900">Supprimer cette équipe ?</p>
+            <p className="font-semibold text-gray-900">Delete this team?</p>
             <p className="mt-1 text-sm text-gray-500">
-              <span className="font-medium text-gray-700">{team.teamName}</span> sera supprimée définitivement avec tous ses joueurs, membres du staff, matchs et buts associés.
+              <span className="font-medium text-gray-700">{team.teamName}</span> will be permanently deleted along with all its players, staff members, matches and associated goals.
             </p>
           </div>
         </div>
         {error && <p className="mt-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">{error}</p>}
         <div className="mt-6 flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">Non</button>
-          <button type="button" onClick={handleDelete} disabled={isDeleting} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer">{isDeleting && <Spinner />} Oui, supprimer</button>
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">No</button>
+          <button type="button" onClick={handleDelete} disabled={isDeleting} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer">{isDeleting && <Spinner />} Yes, delete</button>
         </div>
       </div>
     </div>
@@ -885,6 +885,9 @@ export default function AdminPage() {
   const [matchHomeId, setMatchHomeId] = useState(""); const [matchAwayId, setMatchAwayId] = useState(""); const [matchKickoffLocal, setMatchKickoffLocal] = useState(""); const [matchVenue, setMatchVenue] = useState("");
   const [resultMatchId, setResultMatchId] = useState(""); const [resultHomeScore, setResultHomeScore] = useState("0"); const [resultAwayScore, setResultAwayScore] = useState("0");
   const [goalRows, setGoalRows] = useState<GoalInputRow[]>([]);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editGroupCode, setEditGroupCode] = useState("");
+  const [editGroupName, setEditGroupName] = useState("");
 
   const isDark = theme === "dark";
   const toggleTheme = () => setTheme((t) => { const n = t === "dark" ? "light" : "dark"; localStorage.setItem("admin-theme", n); return n; });
@@ -932,7 +935,7 @@ export default function AdminPage() {
   // ? Load main data ?
 
   const loadData = useCallback(async (token: string, options?: { quiet?: boolean }) => {
-    if (!options?.quiet) { setStatusMessage("Chargement..."); setStatusTone("info"); }
+    if (!options?.quiet) { setStatusMessage("Loading..."); setStatusTone("info"); }
     const [tr, mr] = await Promise.all([
       fetch("/api/admin/tournament", { method: "GET", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, cache: "no-store" }),
       fetch("/api/members", { method: "GET", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, cache: "no-store" }),
@@ -940,7 +943,7 @@ export default function AdminPage() {
     if (tr.status === 401 || tr.status === 403) { await logoutToLogin(); return; }
     const tp = (await tr.json().catch(() => null)) as TournamentResponse | null;
     const mp = (await mr.json().catch(() => null)) as MembersApiResponse | null;
-    if (!tr.ok) throw new Error(tp?.error || "Erreur de chargement.");
+    if (!tr.ok) throw new Error(tp?.error || "Error loading data.");
     const safe: TournamentResponse = tp ?? { teams: [], players: [], staff: [], groups: [], matches: [], goals: [], standings: [], topScorers: [] };
     setTournament(safe);
     setAdminName(safe.admin?.fullName ?? safe.admin?.email ?? "Admin");
@@ -1069,7 +1072,7 @@ export default function AdminPage() {
       a.href = url; a.download = `${member.badgeId}.pdf`; a.click();
       URL.revokeObjectURL(url);
     } catch (err: unknown) {
-      setStatusMessage(err instanceof Error ? err.message : "Erreur de génération du badge.");
+      setStatusMessage(err instanceof Error ? err.message : "Error generating badge.");
       setStatusTone("error");
     } finally {
       setDownloadingBadgeKey(null);
@@ -1079,7 +1082,7 @@ export default function AdminPage() {
   const handleDownloadTeamBadges = async (teamId: string, teamName: string) => {
     const teamMembers = badgeMembers.filter(m => m.registereId === teamId);
     if (teamMembers.length === 0) {
-      setStatusMessage("Aucun badge disponible pour cette équipe.");
+      setStatusMessage("No badges available for this team.");
       setStatusTone("info");
       return;
     }
@@ -1101,7 +1104,7 @@ export default function AdminPage() {
       a.href = url; a.download = `Badges_${teamName.replace(/\s+/g, "_")}.zip`; a.click();
       URL.revokeObjectURL(url);
     } catch (err: unknown) {
-      setStatusMessage(err instanceof Error ? err.message : "Erreur de génération des badges de l'équipe.");
+      setStatusMessage(err instanceof Error ? err.message : "Error generating team badges.");
       setStatusTone("error");
     } finally {
       setDownloadingBadgeKey(null);
@@ -1109,10 +1112,10 @@ export default function AdminPage() {
   };
 
   const handleDeleteMemberPhoto = async (memberKey: string, fullName: string) => {
-    const confirmed = window.confirm(`Supprimer la photo de ${fullName} ?`);
+    const confirmed = window.confirm(`Delete photo of ${fullName}?`);
     if (!confirmed) return;
     setIsSaving(true);
-    setStatusMessage("Suppression de la photo...");
+    setStatusMessage("Deleting photo...");
     setStatusTone("info");
     try {
       const res = await fetch("/api/admin/tournament", {
@@ -1121,15 +1124,15 @@ export default function AdminPage() {
         body: JSON.stringify({ action: "DELETE_MEMBER_PHOTO", memberKey }),
       });
       const result = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(result?.error || "La suppression a échoué.");
+      if (!res.ok) throw new Error(result?.error || "Delete failed.");
       
       setBadgeMembers((prev) => prev.map(m => m.key === memberKey ? { ...m, photoUrl: null } : m));
       setPlayersData((prev) => prev ? prev.map(p => `player-${p.id}` === memberKey ? { ...p, photoUrl: null, photoSizeBytes: null } : p) : null);
-
-      setStatusMessage("Photo supprimée avec succès.");
+ 
+      setStatusMessage("Photo successfully deleted.");
       setStatusTone("success");
     } catch (err: unknown) {
-      setStatusMessage(err instanceof Error ? err.message : "Erreur de suppression.");
+      setStatusMessage(err instanceof Error ? err.message : "Delete failed.");
       setStatusTone("error");
     } finally {
       setIsSaving(false);
@@ -1151,7 +1154,7 @@ export default function AdminPage() {
         await loadData(session.access_token);
       } catch (error: unknown) {
         if (!active) return;
-        setStatusMessage(error instanceof Error ? error.message : "Impossible de charger le panel."); setStatusTone("error");
+        setStatusMessage(error instanceof Error ? error.message : "Failed to load panel."); setStatusTone("error");
       } finally { if (active) setIsLoading(false); }
     };
     void boot();
@@ -1178,15 +1181,15 @@ export default function AdminPage() {
 
   const postAction = async (payload: Record<string, unknown>, success: string): Promise<boolean> => {
     if (!accessToken) { await logoutToLogin(); return false; }
-    setIsSaving(true); setStatusMessage("Sauvegarde..."); setStatusTone("info");
+    setIsSaving(true); setStatusMessage("Saving..."); setStatusTone("info");
     try {
       const res = await fetch("/api/admin/tournament", { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const result = (await res.json().catch(() => null)) as { error?: string } | null;
-      if (!res.ok) throw new Error(result?.error || "Requête échouée.");
+      if (!res.ok) throw new Error(result?.error || "Action failed.");
       await loadData(accessToken, { quiet: true });
       setStatusMessage(success); setStatusTone("success");
       return true;
-    } catch (err: unknown) { setStatusMessage(err instanceof Error ? err.message : "Action échouée."); setStatusTone("error"); return false; } finally { setIsSaving(false); }
+    } catch (err: unknown) { setStatusMessage(err instanceof Error ? err.message : "Action failed."); setStatusTone("error"); return false; } finally { setIsSaving(false); }
   };
 
   const handleRefresh = async () => {
@@ -1195,21 +1198,31 @@ export default function AdminPage() {
     try { await loadData(accessToken); if (activeSection === "players") { setPlayersData(null); await loadPlayersData(accessToken); } } catch { /**/ } finally { setIsRefreshing(false); }
   };
 
-  const handleCreateGroup = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "CREATE_GROUP", code: groupCode, name: groupName, orderIndex: Number(groupOrder) || 1 }, "Groupe cree."); setGroupCode(""); setGroupName(""); setGroupOrder("1"); };
-  const handleAssignTeam = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "ASSIGN_TEAM_TO_GROUP", groupId: effectiveAssignGroupId, registereId: effectiveAssignTeamId, seed: assignSeed.trim() ? Number(assignSeed) : null }, "Equipe assignee."); };
+  const handleCreateGroup = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "CREATE_GROUP", code: groupCode, name: groupName, orderIndex: Number(groupOrder) || 1 }, "Group created."); setGroupCode(""); setGroupName(""); setGroupOrder("1"); };
+  const handleAssignTeam = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "ASSIGN_TEAM_TO_GROUP", groupId: effectiveAssignGroupId, registereId: effectiveAssignTeamId, seed: assignSeed.trim() ? Number(assignSeed) : null }, "Team assigned."); };
   const handleDeleteGroup = async (groupId: string, groupLabel: string) => {
-    const confirmed = window.confirm(`Supprimer le groupe ${groupLabel} ? Les matchs et buts de ce groupe seront aussi supprimes.`);
+    const confirmed = window.confirm(`Delete group ${groupLabel}? Matches and goals of this group will also be deleted.`);
     if (!confirmed) return;
-    await postAction({ action: "DELETE_GROUP", groupId }, "Groupe supprime.");
+    await postAction({ action: "DELETE_GROUP", groupId }, "Group deleted.");
   };
   const handleDeleteBadge = async (member: AdminBadgeMember) => {
-    const confirmed = window.confirm(`Supprimer le badge de ${member.fullName} ?`);
+    const confirmed = window.confirm(`Delete badge of ${member.fullName}?`);
     if (!confirmed) return;
-    await postAction({ action: "DELETE_BADGE", memberKey: member.key }, "Badge supprime.");
+    await postAction({ action: "DELETE_BADGE", memberKey: member.key }, "Badge deleted.");
   };
-  const handleRunAutoDraw = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); if (drawTeamIds.length !== 8) { setStatusMessage("Selectionnez exactement 8 equipes."); setStatusTone("error"); return; } await postAction({ action: "AUTO_DRAW_8_TEAMS", teamIds: drawTeamIds, clearExisting: true }, "Tirage termine."); };
-  const handleCreateMatch = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "CREATE_MATCH", stage: matchStage, groupId: matchStage === "GROUP" ? effectiveMatchGroupId : null, roundLabel: matchRoundLabel || null, homeRegistereId: effectiveMatchHomeId, awayRegistereId: effectiveMatchAwayId, kickoffAt: toIsoFromLocal(matchKickoffLocal), venue: matchVenue || null }, "Match cree."); setMatchRoundLabel(""); setMatchKickoffLocal(""); setMatchVenue(""); };
-  const handleSaveResult = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); const goals = goalRows.filter((r) => r.teamRegistereId.trim()).map((r) => ({ teamRegistereId: r.teamRegistereId, scorerPlayerId: r.scorerPlayerId || null, minute: r.minute.trim() ? Number(r.minute) : null, isOwnGoal: r.isOwnGoal })); await postAction({ action: "SAVE_MATCH_RESULT", matchId: effectiveResultMatchId, homeScore: Number(resultHomeScore), awayScore: Number(resultAwayScore), goals }, "Resultat sauvegarde."); };
+  const handleRunAutoDraw = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); if (drawTeamIds.length !== 8) { setStatusMessage("Select exactly 8 teams."); setStatusTone("error"); return; } await postAction({ action: "AUTO_DRAW_8_TEAMS", teamIds: drawTeamIds, clearExisting: true }, "Draw completed."); };
+  const handleCreateMatch = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); await postAction({ action: "CREATE_MATCH", stage: matchStage, groupId: matchStage === "GROUP" ? effectiveMatchGroupId : null, roundLabel: matchRoundLabel || null, homeRegistereId: effectiveMatchHomeId, awayRegistereId: effectiveMatchAwayId, kickoffAt: toIsoFromLocal(matchKickoffLocal), venue: matchVenue || null }, "Match created."); setMatchRoundLabel(""); setMatchKickoffLocal(""); setMatchVenue(""); };
+  const handleUpdateGroup = async (groupId: string) => {
+    if (!editGroupCode.trim() || !editGroupName.trim()) return;
+    await postAction({ action: "UPDATE_GROUP", groupId, code: editGroupCode.trim(), name: editGroupName.trim() }, "Group updated.");
+    setEditingGroupId(null);
+  };
+  const handleAutoScheduleMatches = async () => {
+    const confirmed = window.confirm("Automatically generate the schedule (July 12th then 2 matches per Sunday)? This will overwrite existing group stage dates.");
+    if (!confirmed) return;
+    await postAction({ action: "AUTO_SCHEDULE_MATCHES" }, "Schedule successfully generated.");
+  };
+  const handleSaveResult = async (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); const goals = goalRows.filter((r) => r.teamRegistereId.trim()).map((r) => ({ teamRegistereId: r.teamRegistereId, scorerPlayerId: r.scorerPlayerId || null, minute: r.minute.trim() ? Number(r.minute) : null, isOwnGoal: r.isOwnGoal })); await postAction({ action: "SAVE_MATCH_RESULT", matchId: effectiveResultMatchId, homeScore: Number(resultHomeScore), awayScore: Number(resultAwayScore), goals }, "Result saved."); };
   const handleLogout = async () => { await logoutToLogin(); };
 
   // ? Team roster download ?
@@ -1494,10 +1507,10 @@ export default function AdminPage() {
       a.click();
       URL.revokeObjectURL(url);
 
-      setStatusMessage(teamId ? `PDF exporte pour ${selectedTeams[0].teamName}.` : "PDF exporte pour toutes les equipes.");
+      setStatusMessage(teamId ? `PDF exported for ${selectedTeams[0].teamName}.` : "PDF exported for all teams.");
       setStatusTone("success");
     } catch (err: unknown) {
-      setStatusMessage(err instanceof Error ? err.message : "Erreur pendant l'export PDF.");
+      setStatusMessage(err instanceof Error ? err.message : "Error during PDF export.");
       setStatusTone("error");
     } finally {
       setDownloadingRosterKey(null);
@@ -1514,7 +1527,7 @@ export default function AdminPage() {
       <div className={`flex min-h-screen items-center justify-center bg-gray-50 dark:bg-slate-950 ${isDark ? "dark" : ""}`}>
         <div className="text-center">
           <span className="size-8 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600 block mx-auto" />
-          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Chargement du panel admin…</p>
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Loading admin panel...</p>
         </div>
       </div>
     );
@@ -1554,11 +1567,11 @@ export default function AdminPage() {
 
         <div className="border-t border-gray-200 dark:border-slate-700 p-3">
           <div className="rounded-lg bg-gray-50 dark:bg-slate-800 p-3">
-            <p className="text-xs text-gray-400 dark:text-gray-500">Connecté en tant que</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Logged in as</p>
             <p className="mt-0.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{adminName || "Admin"}</p>
           </div>
           <button type="button" onClick={handleLogout} className="mt-2 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
-            <LogOutIcon className="size-4" /> Déconnexion
+            <LogOutIcon className="size-4" /> Logout
           </button>
         </div>
       </aside>
@@ -1574,11 +1587,11 @@ export default function AdminPage() {
             <h1 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{sectionItems.find((s) => s.id === activeSection)?.label ?? "Dashboard"}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={toggleTheme} className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors cursor-pointer" aria-label="Basculer thème">
+            <button type="button" onClick={toggleTheme} className="flex size-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors cursor-pointer" aria-label="Toggle theme">
               {isDark ? <SunIcon className="size-4 text-yellow-400" /> : <MoonIcon className="size-4" />}
             </button>
             <Btn variant="outline" size="sm" isLoading={isRefreshing} onClick={handleRefresh}>
-              <RefreshCwIcon className="size-3" /> Rafraîchir
+              <RefreshCwIcon className="size-3" /> Refresh
             </Btn>
           </div>
         </header>
@@ -1589,18 +1602,18 @@ export default function AdminPage() {
           {activeSection === "overview" && (
             <div className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-                <StatCard label="Équipes" value={tournament?.teams.length ?? 0} icon={<ShieldCheckIcon className="size-5" />} />
-                <StatCard label="Joueurs" value={tournament?.players.length ?? 0} icon={<UsersRoundIcon className="size-5" />} />
-                <StatCard label="Groupes" value={tournament?.groups.length ?? 0} icon={<SplitSquareHorizontalIcon className="size-5" />} />
+                <StatCard label="Teams" value={tournament?.teams.length ?? 0} icon={<ShieldCheckIcon className="size-5" />} />
+                <StatCard label="Players" value={tournament?.players.length ?? 0} icon={<UsersRoundIcon className="size-5" />} />
+                <StatCard label="Groups" value={tournament?.groups.length ?? 0} icon={<SplitSquareHorizontalIcon className="size-5" />} />
                 <StatCard label="Matches" value={tournament?.matches.length ?? 0} icon={<CalendarDaysIcon className="size-5" />} />
-                <StatCard label="Badges Staff" value={staffCount} icon={<BadgeCheckIcon className="size-5" />} />
-                <StatCard label="Badges Joueurs" value={playerCount} icon={<BadgeCheckIcon className="size-5" />} />
+                <StatCard label="Staff Badges" value={staffCount} icon={<BadgeCheckIcon className="size-5" />} />
+                <StatCard label="Player Badges" value={playerCount} icon={<BadgeCheckIcon className="size-5" />} />
               </div>
               <div className={cardCls}>
-                <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Matches récents</p><p className="mt-0.5 text-xs text-gray-500">8 derniers matches</p></div>
+                <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Recent Matches</p><p className="mt-0.5 text-xs text-gray-500">Last 8 matches</p></div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
-                    <thead><tr><th className={thCls}>Stage</th><th className={thCls}>Match</th><th className={thCls}>Coup d&apos;envoi</th><th className={thCls}>Score</th><th className={thCls}>Statut</th></tr></thead>
+                    <thead><tr><th className={thCls}>Stage</th><th className={thCls}>Match</th><th className={thCls}>Kickoff</th><th className={thCls}>Score</th><th className={thCls}>Status</th></tr></thead>
                     <tbody className="divide-y divide-gray-100">
                       {(tournament?.matches ?? []).slice(0, 8).map((match) => (
                         <tr key={match.id} className="hover:bg-gray-50">
@@ -1622,72 +1635,81 @@ export default function AdminPage() {
           {activeSection === "poules" && (
             <div className="grid gap-5 xl:grid-cols-2">
               <div className={`${cardCls} xl:col-span-2`}>
-                <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Tirage Automatique (8 équipes)</p><p className="mt-0.5 text-xs text-gray-500">Sélectionnez 8 équipes. Le système crée Poule A / Poule B et génère tous les matches.</p></div>
+                <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Automatic Draw (8 teams)</p><p className="mt-0.5 text-xs text-gray-500">Select exactly 8 teams. The system will create Group A / Group B and automatically generate all matches.</p></div>
                 <div className="p-5">
                   <form onSubmit={handleRunAutoDraw} className="space-y-4">
                     <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                       {(tournament?.teams ?? []).map((team) => { const idx = drawTeamIds.indexOf(team.id); const isSel = idx >= 0; return (<button key={team.id} type="button" onClick={() => setDrawTeamIds((c) => c.includes(team.id) ? c.filter((id) => id !== team.id) : c.length >= 8 ? c : [...c, team.id])} disabled={!isSel && drawTeamIds.length >= 8} className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all cursor-pointer disabled:opacity-40 ${isSel ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"}`}><span className="w-5 text-left font-mono text-xs text-gray-400">{isSel ? `${idx + 1}.` : "—"}</span><span className="truncate">{team.teamName}</span></button>); })}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-500">{drawTeamIds.length}/8</span>
-                      <Btn type="button" variant="outline" size="sm" onClick={() => setDrawTeamIds([])} disabled={drawTeamIds.length === 0}>Réinitialiser</Btn>
-                      <Btn type="submit" isLoading={isSaving} disabled={drawTeamIds.length !== 8}>Lancer le tirage</Btn>
+                       <span className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-500">{drawTeamIds.length}/8</span>
+                      <Btn type="button" variant="outline" size="sm" onClick={() => setDrawTeamIds([])} disabled={drawTeamIds.length === 0}>Reset</Btn>
+                      <Btn type="submit" isLoading={isSaving} disabled={drawTeamIds.length !== 8}>Run Draw</Btn>
                     </div>
                   </form>
                 </div>
               </div>
-              <div className={cardCls}>
-                <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Créer un groupe</p></div>
-                <form onSubmit={handleCreateGroup} className="space-y-3 p-5">
-                  <div><label className={labelCls}>Code</label><input className={inputCls} value={groupCode} onChange={(e) => setGroupCode(e.target.value)} placeholder="A" required /></div>
-                  <div><label className={labelCls}>Nom</label><input className={inputCls} value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Poule A" required /></div>
-                  <div><label className={labelCls}>Ordre</label><input className={inputCls} type="number" min={1} value={groupOrder} onChange={(e) => setGroupOrder(e.target.value)} required /></div>
-                  <Btn type="submit" isLoading={isSaving}>Ajouter</Btn>
-                </form>
-              </div>
-              <div className={cardCls}>
-                <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Assigner équipe au groupe</p></div>
-                <form onSubmit={handleAssignTeam} className="space-y-3 p-5">
-                  <div><label className={labelCls}>Groupe</label><select className={selectCls} value={effectiveAssignGroupId} onChange={(e) => setAssignGroupId(e.target.value)} required>{(tournament?.groups ?? []).map((g) => <option key={g.id} value={g.id}>{g.code} — {g.name}</option>)}</select></div>
-                  <div><label className={labelCls}>Équipe</label><select className={selectCls} value={effectiveAssignTeamId} onChange={(e) => setAssignTeamId(e.target.value)} required>{(tournament?.teams ?? []).map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
-                  <div><label className={labelCls}>Seed (optionnel)</label><input className={inputCls} value={assignSeed} onChange={(e) => setAssignSeed(e.target.value)} /></div>
-                  <Btn type="submit" isLoading={isSaving}>Sauvegarder</Btn>
-                </form>
-              </div>
+
               <div className={`${cardCls} xl:col-span-2`}>
                 <div className="border-b border-gray-200 px-5 py-4">
-                  <p className="font-semibold text-gray-900">Groupes existants</p>
+                  <p className="font-semibold text-gray-900">Existing Groups</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
                     <thead>
                       <tr>
                         <th className={thCls}>Code</th>
-                        <th className={thCls}>Nom</th>
+                        <th className={thCls}>Name</th>
                         <th className={thCls}>Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {(tournament?.groups ?? []).map((group) => (
                         <tr key={group.id} className="hover:bg-gray-50">
-                          <td className={`${tdCls} font-semibold text-gray-900`}>{group.code}</td>
-                          <td className={tdCls}>{group.name}</td>
-                          <td className={tdCls}>
-                            <button
-                              type="button"
-                              onClick={() => void handleDeleteGroup(group.id, `${group.code} - ${group.name}`)}
-                              disabled={isSaving}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
-                            >
-                              <Trash2Icon className="size-3.5" />
-                              Supprimer
-                            </button>
-                          </td>
+                          {editingGroupId === group.id ? (
+                            <>
+                              <td className={tdCls}><input className={inputCls} value={editGroupCode} onChange={(e) => setEditGroupCode(e.target.value)} placeholder="Code" /></td>
+                              <td className={tdCls}><input className={inputCls} value={editGroupName} onChange={(e) => setEditGroupName(e.target.value)} placeholder="Nom" /></td>
+                              <td className={tdCls}>
+                                <div className="flex items-center gap-2">
+                                  <button type="button" onClick={() => void handleUpdateGroup(group.id)} disabled={isSaving} className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer">Save</button>
+                                  <button type="button" onClick={() => setEditingGroupId(null)} disabled={isSaving} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-colors cursor-pointer">Cancel</button>
+                                </div>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className={`${tdCls} font-semibold text-gray-900`}>{group.code}</td>
+                              <td className={tdCls}>{group.name}</td>
+                              <td className={tdCls}>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => { setEditingGroupId(group.id); setEditGroupCode(group.code); setEditGroupName(group.name); }}
+                                    disabled={isSaving}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50 transition-colors cursor-pointer"
+                                  >
+                                    <PencilIcon className="size-3.5" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleDeleteGroup(group.id, `${group.code} - ${group.name}`)}
+                                    disabled={isSaving}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2Icon className="size-3.5" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </>
+                          )}
                         </tr>
                       ))}
                       {(tournament?.groups ?? []).length === 0 && (
                         <tr>
-                          <td colSpan={3} className="px-5 py-6 text-sm text-gray-400">Aucun groupe cree.</td>
+                          <td colSpan={3} className="px-5 py-6 text-sm text-gray-400">No groups created.</td>
                         </tr>
                       )}
                     </tbody>
@@ -1705,12 +1727,12 @@ export default function AdminPage() {
                       className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
                     >
                       <Trash2Icon className="size-3.5" />
-                      Supprimer
+                      Delete
                     </button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full">
-                      <thead><tr><th className={thCls}>Équipe</th><th className={`${thCls} text-center`}>Pts</th><th className={`${thCls} text-center`}>J</th><th className={`${thCls} text-center`}>G</th><th className={`${thCls} text-center`}>N</th><th className={`${thCls} text-center`}>P</th><th className={`${thCls} text-center`}>GF</th><th className={`${thCls} text-center`}>GA</th><th className={`${thCls} text-center`}>GD</th></tr></thead>
+                      <thead><tr><th className={thCls}>Team</th><th className={`${thCls} text-center`}>Pts</th><th className={`${thCls} text-center`}>PL</th><th className={`${thCls} text-center`}>W</th><th className={`${thCls} text-center`}>D</th><th className={`${thCls} text-center`}>L</th><th className={`${thCls} text-center`}>GF</th><th className={`${thCls} text-center`}>GA</th><th className={`${thCls} text-center`}>GD</th></tr></thead>
                       <tbody className="divide-y divide-gray-100">
                         {gs.teams.map((t) => (<tr key={t.registereId} className="hover:bg-gray-50"><td className={`${tdCls} font-medium text-gray-900`}>{t.teamName}</td><td className={`${tdCls} text-center font-bold text-green-700`}>{t.points}</td><td className={`${tdCls} text-center`}>{t.played}</td><td className={`${tdCls} text-center`}>{t.wins}</td><td className={`${tdCls} text-center`}>{t.draws}</td><td className={`${tdCls} text-center`}>{t.losses}</td><td className={`${tdCls} text-center`}>{t.goalsFor}</td><td className={`${tdCls} text-center`}>{t.goalsAgainst}</td><td className={`${tdCls} text-center`}>{t.goalDifference}</td></tr>))}
                       </tbody>
@@ -1724,26 +1746,17 @@ export default function AdminPage() {
           {/* ? Matches ? */}
           {activeSection === "matches" && (
             <div className="space-y-5">
+
               <div className={cardCls}>
-                <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Créer un match</p></div>
-                <form onSubmit={handleCreateMatch} className="grid gap-4 p-5 lg:grid-cols-2">
-                  <div><label className={labelCls}>Stage</label><select className={selectCls} value={matchStage} onChange={(e) => setMatchStage(e.target.value)} required>{stageOptions.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
-                  <div><label className={labelCls}>Groupe (GROUP uniquement)</label><select className={selectCls} value={effectiveMatchGroupId} onChange={(e) => setMatchGroupId(e.target.value)} disabled={matchStage !== "GROUP"}>{(tournament?.groups ?? []).map((g) => <option key={g.id} value={g.id}>{g.code} — {g.name}</option>)}</select></div>
-                  <div><label className={labelCls}>Label du round</label><input className={inputCls} value={matchRoundLabel} onChange={(e) => setMatchRoundLabel(e.target.value)} /></div>
-                  <div><label className={labelCls}>Coup d&apos;envoi</label><input className={inputCls} type="datetime-local" value={matchKickoffLocal} onChange={(e) => setMatchKickoffLocal(e.target.value)} /></div>
-                  <div><label className={labelCls}>Domicile</label><select className={selectCls} value={effectiveMatchHomeId} onChange={(e) => setMatchHomeId(e.target.value)} required>{(tournament?.teams ?? []).map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
-                  <div><label className={labelCls}>Extérieur</label><select className={selectCls} value={effectiveMatchAwayId} onChange={(e) => setMatchAwayId(e.target.value)} required>{(tournament?.teams ?? []).map((t) => <option key={t.id} value={t.id}>{t.teamName}</option>)}</select></div>
-                  <div className="lg:col-span-2"><label className={labelCls}>Stade</label><input className={inputCls} value={matchVenue} onChange={(e) => setMatchVenue(e.target.value)} /></div>
-                  <div className="lg:col-span-2"><Btn type="submit" isLoading={isSaving}>Ajouter le match</Btn></div>
-                </form>
-              </div>
-              <div className={cardCls}>
-                <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Calendrier des matches</p></div>
+                <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+                  <p className="font-semibold text-gray-900">Match Schedule</p>
+                  <Btn type="button" size="sm" onClick={() => void handleAutoScheduleMatches()} isLoading={isSaving}>Auto Schedule (Sundays)</Btn>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
-                    <thead><tr><th className={thCls}>Stage</th><th className={thCls}>Match</th><th className={thCls}>Coup d&apos;envoi</th><th className={thCls}>Stade</th><th className={thCls}>Score</th><th className={thCls}>Statut</th><th className={thCls}>Actions</th></tr></thead>
+                    <thead><tr><th className={thCls}>Stage</th><th className={thCls}>Match</th><th className={thCls}>Kickoff</th><th className={thCls}>Venue</th><th className={thCls}>Score</th><th className={thCls}>Status</th><th className={thCls}>Actions</th></tr></thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                      {(tournament?.matches ?? []).map((m) => (<tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/40"><td className={tdCls}><span className="rounded px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 text-[10px] font-mono text-gray-600 dark:text-gray-400">{m.stage}</span></td><td className={`${tdCls} font-medium text-gray-900 dark:text-gray-100`}>{teamNameById.get(m.home_registere_id) ?? "Home"} <span className="text-gray-400 dark:text-gray-500">vs</span> {teamNameById.get(m.away_registere_id) ?? "Away"}</td><td className={tdCls}>{formatDateTime(m.kickoff_at)}</td><td className={tdCls}>{m.venue || "—"}</td><td className={tdCls}>{typeof m.home_score === "number" && typeof m.away_score === "number" ? <span className="font-bold">{m.home_score} — {m.away_score}</span> : "—"}</td><td className={tdCls}><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${m.status === "PLAYED" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400"}`}>{m.status}</span></td><td className={tdCls}><div className="flex items-center gap-1.5"><button type="button" onClick={() => setEditingMatch(m)} className="flex size-7 items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer" title="Modifier"><PencilIcon className="size-3.5" /></button><button type="button" onClick={() => setDeletingMatch(m)} className="flex size-7 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer" title="Supprimer"><Trash2Icon className="size-3.5" /></button></div></td></tr>))}
+                      {(tournament?.matches ?? []).map((m) => (<tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/40"><td className={tdCls}><span className="rounded px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 text-[10px] font-mono text-gray-600 dark:text-gray-400">{m.stage}</span></td><td className={`${tdCls} font-medium text-gray-900 dark:text-gray-100`}>{teamNameById.get(m.home_registere_id) ?? "Home"} <span className="text-gray-400 dark:text-gray-500">vs</span> {teamNameById.get(m.away_registere_id) ?? "Away"}</td><td className={tdCls}>{formatDateTime(m.kickoff_at)}</td><td className={tdCls}>{m.venue || "—"}</td><td className={tdCls}>{typeof m.home_score === "number" && typeof m.away_score === "number" ? <span className="font-bold">{m.home_score} — {m.away_score}</span> : "—"}</td><td className={tdCls}><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${m.status === "PLAYED" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400"}`}>{m.status}</span></td><td className={tdCls}><div className="flex items-center gap-1.5"><button type="button" onClick={() => setEditingMatch(m)} className="flex size-7 items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer" title="Edit"><PencilIcon className="size-3.5" /></button><button type="button" onClick={() => setDeletingMatch(m)} className="flex size-7 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer" title="Delete"><Trash2Icon className="size-3.5" /></button></div></td></tr>))}
                     </tbody>
                   </table>
                 </div>
@@ -1754,36 +1767,36 @@ export default function AdminPage() {
           {/* ? Results ? */}
           {activeSection === "results" && (
             <div className={cardCls}>
-              <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Saisir un résultat</p></div>
+              <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Enter Result</p></div>
               <form onSubmit={handleSaveResult} className="space-y-4 p-5">
                 <div><label className={labelCls}>Match</label><select className={selectCls} value={effectiveResultMatchId} onChange={(e) => { const id = e.target.value; setResultMatchId(id); syncResultForm(tournament, id); }} required>{(tournament?.matches ?? []).map((m) => <option key={m.id} value={m.id}>{m.stage} — {teamNameById.get(m.home_registere_id) ?? "Home"} vs {teamNameById.get(m.away_registere_id) ?? "Away"}</option>)}</select></div>
                 {selectedResultMatch && (
                   <div className="grid gap-3 md:grid-cols-2">
-                    <div><label className={labelCls}>{teamNameById.get(selectedResultMatch.home_registere_id) ?? "Domicile"}</label><input className={inputCls} type="number" min={0} value={resultHomeScore} onChange={(e) => setResultHomeScore(e.target.value)} required /></div>
-                    <div><label className={labelCls}>{teamNameById.get(selectedResultMatch.away_registere_id) ?? "Extérieur"}</label><input className={inputCls} type="number" min={0} value={resultAwayScore} onChange={(e) => setResultAwayScore(e.target.value)} required /></div>
+                    <div><label className={labelCls}>{teamNameById.get(selectedResultMatch.home_registere_id) ?? "Home"}</label><input className={inputCls} type="number" min={0} value={resultHomeScore} onChange={(e) => setResultHomeScore(e.target.value)} required /></div>
+                    <div><label className={labelCls}>{teamNameById.get(selectedResultMatch.away_registere_id) ?? "Away"}</label><input className={inputCls} type="number" min={0} value={resultAwayScore} onChange={(e) => setResultAwayScore(e.target.value)} required /></div>
                   </div>
                 )}
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Buteurs</p>
-                    <Btn type="button" variant="outline" size="sm" onClick={() => setGoalRows((c) => [...c, createGoalRow()])}>+ Ajouter un but</Btn>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Scorers</p>
+                    <Btn type="button" variant="outline" size="sm" onClick={() => setGoalRows((c) => [...c, createGoalRow()])}>+ Add Goal</Btn>
                   </div>
                   <div className="space-y-2">
                     {goalRows.map((row, index) => {
                       const pbt = (tournament?.players ?? []).filter((p) => p.registereId === row.teamRegistereId);
                       return (
                         <div key={row.id} className="grid gap-2 rounded-lg border border-gray-200 bg-white p-3 md:grid-cols-12">
-                          <div className="space-y-1 md:col-span-4"><label className="text-[10px] uppercase text-gray-500">Équipe</label><select className={selectCls} value={row.teamRegistereId} onChange={(e) => setGoalRows((c) => c.map((item) => item.id === row.id ? { ...item, teamRegistereId: e.target.value, scorerPlayerId: "" } : item))}><option value="">Sélectionner</option>{selectedResultMatch && <><option value={selectedResultMatch.home_registere_id}>{teamNameById.get(selectedResultMatch.home_registere_id) ?? "Domicile"}</option><option value={selectedResultMatch.away_registere_id}>{teamNameById.get(selectedResultMatch.away_registere_id) ?? "Extérieur"}</option></>}</select></div>
-                          <div className="space-y-1 md:col-span-4"><label className="text-[10px] uppercase text-gray-500">Buteur</label><select className={selectCls} value={row.scorerPlayerId} onChange={(e) => setGoalRows((c) => c.map((item) => item.id === row.id ? { ...item, scorerPlayerId: e.target.value } : item))}><option value="">Sélectionner</option>{pbt.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}</select></div>
+                          <div className="space-y-1 md:col-span-4"><label className="text-[10px] uppercase text-gray-500">Team</label><select className={selectCls} value={row.teamRegistereId} onChange={(e) => setGoalRows((c) => c.map((item) => item.id === row.id ? { ...item, teamRegistereId: e.target.value, scorerPlayerId: "" } : item))}><option value="">Select</option>{selectedResultMatch && <><option value={selectedResultMatch.home_registere_id}>{teamNameById.get(selectedResultMatch.home_registere_id) ?? "Home"}</option><option value={selectedResultMatch.away_registere_id}>{teamNameById.get(selectedResultMatch.away_registere_id) ?? "Away"}</option></>}</select></div>
+                          <div className="space-y-1 md:col-span-4"><label className="text-[10px] uppercase text-gray-500">Scorer</label><select className={selectCls} value={row.scorerPlayerId} onChange={(e) => setGoalRows((c) => c.map((item) => item.id === row.id ? { ...item, scorerPlayerId: e.target.value } : item))}><option value="">Select</option>{pbt.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}</select></div>
                           <div className="space-y-1 md:col-span-2"><label className="text-[10px] uppercase text-gray-500">Minute</label><input className={inputCls} type="number" min={0} max={130} value={row.minute} onChange={(e) => setGoalRows((c) => c.map((item) => item.id === row.id ? { ...item, minute: e.target.value } : item))} /></div>
-                          <div className="flex items-end gap-3 md:col-span-2"><label className="flex items-center gap-2 pb-2 text-xs text-gray-600 cursor-pointer"><input type="checkbox" checked={row.isOwnGoal} onChange={(e) => setGoalRows((c) => c.map((item) => item.id === row.id ? { ...item, isOwnGoal: e.target.checked } : item))} className="rounded" />CSC</label><Btn type="button" variant="danger" size="sm" onClick={() => setGoalRows((c) => c.filter((item) => item.id !== row.id))}>×</Btn></div>
-                          <p className="text-[10px] text-gray-400 md:col-span-12">But {index + 1}</p>
+                          <div className="flex items-end gap-3 md:col-span-2"><label className="flex items-center gap-2 pb-2 text-xs text-gray-600 cursor-pointer"><input type="checkbox" checked={row.isOwnGoal} onChange={(e) => setGoalRows((c) => c.map((item) => item.id === row.id ? { ...item, isOwnGoal: e.target.checked } : item))} className="rounded" />OG</label><Btn type="button" variant="danger" size="sm" onClick={() => setGoalRows((c) => c.filter((item) => item.id !== row.id))}>×</Btn></div>
+                          <p className="text-[10px] text-gray-400 md:col-span-12">Goal {index + 1}</p>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-                <Btn type="submit" isLoading={isSaving} disabled={!effectiveResultMatchId}>Sauvegarder le résultat</Btn>
+                <Btn type="submit" isLoading={isSaving} disabled={!effectiveResultMatchId}>Save Result</Btn>
               </form>
             </div>
           )}
@@ -1802,13 +1815,13 @@ export default function AdminPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-gray-900">{team.teamName}</p>
-                          <p className="text-xs text-gray-500">{playerCountByTeamId.get(team.id) ?? 0} joueurs · {staffCountByTeamId.get(team.id) ?? 0} staff</p>
+                          <p className="text-xs text-gray-500">{playerCountByTeamId.get(team.id) ?? 0} players · {staffCountByTeamId.get(team.id) ?? 0} staff</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setEditingTeamLogo(team)}
                           className="flex size-7 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors cursor-pointer"
-                          title="Modifier le logo"
+                          title="Edit Logo"
                         >
                           <PencilIcon className="size-3.5" />
                         </button>
@@ -1816,7 +1829,7 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => setDeletingTeam(team)}
                           className="flex size-7 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
-                          title="Supprimer l'équipe"
+                          title="Delete Team"
                         >
                           <Trash2Icon className="size-3.5" />
                         </button>
@@ -1828,8 +1841,8 @@ export default function AdminPage() {
 
               <div className={cardCls}>
                 <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-                  <div><p className="font-semibold text-gray-900">Liste officielle des joueurs</p><p className="mt-0.5 text-xs text-gray-500">Cliquez sur l&apos;icône PDF pour prévisualiser ou télécharger directement le badge</p></div>
-                  <Btn variant="outline" size="sm" isLoading={downloadingRosterKey === "__all__"} onClick={() => void handleDownloadRoster()}><DownloadIcon className="size-3" />PDF toutes les equipes</Btn>
+                  <div><p className="font-semibold text-gray-900">Official Roster</p><p className="mt-0.5 text-xs text-gray-500">Click on the PDF icon to preview or directly download the badge</p></div>
+                  <Btn variant="outline" size="sm" isLoading={downloadingRosterKey === "__all__"} onClick={() => void handleDownloadRoster()}><DownloadIcon className="size-3" />PDF All Rosters</Btn>
                 </div>
 
                 <div className="divide-y divide-gray-100">
@@ -1861,11 +1874,10 @@ export default function AdminPage() {
                             PDF equipe
                           </Btn>
                         </div>
-
                         {isExp && (
                           <div className="border-t border-gray-100 bg-gray-50/50">
                             <div className="px-5 py-4 flex items-center justify-between border-b border-gray-200 bg-white">
-                              <h4 className="font-semibold text-gray-900">Membres de l'équipe</h4>
+                              <h4 className="font-semibold text-gray-900">Team Members</h4>
                               <button
                                 type="button"
                                 onClick={() => void handleDownloadTeamBadges(team.id, team.teamName)}
@@ -1873,9 +1885,10 @@ export default function AdminPage() {
                                 className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-colors cursor-pointer"
                               >
                                 {downloadingBadgeKey === `team-${team.id}` ? <Spinner /> : <DownloadIcon className="size-3.5" />}
-                                Télécharger tous les badges (PDF)
+                                Download All Badges (PDF)
                               </button>
                             </div>
+
                             {tp.length > 0 && (
                               <div>
                                 <div className="px-5 py-2 border-b border-gray-100"><p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Joueurs ({tp.length})</p></div>
@@ -1908,14 +1921,14 @@ export default function AdminPage() {
                                               <div className="flex items-center gap-1.5">
                                                 {member ? (
                                                   <>
-                                                    <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex size-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Visualiser le badge">
+                                                    <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex size-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="View Badge">
                                                       <FileTextIcon className="size-3.5" />
                                                     </button>
-                                                    <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex size-7 items-center justify-center rounded-lg bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer" title="Télécharger le badge PDF">
+                                                    <button type="button" onClick={() => { handleDirectBadgeDownload(member.key); }} disabled={isDl} className="flex size-7 items-center justify-center rounded-lg bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer" title="Download PDF Badge">
                                                       {isDl ? <Spinner /> : <DownloadIcon className="size-3.5" />}
                                                     </button>
                                                     {member.photoUrl && (
-                                                      <button type="button" onClick={() => void handleDeleteMemberPhoto(member.key, player.fullName)} className="flex size-7 items-center justify-center rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors cursor-pointer" title="Supprimer la photo">
+                                                      <button type="button" onClick={() => { handleDeleteMemberPhoto(member.key, player.fullName); }} className="flex size-7 items-center justify-center rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors cursor-pointer" title="Delete Photo">
                                                         <Trash2Icon className="size-3.5" />
                                                       </button>
                                                     )}
@@ -1962,14 +1975,14 @@ export default function AdminPage() {
                                               <div className="flex items-center gap-1.5">
                                                 {member ? (
                                                   <>
-                                                    <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex size-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="Visualiser le badge">
+                                                    <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex size-7 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer" title="View Badge">
                                                       <FileTextIcon className="size-3.5" />
                                                     </button>
-                                                    <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex size-7 items-center justify-center rounded-lg bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer" title="Télécharger le badge PDF">
+                                                    <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex size-7 items-center justify-center rounded-lg bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer" title="Download PDF Badge">
                                                       {isDl ? <Spinner /> : <DownloadIcon className="size-3.5" />}
                                                     </button>
                                                     {member.photoUrl && (
-                                                      <button type="button" onClick={() => void handleDeleteMemberPhoto(member.key, ms.fullName)} className="flex size-7 items-center justify-center rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors cursor-pointer" title="Supprimer la photo">
+                                                      <button type="button" onClick={() => void handleDeleteMemberPhoto(member.key, ms.fullName)} className="flex size-7 items-center justify-center rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors cursor-pointer" title="Delete Photo">
                                                         <Trash2Icon className="size-3.5" />
                                                       </button>
                                                     )}
@@ -2001,15 +2014,15 @@ export default function AdminPage() {
             <div className={cardCls}>
               <div className="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-semibold text-gray-900">Joueurs</p>
-                  <p className="mt-0.5 text-xs text-gray-500">{playersData ? `${filteredPlayers.length} joueur${filteredPlayers.length !== 1 ? "s" : ""}${playerSearch ? " trouvés" : " au total"}` : "Chargement…"}</p>
+                  <p className="font-semibold text-gray-900">Players</p>
+                  <p className="mt-0.5 text-xs text-gray-500">{playersData ? `${filteredPlayers.length} player${filteredPlayers.length !== 1 ? "s" : ""}${playerSearch ? " found" : " total"}` : "Loading..."}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                   <div className="relative w-full sm:w-64">
                     <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400" />
-                    <input className={`${inputCls} pl-8`} placeholder="Rechercher joueur, équipe…" value={playerSearch} onChange={(e) => setPlayerSearch(e.target.value)} />
+                    <input className={`${inputCls} pl-8`} placeholder="Search player, team..." value={playerSearch} onChange={(e) => setPlayerSearch(e.target.value)} />
                   </div>
-                  <Btn variant="primary" onClick={() => setAddingPlayer(true)}>+ Ajouter un Joueur</Btn>
+                  <Btn variant="primary" onClick={() => setAddingPlayer(true)}>+ Add Player</Btn>
                 </div>
               </div>
               {isLoadingPlayers ? (
@@ -2017,7 +2030,7 @@ export default function AdminPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
-                    <thead><tr><th className={thCls}>#</th><th className={thCls}>Joueur</th><th className={thCls}>Equipe / Club</th><th className={thCls}>Position</th><th className={thCls}>Maillot</th><th className={thCls}>Age</th><th className={thCls}>Badge ID</th><th className={thCls}>Actions</th></tr></thead>
+                    <thead><tr><th className={thCls}>#</th><th className={thCls}>Player</th><th className={thCls}>Team / Club</th><th className={thCls}>Position</th><th className={thCls}>Jersey</th><th className={thCls}>Age</th><th className={thCls}>Badge ID</th><th className={thCls}>Actions</th></tr></thead>
                     <tbody className="divide-y divide-gray-100">
                       {filteredPlayers.map((player, idx) => (
                         <tr key={player.id} className="hover:bg-gray-50">
@@ -2052,20 +2065,18 @@ export default function AdminPage() {
               )}
             </div>
           )}
-
-          {/* ? Badges ? */}
           {activeSection === "badges" && (
             <div className={cardCls}>
               <div className="border-b border-gray-200 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-gray-900">Badges membres</p>
-                  <p className="mt-0.5 text-xs text-gray-500">Visualisez le badge dans une fenêtre ou téléchargez-le directement en PDF.</p>
+                  <p className="font-semibold text-gray-900">Member Badges</p>
+                  <p className="mt-0.5 text-xs text-gray-500">Preview the badge in a modal window or download it directly as a PDF.</p>
                 </div>
                 <div className="relative w-full sm:w-72">
                   <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Rechercher (nom, ID, équipe)..."
+                    placeholder="Search (name, ID, team)..."
                     value={badgeSearch}
                     onChange={(e) => setBadgeSearch(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all"
@@ -2074,7 +2085,7 @@ export default function AdminPage() {
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead><tr><th className={thCls}>Type</th><th className={thCls}>Nom complet</th><th className={thCls}>Equipe</th><th className={thCls}>Badge ID</th><th className={thCls}>Visualiser</th><th className={thCls}>Telecharger PDF</th><th className={thCls}>Actions</th></tr></thead>
+                  <thead><tr><th className={thCls}>Type</th><th className={thCls}>Full Name</th><th className={thCls}>Team</th><th className={thCls}>Badge ID</th><th className={thCls}>Preview</th><th className={thCls}>Download PDF</th><th className={thCls}>Actions</th></tr></thead>
                   <tbody className="divide-y divide-gray-100">
                     {(() => {
                       const lowerSearch = badgeSearch.toLowerCase().trim();
@@ -2091,31 +2102,31 @@ export default function AdminPage() {
                             const isDl = downloadingBadgeKey === member.key;
                             return (
                               <tr key={member.key} className="hover:bg-gray-50">
-                          <td className={tdCls}><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${member.memberType === "PLAYER" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}`}>{member.memberType}</span></td>
-                          <td className={`${tdCls} font-medium text-gray-900`}>{member.fullName}</td>
-                          <td className={tdCls}>{member.teamName}</td>
-                          <td className={`${tdCls} font-mono text-xs text-gray-500`}>{member.badgeId}</td>
-                          <td className={tdCls}>
-                            <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer">
-                              <FileTextIcon className="size-3" /> Visualiser
-                            </button>
-                          </td>
-                          <td className={tdCls}>
-                            <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer">
-                              {isDl ? <><Spinner />Génération…</> : <><DownloadIcon className="size-3" />Télécharger</>}
-                            </button>
-                          </td>
-                          <td className={tdCls}>
-                            <button
-                              type="button"
-                              onClick={() => void handleDeleteBadge(member)}
-                              disabled={isSaving}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
-                            >
-                              <Trash2Icon className="size-3" />
-                              Supprimer
-                            </button>
-                          </td>
+                                <td className={tdCls}><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${member.memberType === "PLAYER" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}`}>{member.memberType}</span></td>
+                                <td className={`${tdCls} font-medium text-gray-900`}>{member.fullName}</td>
+                                <td className={tdCls}>{member.teamName}</td>
+                                <td className={`${tdCls} font-mono text-xs text-gray-400`}>{member.badgeId ?? "—"}</td>
+                                <td className={tdCls}>
+                                  <button type="button" onClick={() => setBadgeModalKey(member.key)} className="flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer">
+                                    <FileTextIcon className="size-3" /> View
+                                  </button>
+                                </td>
+                                <td className={tdCls}>
+                                  <button type="button" onClick={() => void handleDirectBadgeDownload(member.key)} disabled={isDl} className="flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer">
+                                    {isDl ? <><Spinner />Generating...</> : <><DownloadIcon className="size-3" />Download</>}
+                                  </button>
+                                </td>
+                                <td className={tdCls}>
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleDeleteBadge(member)}
+                                    disabled={isSaving}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2Icon className="size-3" />
+                                    Delete
+                                  </button>
+                                </td>
                               </tr>
                             );
                           })}
@@ -2126,16 +2137,16 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
+              </div>
           )}
 
           {/* ? Scorers ? */}
           {activeSection === "scorers" && (
             <div className={cardCls}>
-              <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Meilleurs Buteurs</p></div>
+              <div className="border-b border-gray-200 px-5 py-4"><p className="font-semibold text-gray-900">Top Scorers</p></div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead><tr><th className={thCls}>Rang</th><th className={thCls}>Joueur</th><th className={thCls}>Équipe</th><th className={thCls}>Position</th><th className={thCls}>Buts</th></tr></thead>
+                  <thead><tr><th className={thCls}>Rank</th><th className={thCls}>Player</th><th className={thCls}>Team</th><th className={thCls}>Position</th><th className={thCls}>Goals</th></tr></thead>
                   <tbody className="divide-y divide-gray-100">
                     {(tournament?.topScorers ?? []).map((scorer, idx) => (
                       <tr key={scorer.playerId} className="hover:bg-gray-50">

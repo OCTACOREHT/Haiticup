@@ -169,6 +169,17 @@ type PurgeRegistrationsAction = {
   action: "PURGE_REGISTRATIONS";
 };
 
+type UpdateGroupAction = {
+  action: "UPDATE_GROUP";
+  groupId: string;
+  code: string;
+  name: string;
+};
+
+type AutoScheduleMatchesAction = {
+  action: "AUTO_SCHEDULE_MATCHES";
+};
+
 type TournamentAction =
   | CreateGroupAction
   | AssignTeamToGroupAction
@@ -180,6 +191,8 @@ type TournamentAction =
   | AutoDraw8TeamsAction
   | UpdateMatchAction
   | DeleteMatchAction
+  | UpdateGroupAction
+  | AutoScheduleMatchesAction
   | PurgeRegistrationsAction;
 
 const STAGES = new Set([
@@ -743,6 +756,77 @@ export async function POST(request: Request) {
       }
 
       return Response.json({ ok: true, drawId: data }, { status: 200 });
+    }
+
+    if (payload.action === "UPDATE_GROUP") {
+      if (!isNonEmptyString(payload.groupId) || !isNonEmptyString(payload.name) || !isNonEmptyString(payload.code)) {
+        return Response.json({ error: "groupId, code and name are required." }, { status: 400 });
+      }
+
+      const { error } = await supabase
+        .from("tournament_groups")
+        .update({ name: payload.name.trim(), code: payload.code.trim() })
+        .eq("id", payload.groupId.trim());
+
+      if (error) return Response.json({ error: error.message }, { status: 400 });
+      return Response.json({ ok: true }, { status: 200 });
+    }
+
+    if (payload.action === "AUTO_SCHEDULE_MATCHES") {
+      const { data: matches, error: fetchError } = await supabase
+        .from("tournament_matches")
+        .select("id, round_label, home:registere!tournament_matches_home_registere_id_fkey(team_name), away:registere!tournament_matches_away_registere_id_fkey(team_name)")
+        .eq("stage", "GROUP");
+
+      if (fetchError) return Response.json({ error: fetchError.message }, { status: 400 });
+      if (!matches || matches.length !== 12) {
+        return Response.json({ error: "Exactly 12 group matches expected for auto-scheduling." }, { status: 400 });
+      }
+
+      // Sort matches to guarantee the special opening match is first, then group them by MatchDay
+      const sortedMatches = matches.sort((a, b) => {
+        const nameA1 = ((a.home as any)?.team_name || "").toLowerCase();
+        const nameA2 = ((a.away as any)?.team_name || "").toLowerCase();
+        const nameB1 = ((b.home as any)?.team_name || "").toLowerCase();
+        const nameB2 = ((b.away as any)?.team_name || "").toLowerCase();
+
+        const isASpecial = (nameA1.includes("1804") && nameA2.includes("elite energy")) || (nameA2.includes("1804") && nameA1.includes("elite energy"));
+        const isBSpecial = (nameB1.includes("1804") && nameB2.includes("elite energy")) || (nameB2.includes("1804") && nameB1.includes("elite energy"));
+        
+        if (isASpecial && !isBSpecial) return -1;
+        if (isBSpecial && !isASpecial) return 1;
+
+        const mdA = a.round_label?.match(/MD(\d)/)?.[1] || "9";
+        const mdB = b.round_label?.match(/MD(\d)/)?.[1] || "9";
+        if (mdA !== mdB) return mdA.localeCompare(mdB);
+
+        return (a.round_label || "").localeCompare(b.round_label || "");
+      });
+
+      const venue = "EZELL HESTER COMMUNITY CENTER";
+      const schedule = [
+        "2026-07-12T17:00:00.000Z", // Sunday 1 (1 match)
+        "2026-07-19T16:00:00.000Z", // Sunday 2 (2 matches)
+        "2026-07-19T18:00:00.000Z",
+        "2026-07-26T16:00:00.000Z", // Sunday 3 (2 matches)
+        "2026-07-26T18:00:00.000Z",
+        "2026-08-02T16:00:00.000Z", // Sunday 4 (2 matches)
+        "2026-08-02T18:00:00.000Z",
+        "2026-08-09T16:00:00.000Z", // Sunday 5 (2 matches)
+        "2026-08-09T18:00:00.000Z",
+        "2026-08-16T16:00:00.000Z", // Sunday 6 (2 matches)
+        "2026-08-16T18:00:00.000Z",
+        "2026-08-23T17:00:00.000Z", // Sunday 7 (1 match)
+      ];
+
+      for (let i = 0; i < 12; i++) {
+        await supabase
+          .from("tournament_matches")
+          .update({ kickoff_at: schedule[i], venue })
+          .eq("id", sortedMatches[i].id);
+      }
+
+      return Response.json({ ok: true }, { status: 200 });
     }
 
     if (payload.action === "SAVE_MATCH_RESULT") {
