@@ -405,51 +405,76 @@ export default function MatchSchedulePage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {standings.map((groupStanding) => (
-                <article key={groupStanding.groupId} className="overflow-hidden rounded-xl border border-[#004AD3]/20 bg-white shadow-sm">
-                  <div className="border-b border-[#004AD3]/20 bg-white px-6 py-4">
-                    <h3 className="font-heading text-xl text-[#FF6B53] uppercase">{groupStanding.groupName}</h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="text-[11px] tracking-wider text-[#004AD3]/70 uppercase">
-                        <tr>
-                          <th className="px-5 py-3 text-left">Equipe</th>
-                          <th className="px-3 py-3 text-center">Pts</th>
-                          <th className="px-3 py-3 text-center">J</th>
-                          <th className="px-3 py-3 text-center">G</th>
-                          <th className="px-3 py-3 text-center">N</th>
-                          <th className="px-3 py-3 text-center">P</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {groupStanding.teams.map((row) => (
-                          <tr key={row.registereId} className="border-t border-[#004AD3]/15">
-                            <td className="px-5 py-3 flex items-center gap-3">
-                              <div className="relative h-8 w-8 shrink-0 flex items-center justify-center">
-                                <Image
-                                  src={getTeamLogo(teamsMap.get(row.registereId)?.logoUrl, row.teamName)}
-                                  alt={row.teamName}
-                                  fill
-                                  sizes="32px"
-                                  className="object-contain"
-                                  unoptimized
-                                />
-                              </div>
-                              <span className="font-bold text-[#004AD3]">{row.teamName}</span>
-                            </td>
-                            <td className="text-center font-extrabold text-[#004AD3] text-base">{row.points}</td>
-                            <td className="text-center">{row.played}</td>
-                            <td className="text-center text-green-600 font-semibold">{row.wins}</td>
-                            <td className="text-center text-gray-500">{row.draws}</td>
-                            <td className="text-center text-red-500">{row.losses}</td>
+              {loading ? (
+                [...Array(2)].map((_, i) => (
+                  <article key={i} className="overflow-hidden rounded-xl border border-[#004AD3]/12 bg-white shadow-sm animate-pulse">
+                    <div className="border-b border-[#004AD3]/10 px-6 py-4">
+                      <div className="h-5 w-24 bg-slate-100 rounded" />
+                    </div>
+                    <div className="px-6 py-4 space-y-4">
+                      {[...Array(4)].map((_, j) => (
+                        <div key={j} className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="h-8 w-8 bg-slate-100 rounded-full" />
+                            <div className="h-4 w-32 bg-slate-100 rounded" />
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="h-4 w-6 bg-slate-100 rounded" />
+                            <div className="h-4 w-6 bg-slate-100 rounded" />
+                            <div className="h-4 w-6 bg-slate-100 rounded" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                ))
+              ) : (
+                standings.map((groupStanding) => (
+                  <article key={groupStanding.groupId} className="overflow-hidden rounded-xl border border-[#004AD3]/20 bg-white shadow-sm">
+                    <div className="border-b border-[#004AD3]/20 bg-white px-6 py-4">
+                      <h3 className="font-heading text-xl text-[#FF6B53] uppercase">{groupStanding.groupName}</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="text-[11px] tracking-wider text-[#004AD3]/70 uppercase">
+                          <tr>
+                            <th className="px-5 py-3 text-left">Equipe</th>
+                            <th className="px-3 py-3 text-center">Pts</th>
+                            <th className="px-3 py-3 text-center">J</th>
+                            <th className="px-3 py-3 text-center">G</th>
+                            <th className="px-3 py-3 text-center">N</th>
+                            <th className="px-3 py-3 text-center">P</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </article>
-              ))}
+                        </thead>
+                        <tbody>
+                          {groupStanding.teams.map((row) => (
+                            <tr key={row.registereId} className="border-t border-[#004AD3]/15">
+                              <td className="px-5 py-3 flex items-center gap-3">
+                                <div className="relative h-8 w-8 shrink-0 flex items-center justify-center">
+                                  <Image
+                                    src={getTeamLogo(teamsMap.get(row.registereId)?.logoUrl, row.teamName)}
+                                    alt={row.teamName}
+                                    fill
+                                    sizes="32px"
+                                    className="object-contain"
+                                    unoptimized
+                                  />
+                                </div>
+                                <span className="font-bold text-[#004AD3]">{row.teamName}</span>
+                              </td>
+                              <td className="text-center font-extrabold text-[#004AD3] text-base">{row.points}</td>
+                              <td className="text-center">{row.played}</td>
+                              <td className="text-center text-green-600 font-semibold">{row.wins}</td>
+                              <td className="text-center text-gray-500">{row.draws}</td>
+                              <td className="text-center text-red-500">{row.losses}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </article>
+                ))
+              )}
             </div>
           </div>
         </section>
@@ -467,94 +492,124 @@ export default function MatchSchedulePage() {
               <article className="w-full">
                 <h3 className="mb-6 text-xl tracking-[0.08em] text-[#FF6B53] uppercase font-bold border-b border-slate-100 pb-2">Poule A Fixtures</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {matches
-                    .filter((m) => {
-                      const group = groups.find((g) => g.id === m.group_id);
-                      return m.stage === "GROUP" && group?.code === "A";
-                    })
-                    .map((match) => {
-                      const homeTeam = teamsMap.get(match.home_registere_id);
-                      const awayTeam = teamsMap.get(match.away_registere_id);
-                      const displayDate = formatDateTime(match.kickoff_at) || getMatchdayDateFallback(match.round_label);
-                      const isPlayed = match.status === "PLAYED";
-                      
-                      return (
-                        <div key={match.id} className="relative overflow-hidden border border-[#004AD3]/12 bg-transparent hover:border-[#FF6B53]/30 transition-all duration-300 rounded-xl p-5 flex flex-col justify-between min-h-[210px]">
-                          <div className="relative z-10 flex flex-col justify-between h-full w-full">
-                            {/* Montserrat Header */}
-                            <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3 mb-4">
-                              <span className="[font-family:var(--font-nav),sans-serif] font-black text-xs uppercase text-[#FF6B53] tracking-[0.14em]">
-                                {match.round_label || "GROUP A"}
-                              </span>
-                              <span className="[font-family:var(--font-nav),sans-serif] font-bold text-xs text-[#0D47B5]/80 tracking-wide uppercase">
-                                {displayDate}
-                              </span>
+                  {loading ? (
+                    [...Array(3)].map((_, i) => (
+                      <div key={i} className="relative overflow-hidden border border-[#004AD3]/8 bg-transparent rounded-xl p-5 flex flex-col justify-between min-h-[210px] animate-pulse">
+                        <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                          <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3 mb-4">
+                            <div className="h-3.5 w-16 bg-slate-100 rounded" />
+                            <div className="h-3.5 w-24 bg-slate-100 rounded" />
+                          </div>
+                          <div className="grid grid-cols-7 items-center gap-2 flex-1">
+                            <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                              <div className="h-16 w-16 bg-slate-100 rounded-full" />
+                              <div className="h-3 w-16 bg-slate-100 rounded mt-1" />
                             </div>
-                            
-                            {/* Body (Transparent Logos) */}
-                            <div className="grid grid-cols-7 items-center gap-2 flex-1">
-                              {/* Home Team */}
-                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
-                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
-                                  <Image
-                                    src={getTeamLogo(homeTeam?.logoUrl, homeTeam?.teamName || "TBD")}
-                                    alt={homeTeam?.teamName || "TBD"}
-                                    fill
-                                    sizes="64px"
-                                    className="object-contain"
-                                    unoptimized
-                                  />
-                                </div>
-                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
-                                  {homeTeam?.teamName || "TBD"}
-                                </span>
-                              </div>
-
-                              {/* Score or VS */}
-                              <div className="col-span-1 flex flex-col items-center justify-center">
-                                {isPlayed ? (
-                                  <div className="flex flex-col items-center">
-                                    <div className="flex items-center gap-1">
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.home_score}</span>
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-sm font-black text-[#FF6B53] leading-none">–</span>
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.away_score}</span>
-                                    </div>
-                                    <span className="[font-family:var(--font-nav),sans-serif] text-[8px] font-black uppercase tracking-widest text-[#FF6B53] mt-1">Final</span>
-                                  </div>
-                                ) : (
-                                  <span className="[font-family:var(--font-nav),sans-serif] text-[10px] font-black tracking-[0.15em] bg-[#0D47B5]/5 border border-[#0D47B5]/10 px-3 py-1 rounded text-[#0D47B5]/80 uppercase">
-                                    VS
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Away Team */}
-                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
-                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
-                                  <Image
-                                    src={getTeamLogo(awayTeam?.logoUrl, awayTeam?.teamName || "TBD")}
-                                    alt={awayTeam?.teamName || "TBD"}
-                                    fill
-                                    sizes="64px"
-                                    className="object-contain"
-                                    unoptimized
-                                  />
-                                </div>
-                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
-                                  {awayTeam?.teamName || "TBD"}
-                                </span>
-                              </div>
+                            <div className="col-span-1 flex flex-col items-center justify-center">
+                              <div className="h-5 w-8 bg-slate-100 rounded" />
                             </div>
-
-                            {/* Montserrat Location Footer */}
-                            <div className="mt-4 text-center [font-family:var(--font-nav),sans-serif] text-[9px] font-extrabold text-[#0D47B5]/60 flex items-center justify-center gap-1.5 border-t border-[#004AD3]/10 pt-3 uppercase tracking-[0.12em]">
-                              <AppIcon name="location_on" className="text-xs text-[#FF6B53]" />
-                              <span>Ezell Hester Community Center</span>
+                            <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                              <div className="h-16 w-16 bg-slate-100 rounded-full" />
+                              <div className="h-3 w-16 bg-slate-100 rounded mt-1" />
                             </div>
                           </div>
+                          <div className="mt-4 border-t border-[#004AD3]/10 pt-3 flex items-center justify-center gap-1.5">
+                            <div className="h-3 w-3 bg-slate-100 rounded-full" />
+                            <div className="h-3 w-36 bg-slate-100 rounded" />
+                          </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))
+                  ) : (
+                    matches
+                      .filter((m) => {
+                        const group = groups.find((g) => g.id === m.group_id);
+                        return m.stage === "GROUP" && group?.code === "A";
+                      })
+                      .map((match) => {
+                        const homeTeam = teamsMap.get(match.home_registere_id);
+                        const awayTeam = teamsMap.get(match.away_registere_id);
+                        const displayDate = formatDateTime(match.kickoff_at) || getMatchdayDateFallback(match.round_label);
+                        const isPlayed = match.status === "PLAYED";
+                        
+                        return (
+                          <div key={match.id} className="relative overflow-hidden border border-[#004AD3]/12 bg-transparent hover:border-[#FF6B53]/30 transition-all duration-300 rounded-xl p-5 flex flex-col justify-between min-h-[210px]">
+                            <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                              {/* Montserrat Header */}
+                              <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3 mb-4">
+                                <span className="[font-family:var(--font-nav),sans-serif] font-black text-xs uppercase text-[#FF6B53] tracking-[0.14em]">
+                                  {match.round_label || "GROUP A"}
+                                </span>
+                                <span className="[font-family:var(--font-nav),sans-serif] font-bold text-xs text-[#0D47B5]/80 tracking-wide uppercase">
+                                  {displayDate}
+                                </span>
+                              </div>
+                              
+                              {/* Body (Transparent Logos) */}
+                              <div className="grid grid-cols-7 items-center gap-2 flex-1">
+                                {/* Home Team */}
+                                <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                  <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                    <Image
+                                      src={getTeamLogo(homeTeam?.logoUrl, homeTeam?.teamName || "TBD")}
+                                      alt={homeTeam?.teamName || "TBD"}
+                                      fill
+                                      sizes="64px"
+                                      className="object-contain"
+                                      unoptimized
+                                    />
+                                  </div>
+                                  <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                    {homeTeam?.teamName || "TBD"}
+                                  </span>
+                                </div>
+
+                                {/* Score or VS */}
+                                <div className="col-span-1 flex flex-col items-center justify-center">
+                                  {isPlayed ? (
+                                    <div className="flex flex-col items-center">
+                                      <div className="flex items-center gap-1">
+                                        <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.home_score}</span>
+                                        <span className="[font-family:var(--font-nav),sans-serif] text-sm font-black text-[#FF6B53] leading-none">–</span>
+                                        <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.away_score}</span>
+                                      </div>
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-[8px] font-black uppercase tracking-widest text-[#FF6B53] mt-1">Final</span>
+                                    </div>
+                                  ) : (
+                                    <span className="[font-family:var(--font-nav),sans-serif] text-[10px] font-black tracking-[0.15em] bg-[#0D47B5]/5 border border-[#0D47B5]/10 px-3.5 py-1 rounded text-[#0D47B5]/80 uppercase">
+                                      V
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Away Team */}
+                                <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                  <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                    <Image
+                                      src={getTeamLogo(awayTeam?.logoUrl, awayTeam?.teamName || "TBD")}
+                                      alt={awayTeam?.teamName || "TBD"}
+                                      fill
+                                      sizes="64px"
+                                      className="object-contain"
+                                      unoptimized
+                                    />
+                                  </div>
+                                  <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                    {awayTeam?.teamName || "TBD"}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Montserrat Location Footer */}
+                              <div className="mt-4 text-center [font-family:var(--font-nav),sans-serif] text-[9px] font-extrabold text-[#0D47B5]/60 flex items-center justify-center gap-1.5 border-t border-[#004AD3]/10 pt-3 uppercase tracking-[0.12em]">
+                                <AppIcon name="location_on" className="text-xs text-[#FF6B53]" />
+                                <span>Ezell Hester Community Center</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
               </article>
 
@@ -562,94 +617,124 @@ export default function MatchSchedulePage() {
               <article className="w-full">
                 <h3 className="mb-6 text-xl tracking-[0.08em] text-[#FF6B53] uppercase font-bold border-b border-slate-100 pb-2">Poule B Fixtures</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {matches
-                    .filter((m) => {
-                      const group = groups.find((g) => g.id === m.group_id);
-                      return m.stage === "GROUP" && group?.code === "B";
-                    })
-                    .map((match) => {
-                      const homeTeam = teamsMap.get(match.home_registere_id);
-                      const awayTeam = teamsMap.get(match.away_registere_id);
-                      const displayDate = formatDateTime(match.kickoff_at) || getMatchdayDateFallback(match.round_label);
-                      const isPlayed = match.status === "PLAYED";
-                      
-                      return (
-                        <div key={match.id} className="relative overflow-hidden border border-[#004AD3]/12 bg-transparent hover:border-[#FF6B53]/30 transition-all duration-300 rounded-xl p-5 flex flex-col justify-between min-h-[210px]">
-                          <div className="relative z-10 flex flex-col justify-between h-full w-full">
-                            {/* Montserrat Header */}
-                            <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3 mb-4">
-                              <span className="[font-family:var(--font-nav),sans-serif] font-black text-xs uppercase text-[#FF6B53] tracking-[0.14em]">
-                                {match.round_label || "GROUP B"}
-                              </span>
-                              <span className="[font-family:var(--font-nav),sans-serif] font-bold text-xs text-[#0D47B5]/80 tracking-wide uppercase">
-                                {displayDate}
-                              </span>
+                  {loading ? (
+                    [...Array(3)].map((_, i) => (
+                      <div key={i} className="relative overflow-hidden border border-[#004AD3]/8 bg-transparent rounded-xl p-5 flex flex-col justify-between min-h-[210px] animate-pulse">
+                        <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                          <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3 mb-4">
+                            <div className="h-3.5 w-16 bg-slate-100 rounded" />
+                            <div className="h-3.5 w-24 bg-slate-100 rounded" />
+                          </div>
+                          <div className="grid grid-cols-7 items-center gap-2 flex-1">
+                            <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                              <div className="h-16 w-16 bg-slate-100 rounded-full" />
+                              <div className="h-3 w-16 bg-slate-100 rounded mt-1" />
                             </div>
-                            
-                            {/* Body (Transparent Logos) */}
-                            <div className="grid grid-cols-7 items-center gap-2 flex-1">
-                              {/* Home Team */}
-                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
-                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
-                                  <Image
-                                    src={getTeamLogo(homeTeam?.logoUrl, homeTeam?.teamName || "TBD")}
-                                    alt={homeTeam?.teamName || "TBD"}
-                                    fill
-                                    sizes="64px"
-                                    className="object-contain"
-                                    unoptimized
-                                  />
-                                </div>
-                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
-                                  {homeTeam?.teamName || "TBD"}
-                                </span>
-                              </div>
-
-                              {/* Score or VS */}
-                              <div className="col-span-1 flex flex-col items-center justify-center">
-                                {isPlayed ? (
-                                  <div className="flex flex-col items-center">
-                                    <div className="flex items-center gap-1">
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.home_score}</span>
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-sm font-black text-[#FF6B53] leading-none">–</span>
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.away_score}</span>
-                                    </div>
-                                    <span className="[font-family:var(--font-nav),sans-serif] text-[8px] font-black uppercase tracking-widest text-[#FF6B53] mt-1">Final</span>
-                                  </div>
-                                ) : (
-                                  <span className="[font-family:var(--font-nav),sans-serif] text-[10px] font-black tracking-[0.15em] bg-[#0D47B5]/5 border border-[#0D47B5]/10 px-3 py-1 rounded text-[#0D47B5]/80 uppercase">
-                                    VS
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Away Team */}
-                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
-                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
-                                  <Image
-                                    src={getTeamLogo(awayTeam?.logoUrl, awayTeam?.teamName || "TBD")}
-                                    alt={awayTeam?.teamName || "TBD"}
-                                    fill
-                                    sizes="64px"
-                                    className="object-contain"
-                                    unoptimized
-                                  />
-                                </div>
-                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
-                                  {awayTeam?.teamName || "TBD"}
-                                </span>
-                              </div>
+                            <div className="col-span-1 flex flex-col items-center justify-center">
+                              <div className="h-5 w-8 bg-slate-100 rounded" />
                             </div>
-
-                            {/* Montserrat Location Footer */}
-                            <div className="mt-4 text-center [font-family:var(--font-nav),sans-serif] text-[9px] font-extrabold text-[#0D47B5]/60 flex items-center justify-center gap-1.5 border-t border-[#004AD3]/10 pt-3 uppercase tracking-[0.12em]">
-                              <AppIcon name="location_on" className="text-xs text-[#FF6B53]" />
-                              <span>Ezell Hester Community Center</span>
+                            <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                              <div className="h-16 w-16 bg-slate-100 rounded-full" />
+                              <div className="h-3 w-16 bg-slate-100 rounded mt-1" />
                             </div>
                           </div>
+                          <div className="mt-4 border-t border-[#004AD3]/10 pt-3 flex items-center justify-center gap-1.5">
+                            <div className="h-3 w-3 bg-slate-100 rounded-full" />
+                            <div className="h-3 w-36 bg-slate-100 rounded" />
+                          </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))
+                  ) : (
+                    matches
+                      .filter((m) => {
+                        const group = groups.find((g) => g.id === m.group_id);
+                        return m.stage === "GROUP" && group?.code === "B";
+                      })
+                      .map((match) => {
+                        const homeTeam = teamsMap.get(match.home_registere_id);
+                        const awayTeam = teamsMap.get(match.away_registere_id);
+                        const displayDate = formatDateTime(match.kickoff_at) || getMatchdayDateFallback(match.round_label);
+                        const isPlayed = match.status === "PLAYED";
+                        
+                        return (
+                          <div key={match.id} className="relative overflow-hidden border border-[#004AD3]/12 bg-transparent hover:border-[#FF6B53]/30 transition-all duration-300 rounded-xl p-5 flex flex-col justify-between min-h-[210px]">
+                            <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                              {/* Montserrat Header */}
+                              <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3 mb-4">
+                                <span className="[font-family:var(--font-nav),sans-serif] font-black text-xs uppercase text-[#FF6B53] tracking-[0.14em]">
+                                  {match.round_label || "GROUP B"}
+                                </span>
+                                <span className="[font-family:var(--font-nav),sans-serif] font-bold text-xs text-[#0D47B5]/80 tracking-wide uppercase">
+                                  {displayDate}
+                                </span>
+                              </div>
+                              
+                              {/* Body (Transparent Logos) */}
+                              <div className="grid grid-cols-7 items-center gap-2 flex-1">
+                                {/* Home Team */}
+                                <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                  <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                    <Image
+                                      src={getTeamLogo(homeTeam?.logoUrl, homeTeam?.teamName || "TBD")}
+                                      alt={homeTeam?.teamName || "TBD"}
+                                      fill
+                                      sizes="64px"
+                                      className="object-contain"
+                                      unoptimized
+                                    />
+                                  </div>
+                                  <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                    {homeTeam?.teamName || "TBD"}
+                                  </span>
+                                </div>
+
+                                {/* Score or VS */}
+                                <div className="col-span-1 flex flex-col items-center justify-center">
+                                  {isPlayed ? (
+                                    <div className="flex flex-col items-center">
+                                      <div className="flex items-center gap-1">
+                                        <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.home_score}</span>
+                                        <span className="[font-family:var(--font-nav),sans-serif] text-sm font-black text-[#FF6B53] leading-none">–</span>
+                                        <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.away_score}</span>
+                                      </div>
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-[8px] font-black uppercase tracking-widest text-[#FF6B53] mt-1">Final</span>
+                                    </div>
+                                  ) : (
+                                    <span className="[font-family:var(--font-nav),sans-serif] text-[10px] font-black tracking-[0.15em] bg-[#0D47B5]/5 border border-[#0D47B5]/10 px-3.5 py-1 rounded text-[#0D47B5]/80 uppercase">
+                                      V
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Away Team */}
+                                <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                  <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                    <Image
+                                      src={getTeamLogo(awayTeam?.logoUrl, awayTeam?.teamName || "TBD")}
+                                      alt={awayTeam?.teamName || "TBD"}
+                                      fill
+                                      sizes="64px"
+                                      className="object-contain"
+                                      unoptimized
+                                    />
+                                  </div>
+                                  <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                    {awayTeam?.teamName || "TBD"}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Montserrat Location Footer */}
+                              <div className="mt-4 text-center [font-family:var(--font-nav),sans-serif] text-[9px] font-extrabold text-[#0D47B5]/60 flex items-center justify-center gap-1.5 border-t border-[#004AD3]/10 pt-3 uppercase tracking-[0.12em]">
+                                <AppIcon name="location_on" className="text-xs text-[#FF6B53]" />
+                                <span>Ezell Hester Community Center</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
               </article>
             </div>

@@ -482,30 +482,208 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Registered Teams Marquee ──────────────────────────────────────── */}
-        <section className="bg-[#f8f9fa] py-16 border-b border-[#0D47B5]/10 overflow-hidden">
-          <Reveal direction="up" className="mx-auto max-w-[1180px] px-4 md:px-16 mb-10 text-center">
-            <div>
-              <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#0D47B5]/72 uppercase">
-                The Competition
-              </p>
-              <h3 className="mt-2 text-2xl md:text-3xl font-extrabold [font-family:var(--font-nav),sans-serif] text-[#0D47B5] uppercase">
-                Teams Already Registered
-              </h3>
+        {/* ── Participating Teams Section ────────────────────────── */}
+        <section id="participating-teams" className="py-20 bg-white border-t border-slate-100">
+          <div className="mx-auto max-w-[1180px] px-4 md:px-16">
+            
+            <div className="w-full">
+              <Reveal direction="up" className="text-center mb-12">
+                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#FF6B53] uppercase">
+                  Official Contenders
+                </p>
+                <h2 className="font-heading mt-2 text-3xl md:text-5xl text-[#0D47B5] uppercase">
+                  Championship Teams
+                </h2>
+                <div className="mx-auto mt-4 h-1 w-16 bg-[#FF6B53] rounded" />
+              </Reveal>
+
+              <Reveal direction="up" delay={200}>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
+                  {registeredTeams.map((team, idx) => (
+                    <div key={idx} className="flex flex-col items-center justify-center p-4 text-center">
+                      <div className="relative h-24 w-24 flex items-center justify-center mb-3">
+                        <Image 
+                          src={team.logo} 
+                          alt={team.name} 
+                          fill
+                          className="object-contain" 
+                          unoptimized 
+                        />
+                      </div>
+                      <span className="text-sm font-bold text-[#0D47B5]">
+                        {team.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
             </div>
-          </Reveal>
-          
-          <Reveal direction="up" delay={200} className="w-full py-8">
-            <div className="w-full [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
-              <InfiniteSlider gap={32} duration={40} durationOnHover={80}>
-                {registeredTeams.map((team, idx) => (
-                  <div key={idx} className="flex h-[90px] w-[130px] items-center justify-center">
-                    <Image src={team.logo} alt={team.name} width={130} height={130} className="max-h-full max-w-full object-contain" unoptimized />
+
+          </div>
+        </section>
+
+        <section id="schedule" className="bg-[#ffffff] py-[120px] border-b border-slate-100">
+          <div className="mx-auto max-w-[1180px] px-4 md:px-16">
+            <Reveal direction="up">
+              <div className="mb-12 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#FF6B53] uppercase text-center sm:text-left">
+                    Match Center
+                  </p>
+                  <h2 className="font-heading mt-1 text-3xl md:text-5xl text-[#0D47B5] uppercase text-center sm:text-left">MATCH SCHEDULE</h2>
+                </div>
+                <div className="flex items-center gap-2 text-[#FF6B53]">
+                  <span className="h-3 w-3 animate-pulse rounded-full bg-[#FF6B53]" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Live Scores Enabled</span>
+                </div>
+              </div>
+            </Reveal>
+
+            {scheduleLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto w-full">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="relative overflow-hidden border border-[#004AD3]/8 bg-transparent rounded-xl p-6 flex flex-col justify-between min-h-[220px] animate-pulse">
+                    <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                      <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3.5 mb-4">
+                        <div className="h-3.5 w-16 bg-slate-100 rounded" />
+                        <div className="h-3.5 w-24 bg-slate-100 rounded" />
+                      </div>
+                      <div className="grid grid-cols-7 items-center gap-2 flex-1">
+                        <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                          <div className="h-16 w-16 bg-slate-100 rounded-full" />
+                          <div className="h-3 w-16 bg-slate-100 rounded mt-1" />
+                        </div>
+                        <div className="col-span-1 flex flex-col items-center justify-center">
+                          <div className="h-5 w-8 bg-slate-100 rounded" />
+                        </div>
+                        <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                          <div className="h-16 w-16 bg-slate-100 rounded-full" />
+                          <div className="h-3 w-16 bg-slate-100 rounded mt-1" />
+                        </div>
+                      </div>
+                      <div className="mt-4 border-t border-[#004AD3]/10 pt-3 flex items-center justify-center gap-1.5">
+                        <div className="h-3 w-3 bg-slate-100 rounded-full" />
+                        <div className="h-3 w-36 bg-slate-100 rounded" />
+                      </div>
+                    </div>
                   </div>
                 ))}
-              </InfiniteSlider>
-            </div>
-          </Reveal>
+              </div>
+            ) : featuredMatches.length === 0 ? (
+              <Reveal direction="up" delay={200}>
+                <div className="overflow-hidden rounded-xl border border-[#0D47B5]/15 bg-white">
+                  <div className="flex h-[220px] flex-col items-center justify-center gap-3 bg-white text-[#0D47B5]/45 md:h-[280px]">
+                    <AppIcon name="pending_actions" className="text-5xl text-[#0D47B5]/35" />
+                    <p className="text-center text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#0D47B5]/45 uppercase md:text-sm">
+                      No Matches Scheduled Yet.
+                    </p>
+                  </div>
+                </div>
+              </Reveal>
+            ) : (
+              <div className="flex flex-col gap-10">
+                <Reveal direction="up" delay={200}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    {featuredMatches.map((match) => {
+                      const homeTeam = teamsMap.get(match.home_registere_id);
+                      const awayTeam = teamsMap.get(match.away_registere_id);
+                      const displayDate = formatDateTime(match.kickoff_at) || getMatchdayDateFallback(match.round_label);
+                      const isPlayed = match.status === "PLAYED";
+                      const groupCode = groupsMap.get(match.group_id)?.code || "A";
+
+                      return (
+                        <div key={match.id} className="relative overflow-hidden border border-[#004AD3]/12 bg-transparent hover:border-[#FF6B53]/35 transition-all duration-300 rounded-xl p-6 flex flex-col justify-between min-h-[220px]">
+                          <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                            {/* Montserrat Header */}
+                            <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3.5 mb-4">
+                              <span className="[font-family:var(--font-nav),sans-serif] font-black text-xs uppercase text-[#FF6B53] tracking-[0.14em]">
+                                {match.round_label || `GROUP ${groupCode}`}
+                              </span>
+                              <span className="[font-family:var(--font-nav),sans-serif] font-bold text-xs text-[#0D47B5]/80 tracking-wide uppercase">
+                                {displayDate}
+                              </span>
+                            </div>
+                            
+                            {/* Body (Transparent Logos) */}
+                            <div className="grid grid-cols-7 items-center gap-2 flex-1">
+                              {/* Home Team */}
+                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                  <Image
+                                    src={getTeamLogo(homeTeam?.logoUrl, homeTeam?.teamName || "TBD")}
+                                    alt={homeTeam?.teamName || "TBD"}
+                                    fill
+                                    sizes="64px"
+                                    className="object-contain"
+                                    unoptimized
+                                  />
+                                </div>
+                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                  {homeTeam?.teamName || "TBD"}
+                                </span>
+                              </div>
+
+                              {/* Score or VS */}
+                              <div className="col-span-1 flex flex-col items-center justify-center">
+                                {isPlayed ? (
+                                  <div className="flex flex-col items-center">
+                                    <div className="flex items-center gap-1">
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.home_score}</span>
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-sm font-black text-[#FF6B53] leading-none">–</span>
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.away_score}</span>
+                                    </div>
+                                    <span className="[font-family:var(--font-nav),sans-serif] text-[8px] font-black uppercase tracking-widest text-[#FF6B53] mt-1">Final</span>
+                                  </div>
+                                ) : (
+                                  <span className="[font-family:var(--font-nav),sans-serif] text-[10px] font-black tracking-[0.15em] bg-[#0D47B5]/5 border border-[#0D47B5]/10 px-3.5 py-1 rounded text-[#0D47B5]/80 uppercase">
+                                    V
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Away Team */}
+                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                  <Image
+                                    src={getTeamLogo(awayTeam?.logoUrl, awayTeam?.teamName || "TBD")}
+                                    alt={awayTeam?.teamName || "TBD"}
+                                    fill
+                                    sizes="64px"
+                                    className="object-contain"
+                                    unoptimized
+                                  />
+                                </div>
+                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                  {awayTeam?.teamName || "TBD"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Montserrat Location Footer */}
+                            <div className="mt-4 text-center [font-family:var(--font-nav),sans-serif] text-[9px] font-extrabold text-[#0D47B5]/60 flex items-center justify-center gap-1.5 border-t border-[#004AD3]/10 pt-3 uppercase tracking-[0.12em]">
+                              <AppIcon name="location_on" className="text-xs text-[#FF6B53]" />
+                              <span>Ezell Hester Community Center</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Reveal>
+
+                {/* View All Matches Button */}
+                <Reveal direction="up" delay={300} className="flex justify-center mt-4">
+                  <Link
+                    href="/match-schedule"
+                    className="group inline-flex items-center gap-2.5 px-8 py-3.5 border-2 border-[#0D47B5] text-xs font-black tracking-widest [font-family:var(--font-nav),sans-serif] text-[#0D47B5] hover:bg-[#FF6B53] hover:border-[#FF6B53] hover:text-white transition-all duration-300 uppercase rounded-sm"
+                  >
+                    <span>View All Matches</span>
+                    <AppIcon name="arrow_forward" className="text-sm text-[#0D47B5] group-hover:text-white transition-colors duration-300" />
+                  </Link>
+                </Reveal>
+              </div>
+            )}
+          </div>
         </section>
 
         {/* ── About The Tournament ──────────────────────────────────────── */}
@@ -730,184 +908,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Participating Teams Section ────────────────────────── */}
-        <section id="participating-teams" className="py-20 bg-white border-t border-slate-100">
-          <div className="mx-auto max-w-[1180px] px-4 md:px-16">
-            
-            <div className="w-full">
-              <Reveal direction="up" className="text-center mb-12">
-                <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#FF6B53] uppercase">
-                  Official Contenders
-                </p>
-                <h2 className="font-heading mt-2 text-3xl md:text-5xl text-[#0D47B5] uppercase">
-                  Championship Teams
-                </h2>
-                <div className="mx-auto mt-4 h-1 w-16 bg-[#FF6B53] rounded" />
-              </Reveal>
-
-              <Reveal direction="up" delay={200}>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
-                  {registeredTeams.map((team, idx) => (
-                    <div key={idx} className="flex flex-col items-center justify-center p-4 text-center">
-                      <div className="relative h-24 w-24 flex items-center justify-center mb-3">
-                        <Image 
-                          src={team.logo} 
-                          alt={team.name} 
-                          fill
-                          className="object-contain" 
-                          unoptimized 
-                        />
-                      </div>
-                      <span className="text-sm font-bold text-[#0D47B5]">
-                        {team.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Reveal>
-            </div>
-
-          </div>
-        </section>
-
-        <section id="schedule" className="bg-[#ffffff] py-[120px] border-b border-slate-100">
-          <div className="mx-auto max-w-[1180px] px-4 md:px-16">
-            <Reveal direction="up">
-              <div className="mb-12 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.16em] text-[#FF6B53] uppercase text-center sm:text-left">
-                    Match Center
-                  </p>
-                  <h2 className="font-heading mt-1 text-3xl md:text-5xl text-[#0D47B5] uppercase text-center sm:text-left">MATCH SCHEDULE</h2>
-                </div>
-                <div className="flex items-center gap-2 text-[#FF6B53]">
-                  <span className="h-3 w-3 animate-pulse rounded-full bg-[#FF6B53]" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Live Scores Enabled</span>
-                </div>
-              </div>
-            </Reveal>
-
-            {scheduleLoading ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <span className="animate-spin rounded-full border-4 border-[#0D47B5] border-t-transparent h-10 w-10 mb-4" />
-                <p className="text-xs font-semibold tracking-wider text-[#0D47B5]/60 uppercase">Loading matches...</p>
-              </div>
-            ) : featuredMatches.length === 0 ? (
-              <Reveal direction="up" delay={200}>
-                <div className="overflow-hidden rounded-xl border border-[#0D47B5]/15 bg-white">
-                  <div className="flex h-[220px] flex-col items-center justify-center gap-3 bg-white text-[#0D47B5]/45 md:h-[280px]">
-                    <AppIcon name="pending_actions" className="text-5xl text-[#0D47B5]/35" />
-                    <p className="text-center text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-[#0D47B5]/45 uppercase md:text-sm">
-                      No Matches Scheduled Yet.
-                    </p>
-                  </div>
-                </div>
-              </Reveal>
-            ) : (
-              <div className="flex flex-col gap-10">
-                <Reveal direction="up" delay={200}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                    {featuredMatches.map((match) => {
-                      const homeTeam = teamsMap.get(match.home_registere_id);
-                      const awayTeam = teamsMap.get(match.away_registere_id);
-                      const displayDate = formatDateTime(match.kickoff_at) || getMatchdayDateFallback(match.round_label);
-                      const isPlayed = match.status === "PLAYED";
-                      const groupCode = groupsMap.get(match.group_id)?.code || "A";
-
-                      return (
-                        <div key={match.id} className="relative overflow-hidden border border-[#004AD3]/12 bg-transparent hover:border-[#FF6B53]/35 transition-all duration-300 rounded-xl p-6 flex flex-col justify-between min-h-[220px]">
-                          <div className="relative z-10 flex flex-col justify-between h-full w-full">
-                            {/* Montserrat Header */}
-                            <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3.5 mb-4">
-                              <span className="[font-family:var(--font-nav),sans-serif] font-black text-xs uppercase text-[#FF6B53] tracking-[0.14em]">
-                                {match.round_label || `GROUP ${groupCode}`}
-                              </span>
-                              <span className="[font-family:var(--font-nav),sans-serif] font-bold text-xs text-[#0D47B5]/80 tracking-wide uppercase">
-                                {displayDate}
-                              </span>
-                            </div>
-                            
-                            {/* Body (Transparent Logos) */}
-                            <div className="grid grid-cols-7 items-center gap-2 flex-1">
-                              {/* Home Team */}
-                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
-                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
-                                  <Image
-                                    src={getTeamLogo(homeTeam?.logoUrl, homeTeam?.teamName || "TBD")}
-                                    alt={homeTeam?.teamName || "TBD"}
-                                    fill
-                                    sizes="64px"
-                                    className="object-contain"
-                                    unoptimized
-                                  />
-                                </div>
-                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
-                                  {homeTeam?.teamName || "TBD"}
-                                </span>
-                              </div>
-
-                              {/* Score or VS */}
-                              <div className="col-span-1 flex flex-col items-center justify-center">
-                                {isPlayed ? (
-                                  <div className="flex flex-col items-center">
-                                    <div className="flex items-center gap-1">
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.home_score}</span>
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-sm font-black text-[#FF6B53] leading-none">–</span>
-                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.away_score}</span>
-                                    </div>
-                                    <span className="[font-family:var(--font-nav),sans-serif] text-[8px] font-black uppercase tracking-widest text-[#FF6B53] mt-1">Final</span>
-                                  </div>
-                                ) : (
-                                  <span className="[font-family:var(--font-nav),sans-serif] text-[10px] font-black tracking-[0.15em] bg-[#0D47B5]/5 border border-[#0D47B5]/10 px-3 py-1 rounded text-[#0D47B5]/80 uppercase">
-                                    VS
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Away Team */}
-                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
-                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
-                                  <Image
-                                    src={getTeamLogo(awayTeam?.logoUrl, awayTeam?.teamName || "TBD")}
-                                    alt={awayTeam?.teamName || "TBD"}
-                                    fill
-                                    sizes="64px"
-                                    className="object-contain"
-                                    unoptimized
-                                  />
-                                </div>
-                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
-                                  {awayTeam?.teamName || "TBD"}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Montserrat Location Footer */}
-                            <div className="mt-4 text-center [font-family:var(--font-nav),sans-serif] text-[9px] font-extrabold text-[#0D47B5]/60 flex items-center justify-center gap-1.5 border-t border-[#004AD3]/10 pt-3 uppercase tracking-[0.12em]">
-                              <AppIcon name="location_on" className="text-xs text-[#FF6B53]" />
-                              <span>Ezell Hester Community Center</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Reveal>
-
-                {/* View All Matches Button */}
-                <Reveal direction="up" delay={300} className="flex justify-center mt-4">
-                  <Link
-                    href="/match-schedule"
-                    className="inline-flex items-center gap-2 px-8 py-3.5 border-2 border-[#0D47B5] text-xs font-black tracking-widest [font-family:var(--font-nav),sans-serif] text-[#0D47B5] hover:bg-[#0D47B5] hover:text-white transition-all duration-300 uppercase rounded-sm"
-                  >
-                    View All Matches
-                    <AppIcon name="arrow_forward" className="text-sm" />
-                  </Link>
-                </Reveal>
-              </div>
-            )}
-          </div>
-        </section>
 
         <section id="rules" className="py-[120px]">
           <div className="mx-auto max-w-[1280px] px-4 md:px-16">
@@ -939,6 +939,7 @@ export default function Home() {
             </Reveal>
           </div>
         </section>
+
       </main>
 
       <SiteFooter variant="home" />
