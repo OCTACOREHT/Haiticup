@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import SiteNavbar from "@/components/SiteNavbar";
 import SiteFooter from "@/components/SiteFooter";
 import AppIcon from "@/components/AppIcon";
@@ -19,20 +20,69 @@ const mobileLinks = [
   { href: "#bracket", icon: "account_tree", label: "Bracket" },
 ];
 
-const groupRowsA = ["1st Team A", "2nd Team A", "3rd Team A", "4th Team A"];
-const groupRowsB = ["1st Team B", "2nd Team B", "3rd Team B", "4th Team B"];
+type Team = {
+  id: string;
+  teamName: string;
+  logoUrl: string | null;
+};
 
-const fixturesA = [
-  ["1st Team A 0 - 0 2nd Team A", "3rd Team A 0 - 0 4th Team A"],
-  ["1st Team A 0 - 0 3rd Team A", "2nd Team A 0 - 0 4th Team A"],
-  ["1st Team A 0 - 0 4th Team A", "2nd Team A 0 - 0 3rd Team A"],
-];
+type Group = {
+  id: string;
+  code: string;
+  name: string;
+  order_index: number;
+};
 
-const fixturesB = [
-  ["1st Team B 0 - 0 2nd Team B", "3rd Team B 0 - 0 4th Team B"],
-  ["1st Team B 0 - 0 3rd Team B", "2nd Team B 0 - 0 4th Team B"],
-  ["1st Team B 0 - 0 4th Team B", "2nd Team B 0 - 0 3rd Team B"],
-];
+type GroupEntry = {
+  id: string;
+  group_id: string;
+  registere_id: string;
+  seed: number | null;
+};
+
+type Match = {
+  id: string;
+  stage: string;
+  group_id: string | null;
+  round_label: string | null;
+  home_registere_id: string;
+  away_registere_id: string;
+  kickoff_at: string | null;
+  venue: string | null;
+  home_score: number | null;
+  away_score: number | null;
+  status: string;
+  created_at: string;
+};
+
+type StandingTeam = {
+  registereId: string;
+  teamName: string;
+  seed: number | null;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+};
+
+type StandingGroup = {
+  groupId: string;
+  groupCode: string;
+  groupName: string;
+  teams: StandingTeam[];
+};
+
+type TournamentData = {
+  teams: Team[];
+  groups: Group[];
+  groupEntries: GroupEntry[];
+  matches: Match[];
+  standings: StandingGroup[];
+};
 
 const knockoutCards = [
   {
@@ -40,8 +90,8 @@ const knockoutCards = [
     className: "match-card",
     style: { left: "2%", top: "11.29%" },
     rows: [
-      { seed: "1A", team: "1st Group A" },
-      { seed: "4B", team: "4th Group B" },
+      { seed: "1A", team: "1st Poule A" },
+      { seed: "4B", team: "4th Poule B" },
     ],
   },
   {
@@ -49,8 +99,8 @@ const knockoutCards = [
     className: "match-card",
     style: { left: "2%", top: "40.32%" },
     rows: [
-      { seed: "1B", team: "1st Group B" },
-      { seed: "4A", team: "4th Group A" },
+      { seed: "1B", team: "1st Poule B" },
+      { seed: "4A", team: "4th Poule A" },
     ],
   },
   {
@@ -67,8 +117,8 @@ const knockoutCards = [
     className: "match-card",
     style: { left: "84%", top: "11.29%" },
     rows: [
-      { seed: "2A", team: "2nd Group A" },
-      { seed: "3B", team: "3rd Group B" },
+      { seed: "2A", team: "2nd Poule A" },
+      { seed: "3B", team: "3rd Poule B" },
     ],
   },
   {
@@ -76,8 +126,8 @@ const knockoutCards = [
     className: "match-card",
     style: { left: "84%", top: "40.32%" },
     rows: [
-      { seed: "2B", team: "2nd Group B" },
-      { seed: "3A", team: "3rd Group A" },
+      { seed: "2B", team: "2nd Poule B" },
+      { seed: "3A", team: "3rd Poule A" },
     ],
   },
   {
@@ -91,75 +141,73 @@ const knockoutCards = [
   },
 ];
 
-const mobileBracketRounds = [
-  {
-    stage: "Quarterfinals",
-    matches: [
-      {
-        id: "QF1",
-        rows: [
-          { seed: "1A", team: "1st Group A" },
-          { seed: "4B", team: "4th Group B" },
-        ],
-      },
-      {
-        id: "QF2",
-        rows: [
-          { seed: "1B", team: "1st Group B" },
-          { seed: "4A", team: "4th Group A" },
-        ],
-      },
-      {
-        id: "QF3",
-        rows: [
-          { seed: "2A", team: "2nd Group A" },
-          { seed: "3B", team: "3rd Group B" },
-        ],
-      },
-      {
-        id: "QF4",
-        rows: [
-          { seed: "2B", team: "2nd Group B" },
-          { seed: "3A", team: "3rd Group A" },
-        ],
-      },
-    ],
-  },
-  {
-    stage: "Semifinals",
-    matches: [
-      {
-        id: "SF1",
-        rows: [
-          { seed: "SF1", team: "Winner QF1" },
-          { seed: "SF1", team: "Winner QF2" },
-        ],
-      },
-      {
-        id: "SF2",
-        rows: [
-          { seed: "SF2", team: "Winner QF3" },
-          { seed: "SF2", team: "Winner QF4" },
-        ],
-      },
-    ],
-  },
-  {
-    stage: "Final",
-    matches: [
-      {
-        id: "F",
-        rows: [
-          { seed: "F", team: "Winner SF1" },
-          { seed: "F", team: "Winner SF2" },
-        ],
-      },
-    ],
-  },
-];
+const getTeamLogo = (logoUrl: string | null | undefined, teamName: string) => {
+  if (logoUrl && (logoUrl.startsWith("http") || logoUrl.startsWith("/"))) {
+    return logoUrl;
+  }
+  const name = teamName.toLowerCase();
+  if (name.includes("klass")) return "/Logo ekip/Klass.png";
+  if (name.includes("1804")) return "/Logo ekip/1804 FC.png";
+  if (name.includes("vétéran") || name.includes("veteran") || name.includes("vens")) return "/Logo ekip/FC des Vétéran.png";
+  if (name.includes("pac")) return "/Logo ekip/FC pac.png";
+  if (name.includes("top notch")) return "/Logo ekip/Fc Top Notch.png";
+  if (name.includes("galaxy")) return "/Logo ekip/Galaxy Fc.png";
+  if (name.includes("elite energy")) return "/Logo ekip/Elite Energy.png";
+  if (name.includes("island")) return "/Logo ekip/Island united FC.png";
+  return "/G%20logo.png";
+};
+
+const formatDateTime = (isoString: string | null) => {
+  if (!isoString) return null;
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const getMatchdayDateFallback = (roundLabel: string | null) => {
+  const label = (roundLabel || "").toUpperCase();
+  if (label.includes("MD1") || label.includes("MATCHDAY 1")) return "Sun, Jul 12";
+  if (label.includes("MD2") || label.includes("MATCHDAY 2")) return "Sun, Jul 19";
+  if (label.includes("MD3") || label.includes("MATCHDAY 3")) return "Sun, Jul 26";
+  return "Sun, Jul 12";
+};
 
 export default function MatchSchedulePage() {
+  const [data, setData] = useState<TournamentData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
+    let active = true;
+    const fetchTournament = async () => {
+      try {
+        const res = await fetch("/api/public/tournament");
+        if (!res.ok) throw new Error("Could not retrieve match data from server.");
+        const json = await res.json();
+        if (active) {
+          setData(json);
+          setLoading(false);
+        }
+      } catch (err: any) {
+        if (active) {
+          setError(err.message || "An unknown error occurred.");
+          setLoading(false);
+        }
+      }
+    };
+    fetchTournament();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (loading || error || !data) return;
+
     const shell = document.querySelector<HTMLElement>(".bracket-shell");
     if (!shell) return;
 
@@ -286,10 +334,52 @@ export default function MatchSchedulePage() {
       window.removeEventListener("resize", scheduleDraw);
       window.removeEventListener("load", scheduleDraw);
     };
-  }, []);
+  }, [loading, error, data]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white text-[#0D47B5]">
+        <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
+        <main className="flex-1 flex flex-col items-center justify-center pt-16">
+          <div className="flex flex-col items-center gap-4">
+            <span className="animate-spin rounded-full border-4 border-[#0D47B5] border-t-transparent h-12 w-12" />
+            <p className="text-sm font-semibold tracking-wider text-[#0D47B5]/60 uppercase">Loading Match Schedules...</p>
+          </div>
+        </main>
+        <SiteFooter variant="schedule" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white text-[#0D47B5]">
+        <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
+        <main className="flex-1 flex flex-col items-center justify-center pt-16 px-4">
+          <div className="rounded-xl border border-red-500/20 bg-red-50 p-6 text-center max-w-md">
+            <AppIcon name="error" className="text-4xl text-red-500 mb-3" />
+            <h3 className="text-lg font-bold text-[#0D47B5] mb-2 uppercase">Error Loading Matches</h3>
+            <p className="text-sm text-[#0D47B5]/75 mb-4">{error || "Data is unavailable"}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-5 py-2.5 bg-[#FF6B53] text-white font-bold text-xs uppercase tracking-wider rounded hover:bg-[#e05a45] transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </main>
+        <SiteFooter variant="schedule" />
+      </div>
+    );
+  }
+
+  const { teams, groups, matches, standings } = data;
+  const teamsMap = new Map(teams.map((t) => [t.id, t]));
+
+
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white text-[#0D47B5]">
       <SiteNavbar desktopLinks={navLinks} mobileLinks={mobileLinks} registerHref="/register" />
 
       <main className="flex-1 pt-16">
@@ -306,6 +396,7 @@ export default function MatchSchedulePage() {
           </div>
         </section>
 
+        {/* ── Poules Standings Section ─────────────────────────────────── */}
         <section id="groups" className="py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
@@ -314,73 +405,56 @@ export default function MatchSchedulePage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <article className="overflow-hidden rounded-xl border border-[#004AD3]/20 bg-white">
-                <div className="border-b border-[#004AD3]/20 bg-white px-6 py-4">
-                  <h3 className="font-heading text-xl text-[#FF6B53] uppercase">Poule A</h3>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-[11px] tracking-wider text-[#004AD3]/70 uppercase">
-                      <tr>
-                        <th className="px-5 py-3 text-left">Equipe</th>
-                        <th className="px-3 py-3 text-center">Pts</th>
-                        <th className="px-3 py-3 text-center">J</th>
-                        <th className="px-3 py-3 text-center">G</th>
-                        <th className="px-3 py-3 text-center">N</th>
-                        <th className="px-3 py-3 text-center">P</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {groupRowsA.map((team) => (
-                        <tr key={team} className="border-t border-[#004AD3]/15">
-                          <td className="px-5 py-3">{team}</td>
-                          <td className="text-center">0</td>
-                          <td className="text-center">0</td>
-                          <td className="text-center">0</td>
-                          <td className="text-center">0</td>
-                          <td className="text-center">0</td>
+              {standings.map((groupStanding) => (
+                <article key={groupStanding.groupId} className="overflow-hidden rounded-xl border border-[#004AD3]/20 bg-white shadow-sm">
+                  <div className="border-b border-[#004AD3]/20 bg-white px-6 py-4">
+                    <h3 className="font-heading text-xl text-[#FF6B53] uppercase">{groupStanding.groupName}</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="text-[11px] tracking-wider text-[#004AD3]/70 uppercase">
+                        <tr>
+                          <th className="px-5 py-3 text-left">Equipe</th>
+                          <th className="px-3 py-3 text-center">Pts</th>
+                          <th className="px-3 py-3 text-center">J</th>
+                          <th className="px-3 py-3 text-center">G</th>
+                          <th className="px-3 py-3 text-center">N</th>
+                          <th className="px-3 py-3 text-center">P</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </article>
-
-              <article className="overflow-hidden rounded-xl border border-[#004AD3]/20 bg-white">
-                <div className="border-b border-[#004AD3]/20 bg-white px-6 py-4">
-                  <h3 className="font-heading text-xl text-[#FF6B53] uppercase">Poule B</h3>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-[11px] tracking-wider text-[#004AD3]/70 uppercase">
-                      <tr>
-                        <th className="px-5 py-3 text-left">Equipe</th>
-                        <th className="px-3 py-3 text-center">Pts</th>
-                        <th className="px-3 py-3 text-center">J</th>
-                        <th className="px-3 py-3 text-center">G</th>
-                        <th className="px-3 py-3 text-center">N</th>
-                        <th className="px-3 py-3 text-center">P</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {groupRowsB.map((team) => (
-                        <tr key={team} className="border-t border-[#004AD3]/15">
-                          <td className="px-5 py-3">{team}</td>
-                          <td className="text-center">0</td>
-                          <td className="text-center">0</td>
-                          <td className="text-center">0</td>
-                          <td className="text-center">0</td>
-                          <td className="text-center">0</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </article>
+                      </thead>
+                      <tbody>
+                        {groupStanding.teams.map((row) => (
+                          <tr key={row.registereId} className="border-t border-[#004AD3]/15">
+                            <td className="px-5 py-3 flex items-center gap-3">
+                              <div className="relative h-8 w-8 shrink-0 flex items-center justify-center">
+                                <Image
+                                  src={getTeamLogo(teamsMap.get(row.registereId)?.logoUrl, row.teamName)}
+                                  alt={row.teamName}
+                                  fill
+                                  sizes="32px"
+                                  className="object-contain"
+                                  unoptimized
+                                />
+                              </div>
+                              <span className="font-bold text-[#004AD3]">{row.teamName}</span>
+                            </td>
+                            <td className="text-center font-extrabold text-[#004AD3] text-base">{row.points}</td>
+                            <td className="text-center">{row.played}</td>
+                            <td className="text-center text-green-600 font-semibold">{row.wins}</td>
+                            <td className="text-center text-gray-500">{row.draws}</td>
+                            <td className="text-center text-red-500">{row.losses}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
+        {/* ── Match Schedule Grid Section ────────────────────────────────── */}
         <section id="schedule" className="bg-[#ffffff] py-10 md:py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
@@ -388,36 +462,201 @@ export default function MatchSchedulePage() {
               <h2 className="font-heading text-2xl text-[#004AD3] uppercase sm:text-3xl md:text-4xl">Group Match Schedule</h2>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              <article className="rounded-xl border border-[#004AD3]/20 bg-white p-6">
-                <h3 className="mb-4 text-sm tracking-[0.08em] text-[#FF6B53] uppercase">Poule A Fixtures</h3>
-                <div className="space-y-3 text-sm">
-                  {fixturesA.map((pair, index) => (
-                    <div key={pair.join("-")} className="rounded-lg border border-[#004AD3]/20 p-4">
-                      <p className="text-[11px] text-[#004AD3]/65 uppercase">Matchday {index + 1}</p>
-                      <p className="mt-1">{pair[0]}</p>
-                      <p>{pair[1]}</p>
-                    </div>
-                  ))}
+            <div className="flex flex-col gap-12">
+              {/* Poule A Fixtures */}
+              <article className="w-full">
+                <h3 className="mb-6 text-xl tracking-[0.08em] text-[#FF6B53] uppercase font-bold border-b border-slate-100 pb-2">Poule A Fixtures</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {matches
+                    .filter((m) => {
+                      const group = groups.find((g) => g.id === m.group_id);
+                      return m.stage === "GROUP" && group?.code === "A";
+                    })
+                    .map((match) => {
+                      const homeTeam = teamsMap.get(match.home_registere_id);
+                      const awayTeam = teamsMap.get(match.away_registere_id);
+                      const displayDate = formatDateTime(match.kickoff_at) || getMatchdayDateFallback(match.round_label);
+                      const isPlayed = match.status === "PLAYED";
+                      
+                      return (
+                        <div key={match.id} className="relative overflow-hidden border border-[#004AD3]/12 bg-transparent hover:border-[#FF6B53]/30 transition-all duration-300 rounded-xl p-5 flex flex-col justify-between min-h-[210px]">
+                          <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                            {/* Montserrat Header */}
+                            <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3 mb-4">
+                              <span className="[font-family:var(--font-nav),sans-serif] font-black text-xs uppercase text-[#FF6B53] tracking-[0.14em]">
+                                {match.round_label || "GROUP A"}
+                              </span>
+                              <span className="[font-family:var(--font-nav),sans-serif] font-bold text-xs text-[#0D47B5]/80 tracking-wide uppercase">
+                                {displayDate}
+                              </span>
+                            </div>
+                            
+                            {/* Body (Transparent Logos) */}
+                            <div className="grid grid-cols-7 items-center gap-2 flex-1">
+                              {/* Home Team */}
+                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                  <Image
+                                    src={getTeamLogo(homeTeam?.logoUrl, homeTeam?.teamName || "TBD")}
+                                    alt={homeTeam?.teamName || "TBD"}
+                                    fill
+                                    sizes="64px"
+                                    className="object-contain"
+                                    unoptimized
+                                  />
+                                </div>
+                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                  {homeTeam?.teamName || "TBD"}
+                                </span>
+                              </div>
+
+                              {/* Score or VS */}
+                              <div className="col-span-1 flex flex-col items-center justify-center">
+                                {isPlayed ? (
+                                  <div className="flex flex-col items-center">
+                                    <div className="flex items-center gap-1">
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.home_score}</span>
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-sm font-black text-[#FF6B53] leading-none">–</span>
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.away_score}</span>
+                                    </div>
+                                    <span className="[font-family:var(--font-nav),sans-serif] text-[8px] font-black uppercase tracking-widest text-[#FF6B53] mt-1">Final</span>
+                                  </div>
+                                ) : (
+                                  <span className="[font-family:var(--font-nav),sans-serif] text-[10px] font-black tracking-[0.15em] bg-[#0D47B5]/5 border border-[#0D47B5]/10 px-3 py-1 rounded text-[#0D47B5]/80 uppercase">
+                                    VS
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Away Team */}
+                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                  <Image
+                                    src={getTeamLogo(awayTeam?.logoUrl, awayTeam?.teamName || "TBD")}
+                                    alt={awayTeam?.teamName || "TBD"}
+                                    fill
+                                    sizes="64px"
+                                    className="object-contain"
+                                    unoptimized
+                                  />
+                                </div>
+                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                  {awayTeam?.teamName || "TBD"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Montserrat Location Footer */}
+                            <div className="mt-4 text-center [font-family:var(--font-nav),sans-serif] text-[9px] font-extrabold text-[#0D47B5]/60 flex items-center justify-center gap-1.5 border-t border-[#004AD3]/10 pt-3 uppercase tracking-[0.12em]">
+                              <AppIcon name="location_on" className="text-xs text-[#FF6B53]" />
+                              <span>Ezell Hester Community Center</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               </article>
 
-              <article className="rounded-xl border border-[#004AD3]/20 bg-white p-6">
-                <h3 className="mb-4 text-sm tracking-[0.08em] text-[#FF6B53] uppercase">Poule B Fixtures</h3>
-                <div className="space-y-3 text-sm">
-                  {fixturesB.map((pair, index) => (
-                    <div key={pair.join("-")} className="rounded-lg border border-[#004AD3]/20 p-4">
-                      <p className="text-[11px] text-[#004AD3]/65 uppercase">Matchday {index + 1}</p>
-                      <p className="mt-1">{pair[0]}</p>
-                      <p>{pair[1]}</p>
-                    </div>
-                  ))}
+              {/* Poule B Fixtures */}
+              <article className="w-full">
+                <h3 className="mb-6 text-xl tracking-[0.08em] text-[#FF6B53] uppercase font-bold border-b border-slate-100 pb-2">Poule B Fixtures</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {matches
+                    .filter((m) => {
+                      const group = groups.find((g) => g.id === m.group_id);
+                      return m.stage === "GROUP" && group?.code === "B";
+                    })
+                    .map((match) => {
+                      const homeTeam = teamsMap.get(match.home_registere_id);
+                      const awayTeam = teamsMap.get(match.away_registere_id);
+                      const displayDate = formatDateTime(match.kickoff_at) || getMatchdayDateFallback(match.round_label);
+                      const isPlayed = match.status === "PLAYED";
+                      
+                      return (
+                        <div key={match.id} className="relative overflow-hidden border border-[#004AD3]/12 bg-transparent hover:border-[#FF6B53]/30 transition-all duration-300 rounded-xl p-5 flex flex-col justify-between min-h-[210px]">
+                          <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                            {/* Montserrat Header */}
+                            <div className="flex items-center justify-between border-b border-[#004AD3]/10 pb-3 mb-4">
+                              <span className="[font-family:var(--font-nav),sans-serif] font-black text-xs uppercase text-[#FF6B53] tracking-[0.14em]">
+                                {match.round_label || "GROUP B"}
+                              </span>
+                              <span className="[font-family:var(--font-nav),sans-serif] font-bold text-xs text-[#0D47B5]/80 tracking-wide uppercase">
+                                {displayDate}
+                              </span>
+                            </div>
+                            
+                            {/* Body (Transparent Logos) */}
+                            <div className="grid grid-cols-7 items-center gap-2 flex-1">
+                              {/* Home Team */}
+                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                  <Image
+                                    src={getTeamLogo(homeTeam?.logoUrl, homeTeam?.teamName || "TBD")}
+                                    alt={homeTeam?.teamName || "TBD"}
+                                    fill
+                                    sizes="64px"
+                                    className="object-contain"
+                                    unoptimized
+                                  />
+                                </div>
+                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                  {homeTeam?.teamName || "TBD"}
+                                </span>
+                              </div>
+
+                              {/* Score or VS */}
+                              <div className="col-span-1 flex flex-col items-center justify-center">
+                                {isPlayed ? (
+                                  <div className="flex flex-col items-center">
+                                    <div className="flex items-center gap-1">
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.home_score}</span>
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-sm font-black text-[#FF6B53] leading-none">–</span>
+                                      <span className="[font-family:var(--font-nav),sans-serif] text-2xl font-black text-[#0D47B5] tabular-nums leading-none">{match.away_score}</span>
+                                    </div>
+                                    <span className="[font-family:var(--font-nav),sans-serif] text-[8px] font-black uppercase tracking-widest text-[#FF6B53] mt-1">Final</span>
+                                  </div>
+                                ) : (
+                                  <span className="[font-family:var(--font-nav),sans-serif] text-[10px] font-black tracking-[0.15em] bg-[#0D47B5]/5 border border-[#0D47B5]/10 px-3 py-1 rounded text-[#0D47B5]/80 uppercase">
+                                    VS
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Away Team */}
+                              <div className="col-span-3 flex flex-col items-center text-center gap-2">
+                                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                                  <Image
+                                    src={getTeamLogo(awayTeam?.logoUrl, awayTeam?.teamName || "TBD")}
+                                    alt={awayTeam?.teamName || "TBD"}
+                                    fill
+                                    sizes="64px"
+                                    className="object-contain"
+                                    unoptimized
+                                  />
+                                </div>
+                                <span className="[font-family:var(--font-nav),sans-serif] text-xs font-bold text-[#0D47B5] uppercase tracking-wide max-w-full truncate mt-1">
+                                  {awayTeam?.teamName || "TBD"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Montserrat Location Footer */}
+                            <div className="mt-4 text-center [font-family:var(--font-nav),sans-serif] text-[9px] font-extrabold text-[#0D47B5]/60 flex items-center justify-center gap-1.5 border-t border-[#004AD3]/10 pt-3 uppercase tracking-[0.12em]">
+                              <AppIcon name="location_on" className="text-xs text-[#FF6B53]" />
+                              <span>Ezell Hester Community Center</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               </article>
             </div>
           </div>
         </section>
 
+        {/* ── Knockout Bracket Section ─────────────────────────────────── */}
         <section id="bracket" className="py-14 md:py-[110px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
             <div className="mb-8 flex items-center gap-3">
@@ -426,46 +665,75 @@ export default function MatchSchedulePage() {
             </div>
           </div>
 
+          {/* Bracket - Mobile view */}
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:hidden">
             <div className="space-y-6">
-              {mobileBracketRounds.map((round) => (
-                <article key={round.stage} className="rounded-lg border border-[#004AD3]/18 bg-[#ffffff] p-4 shadow-[0_8px_20px_rgba(0,74,211,0.08)]">
-                  <p className="text-[11px] font-semibold tracking-[0.14em] text-[#FF6B53] uppercase">{round.stage}</p>
-                  <div className="mt-3 space-y-3">
-                    {round.matches.map((match) => (
-                      <div
-                        key={`${round.stage}-${match.id}`}
-                        className={`rounded-md border p-3 ${
-                          round.stage === "Final"
-                            ? "border-[#FF6B53]/28 bg-[#ffffff]"
-                            : "border-[#004AD3]/18 bg-white"
-                        }`}
-                      >
-                        <p className="text-[10px] font-semibold tracking-[0.12em] text-[#004AD3]/65 uppercase">{match.id}</p>
-                        <div className="mt-2 space-y-1.5">
-                          {match.rows.map((row, index) => (
-                            <div
-                              key={`${round.stage}-${match.id}-${row.team}`}
-                              className={`flex items-center justify-between gap-2 text-sm text-[#004AD3] ${
-                                index > 0 ? "border-t border-[#004AD3]/14 pt-1.5" : ""
-                              }`}
-                            >
-                              <span className="min-w-[34px] text-[10px] font-semibold tracking-[0.08em] text-[#FF6B53] uppercase">
-                                {row.seed}
-                              </span>
-                              <span className="flex-1 truncate">{row.team}</span>
-                              <span className="h-4 min-w-3 rounded-sm bg-[#004AD3]/10" />
+              {["Quarterfinals", "Semifinals", "Final"].map((stageLabel) => {
+                let cards: typeof knockoutCards = [];
+                if (stageLabel === "Quarterfinals") {
+                  cards = knockoutCards.filter((c) => c.id.startsWith("qf"));
+                } else if (stageLabel === "Semifinals") {
+                  cards = knockoutCards.filter((c) => c.id.startsWith("sf"));
+                }
+
+                return (
+                  <article key={stageLabel} className="rounded-lg border border-[#004AD3]/20 bg-white p-4 shadow-sm">
+                    <p className="text-[11px] font-semibold tracking-[0.14em] text-[#FF6B53] uppercase">{stageLabel}</p>
+                    <div className="mt-3 space-y-3">
+                      {stageLabel === "Final" ? (
+                        <div className="rounded-md border border-[#FF6B53]/30 bg-[#FF6B53]/5 p-3 shadow-[0_2px_12px_rgba(255,107,83,0.05)]">
+                          <p className="text-[9px] font-extrabold tracking-[0.12em] text-[#FF6B53] uppercase">Final</p>
+                          <div className="mt-2 space-y-1.5">
+                            <div className="flex items-center justify-between text-sm text-[#004AD3]">
+                              <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">F</span>
+                              <span className="flex-1 font-semibold truncate">Winner SF1</span>
+                              <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
                             </div>
-                          ))}
+                            <div className="flex items-center justify-between text-sm text-[#004AD3] border-t border-[#004AD3]/10 pt-1.5">
+                              <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">F</span>
+                              <span className="flex-1 font-semibold truncate">Winner SF2</span>
+                              <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              ))}
+                      ) : (
+                        cards.map((card) => (
+                          <div
+                            key={card.id}
+                            className={`rounded-md border p-3 ${
+                              card.className.includes("semi-card")
+                                ? "border-[#004AD3]/30 bg-[#004AD3]/5"
+                                : "border-[#004AD3]/15 bg-white shadow-sm"
+                            }`}
+                          >
+                            <p className="text-[9px] font-extrabold tracking-[0.12em] text-[#004AD3]/60 uppercase">{card.id.toUpperCase()}</p>
+                            <div className="mt-2 space-y-1.5">
+                              {card.rows.map((row, index) => (
+                                <div
+                                  key={index}
+                                  className={`flex items-center justify-between gap-2 text-sm text-[#004AD3] ${
+                                    index > 0 ? "border-t border-[#004AD3]/10 pt-1.5" : ""
+                                  }`}
+                                >
+                                  <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">
+                                    {row.seed}
+                                  </span>
+                                  <span className="flex-1 font-semibold truncate">{row.team}</span>
+                                  <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
 
+          {/* Bracket - Desktop view */}
           <div className="hidden px-4 md:px-8 xl:px-10 lg:block">
             <div className="pb-2">
               <div className="bracket-shell">
@@ -486,12 +754,12 @@ export default function MatchSchedulePage() {
                   <path id="line-final-sf2-c" />
                 </svg>
 
-                <span className="stage-label" style={{ left: "2%", top: "3.23%" }}>Quarterfinal 1</span>
-                <span className="stage-label" style={{ left: "2%", top: "32.26%" }}>Quarterfinal 2</span>
-                <span className="stage-label" style={{ left: "22.5%", top: "18.06%" }}>Semifinal 1</span>
-                <span className="stage-label" style={{ left: "63.5%", top: "18.06%" }}>Semifinal 2</span>
-                <span className="stage-label" style={{ left: "84%", top: "3.23%" }}>Quarterfinal 3</span>
-                <span className="stage-label" style={{ left: "84%", top: "32.26%" }}>Quarterfinal 4</span>
+                <span className="stage-label font-bold" style={{ left: "2%", top: "3.23%" }}>Quarterfinal 1</span>
+                <span className="stage-label font-bold" style={{ left: "2%", top: "32.26%" }}>Quarterfinal 2</span>
+                <span className="stage-label font-bold" style={{ left: "22.5%", top: "18.06%" }}>Semifinal 1</span>
+                <span className="stage-label font-bold" style={{ left: "63.5%", top: "18.06%" }}>Semifinal 2</span>
+                <span className="stage-label font-bold" style={{ left: "84%", top: "3.23%" }}>Quarterfinal 3</span>
+                <span className="stage-label font-bold" style={{ left: "84%", top: "32.26%" }}>Quarterfinal 4</span>
 
                 {knockoutCards.map((card) => (
                   <article key={card.id} id={card.id} className={card.className} style={card.style}>
@@ -505,8 +773,9 @@ export default function MatchSchedulePage() {
                   </article>
                 ))}
 
+                {/* Final Card */}
                 <article id="final" className="match-card final-card" style={{ left: "43%", top: "21.77%" }}>
-                  <p className="final-title">Final</p>
+                  <p className="final-title font-heading text-[10px] text-[#FF6B53] tracking-widest uppercase mb-1">Final</p>
                   <div className="row">
                     <span className="seed">F</span>
                     <span>Winner SF1</span>

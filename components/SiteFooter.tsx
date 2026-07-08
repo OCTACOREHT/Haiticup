@@ -44,7 +44,7 @@ const footerNavigation: Record<FooterVariant, FooterLink[]> = {
   contact: [
     { href: "/", label: "Home" },
     { href: "/match-schedule", label: "Match Schedule" },
-    { href: "/register", label: "Register" },
+    { href: "/contact", label: "Contact" },
     { href: "/#rules", label: "Rules" },
     { href: "/match-schedule#groups", label: "Groups" },
     { href: "/match-schedule#bracket", label: "Bracket" },
@@ -52,7 +52,6 @@ const footerNavigation: Record<FooterVariant, FooterLink[]> = {
 };
 
 const footerResources: FooterLink[] = [
-  { href: "/register", label: "Team Registration" },
   { href: "/contact", label: "Contact Center" },
   { href: "/match-schedule#groups", label: "Group Stage" },
   { href: "/match-schedule#bracket", label: "Knockout Bracket" },

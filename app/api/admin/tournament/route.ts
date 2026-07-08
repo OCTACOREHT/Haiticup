@@ -40,6 +40,22 @@ type GroupEntryRow = {
   seed: number | null;
 };
 
+type DrawRow = {
+  id: string;
+  draw_name: string;
+  created_at: string;
+};
+
+type DrawTeamRow = {
+  id: string;
+  draw_id: string;
+  registere_id: string;
+  draw_order: number;
+  group_code: string;
+  seed: number;
+  created_at: string;
+};
+
 type MatchRow = {
   id: string;
   stage: string;
@@ -381,7 +397,7 @@ const buildTopScorers = ({
 const readTournamentData = async () => {
   const supabase = getServiceSupabaseClient();
 
-  const [teamsResult, playersResult, staffResult, groupsResult, entriesResult, matchesResult, goalsResult] =
+  const [teamsResult, playersResult, staffResult, groupsResult, entriesResult, matchesResult, goalsResult, drawsResult] =
     await Promise.all([
     supabase.from("registere").select("id, team_name, club_logo_url"),
     supabase.from("registere_players").select("id, registere_id, full_name, position, jersey_number, badge_id"),
@@ -403,6 +419,11 @@ const readTournamentData = async () => {
       .from("tournament_match_goals")
       .select("id, match_id, team_registere_id, scorer_player_id, minute, is_own_goal, created_at")
       .order("created_at", { ascending: true }),
+    supabase
+      .from("tournament_draws")
+      .select("id, draw_name, created_at")
+      .order("created_at", { ascending: false })
+      .limit(1),
     ]);
 
   if (teamsResult.error) throw new Error(`registere: ${teamsResult.error.message}`);
@@ -412,6 +433,7 @@ const readTournamentData = async () => {
   if (entriesResult.error) throw new Error(`tournament_group_entries: ${entriesResult.error.message}`);
   if (matchesResult.error) throw new Error(`tournament_matches: ${matchesResult.error.message}`);
   if (goalsResult.error) throw new Error(`tournament_match_goals: ${goalsResult.error.message}`);
+  if (drawsResult.error) throw new Error(`tournament_draws: ${drawsResult.error.message}`);
 
   const teams = (teamsResult.data ?? []) as TeamRow[];
   const players = (playersResult.data ?? []) as PlayerRow[];
@@ -420,10 +442,16 @@ const readTournamentData = async () => {
   const entries = (entriesResult.data ?? []) as GroupEntryRow[];
   const matches = (matchesResult.data ?? []) as MatchRow[];
   const goals = (goalsResult.data ?? []) as GoalRow[];
-
+  const mappedTeams = teams.map((team) => ({
+    id: team.id,
+    teamName: toSafeText(team.team_name, "Unknown Team"),
+    logoUrl: isNonEmptyString(team.club_logo_url) ? team.club_logo_url.trim() : null,
+  }));
   const teamNameById = new Map<string, string>();
-  teams.forEach((team) => {
-    teamNameById.set(team.id, toSafeText(team.team_name, "Unknown Team"));
+  const teamMetaById = new Map<string, { teamName: string; logoUrl: string | null }>();
+  mappedTeams.forEach((team) => {
+    teamNameById.set(team.id, team.teamName);
+    teamMetaById.set(team.id, { teamName: team.teamName, logoUrl: team.logoUrl });
   });
 
   const standings = buildStandings({
@@ -440,12 +468,57 @@ const readTournamentData = async () => {
     teamNameById,
   });
 
+  const latestDrawRow = (drawsResult.data ?? []) as DrawRow[];
+  let latestDraw:
+    | {
+        id: string;
+        drawName: string;
+        createdAt: string;
+        teams: Array<{
+          id: string;
+          registereId: string;
+          teamName: string;
+          logoUrl: string | null;
+          drawOrder: number;
+          groupCode: "A" | "B";
+          seed: number;
+        }>;
+      }
+    | null = null;
+
+  if (latestDrawRow[0]) {
+    const { data: drawTeamsData, error: drawTeamsError } = await supabase
+      .from("tournament_draw_teams")
+      .select("id, draw_id, registere_id, draw_order, group_code, seed, created_at")
+      .eq("draw_id", latestDrawRow[0].id)
+      .order("draw_order", { ascending: true });
+
+    if (drawTeamsError) throw new Error(`tournament_draw_teams: ${drawTeamsError.message}`);
+
+    const drawTeams = (drawTeamsData ?? []) as DrawTeamRow[];
+    latestDraw = {
+      id: latestDrawRow[0].id,
+      drawName: toSafeText(latestDrawRow[0].draw_name, "Automatic Draw"),
+      createdAt: latestDrawRow[0].created_at,
+      teams: drawTeams
+        .map((drawTeam) => {
+          const team = teamMetaById.get(drawTeam.registere_id);
+          return {
+            id: drawTeam.id,
+            registereId: drawTeam.registere_id,
+            teamName: team?.teamName ?? "Unknown Team",
+            logoUrl: team?.logoUrl ?? null,
+            drawOrder: drawTeam.draw_order,
+            groupCode: (drawTeam.group_code === "A" ? "A" : "B") as "A" | "B",
+            seed: drawTeam.seed,
+          };
+        })
+        .sort((a, b) => a.drawOrder - b.drawOrder),
+    };
+  }
+
   return {
-    teams: teams.map((team) => ({
-      id: team.id,
-      teamName: toSafeText(team.team_name, "Unknown Team"),
-      logoUrl: isNonEmptyString(team.club_logo_url) ? team.club_logo_url.trim() : null,
-    })),
+    teams: mappedTeams,
     players: players.map((player) => ({
       id: player.id,
       registereId: player.registere_id,
@@ -469,6 +542,7 @@ const readTournamentData = async () => {
     goals,
     standings,
     topScorers,
+    latestDraw,
   };
 };
 

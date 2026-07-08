@@ -96,13 +96,7 @@ export default function SiteNavbar({
               {contactLabel}
             </Link>
 
-            <Link
-              href={registerHref}
-              className="rounded-none border-0 bg-[#1AD1D7] px-5 py-2.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase transition-colors hover:bg-[#0B6A9B]"
-              style={{ color: "#ffffff" }}
-            >
-              {registerLabel}
-            </Link>
+
           </div>
 
           <button
@@ -198,14 +192,7 @@ export default function SiteNavbar({
               {contactLabel}
             </Link>
 
-            <Link
-              href={registerHref}
-              onClick={closeDrawer}
-              className="mt-3 flex items-center justify-center rounded-md border-0 bg-[#1AD1D7] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase shadow-[0_10px_18px_rgba(26,209,215,0.28)] transition-colors hover:bg-[#0B6A9B]"
-              style={{ color: "#ffffff" }}
-            >
-              {registerLabel}
-            </Link>
+
           </div>
         </div>
       </div>
