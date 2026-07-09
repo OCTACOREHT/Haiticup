@@ -91,8 +91,8 @@ const knockoutCards = [
     className: "match-card semi-card",
     style: { left: "22.5%", top: "35%" },
     rows: [
-      { seed: "1A", team: "1st Poule A" },
-      { seed: "2B", team: "2nd Poule B" },
+      { seed: "", team: "1st Poule A" },
+      { seed: "", team: "2nd Poule B" },
     ],
   },
   {
@@ -100,8 +100,8 @@ const knockoutCards = [
     className: "match-card semi-card",
     style: { left: "63.5%", top: "35%" },
     rows: [
-      { seed: "1B", team: "1st Poule B" },
-      { seed: "2A", team: "2nd Poule A" },
+      { seed: "", team: "1st Poule B" },
+      { seed: "", team: "2nd Poule A" },
     ],
   },
 ];
@@ -126,11 +126,20 @@ const formatDateTime = (isoString: string | null) => {
   if (!isoString) return null;
   const date = new Date(isoString);
   if (isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-US", {
+  
+  const dateStr = date.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
   });
+  
+  const timeStr = date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  
+  return `${dateStr} - ${timeStr}`;
 };
 
 const getMatchdayDateFallback = (roundLabel: string | null) => {
@@ -138,6 +147,8 @@ const getMatchdayDateFallback = (roundLabel: string | null) => {
   if (label.includes("MD1") || label.includes("MATCHDAY 1")) return "Sun, Jul 12";
   if (label.includes("MD2") || label.includes("MATCHDAY 2")) return "Sun, Jul 19";
   if (label.includes("MD3") || label.includes("MATCHDAY 3")) return "Sun, Jul 26";
+  if (label.includes("MD4") || label.includes("MATCHDAY 4")) return "Sun, Aug 2";
+  if (label.includes("MD5") || label.includes("MATCHDAY 5")) return "Sun, Aug 9";
   return "Sun, Jul 12";
 };
 
