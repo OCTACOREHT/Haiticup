@@ -1,6 +1,7 @@
 import { getServiceSupabaseClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type TeamRow = {
   id: string;

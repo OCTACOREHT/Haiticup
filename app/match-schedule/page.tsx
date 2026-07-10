@@ -90,18 +90,20 @@ const knockoutCards = [
     id: "sf1",
     className: "match-card semi-card",
     style: { left: "22.5%", top: "35%" },
+    date: "Aug 30 - 5:00 PM",
     rows: [
-      { seed: "", team: "1st Poule A" },
-      { seed: "", team: "2nd Poule B" },
+      { seed: "1", team: "1st Poule A" },
+      { seed: "2", team: "2nd Poule B" },
     ],
   },
   {
     id: "sf2",
     className: "match-card semi-card",
     style: { left: "63.5%", top: "35%" },
+    date: "Aug 30 - 7:00 PM",
     rows: [
-      { seed: "", team: "1st Poule B" },
-      { seed: "", team: "2nd Poule A" },
+      { seed: "1", team: "1st Poule B" },
+      { seed: "2", team: "2nd Poule A" },
     ],
   },
 ];
@@ -145,10 +147,10 @@ const formatDateTime = (isoString: string | null) => {
 const getMatchdayDateFallback = (roundLabel: string | null) => {
   const label = (roundLabel || "").toUpperCase();
   if (label.includes("MD1") || label.includes("MATCHDAY 1")) return "Sun, Jul 12";
-  if (label.includes("MD2") || label.includes("MATCHDAY 2")) return "Sun, Jul 19";
-  if (label.includes("MD3") || label.includes("MATCHDAY 3")) return "Sun, Jul 26";
-  if (label.includes("MD4") || label.includes("MATCHDAY 4")) return "Sun, Aug 2";
-  if (label.includes("MD5") || label.includes("MATCHDAY 5")) return "Sun, Aug 9";
+  if (label.includes("MD2") || label.includes("MATCHDAY 2")) return "Sun, Jul 26";
+  if (label.includes("MD3") || label.includes("MATCHDAY 3")) return "Sun, Aug 2";
+  if (label.includes("MD4") || label.includes("MATCHDAY 4")) return "Sun, Aug 16";
+  if (label.includes("MD5") || label.includes("MATCHDAY 5")) return "Sun, Aug 23";
   return "Sun, Jul 12";
 };
 
@@ -683,7 +685,7 @@ export default function MatchSchedulePage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:hidden">
             <Reveal direction="up" delay={200}>
               <div className="space-y-6">
-                {["Semifinals", "Final"].map((stageLabel) => {
+                {["Semifinals", "Finals"].map((stageLabel) => {
                   let cards: typeof knockoutCards = [];
                   if (stageLabel === "Semifinals") {
                     cards = knockoutCards.filter((c) => c.id.startsWith("sf"));
@@ -693,27 +695,54 @@ export default function MatchSchedulePage() {
                     <article key={stageLabel} className="rounded-lg border border-[#004AD3]/20 bg-white p-4 shadow-sm">
                       <p className="text-[11px] font-semibold tracking-[0.14em] text-[#FF6B53] uppercase">{stageLabel}</p>
                       <div className="mt-3 space-y-3">
-                        {stageLabel === "Final" ? (
-                          <div className={`rounded-md border border-[#FF6B53]/30 bg-[#FF6B53]/5 p-3 shadow-[0_2px_12px_rgba(255,107,83,0.05)] ${loading ? 'animate-pulse opacity-60' : ''}`}>
-                            <p className="text-[9px] font-extrabold tracking-[0.12em] text-[#FF6B53] uppercase">Final</p>
-                            <div className="mt-2 space-y-1.5">
-                              <div className="flex items-center justify-between text-sm text-[#004AD3]">
-                                <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">F</span>
-                                {loading ? (
-                                  <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
-                                ) : (
-                                  <span className="flex-1 font-semibold truncate">Winner SF1</span>
-                                )}
-                                <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
+                        {stageLabel === "Finals" ? (
+                          <div className="space-y-4">
+                            {/* Final */}
+                            <div className={`rounded-md border border-[#FF6B53]/30 bg-[#FF6B53]/5 p-3 shadow-[0_2px_12px_rgba(255,107,83,0.05)] ${loading ? 'animate-pulse opacity-60' : ''}`}>
+                              <p className="text-[9px] font-extrabold tracking-[0.12em] text-[#FF6B53] uppercase">Final • Sep 6 - 7:00 PM</p>
+                              <div className="mt-2 space-y-1.5">
+                                <div className="flex items-center justify-between text-sm text-[#004AD3]">
+                                  <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">F</span>
+                                  {loading ? (
+                                    <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
+                                  ) : (
+                                    <span className="flex-1 font-semibold truncate">Winner SF1</span>
+                                  )}
+                                  <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
+                                </div>
+                                <div className="flex items-center justify-between text-sm text-[#004AD3] border-t border-[#004AD3]/10 pt-1.5">
+                                  <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">F</span>
+                                  {loading ? (
+                                    <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
+                                  ) : (
+                                    <span className="flex-1 font-semibold truncate">Winner SF2</span>
+                                  )}
+                                  <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
+                                </div>
                               </div>
-                              <div className="flex items-center justify-between text-sm text-[#004AD3] border-t border-[#004AD3]/10 pt-1.5">
-                                <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">F</span>
-                                {loading ? (
-                                  <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
-                                ) : (
-                                  <span className="flex-1 font-semibold truncate">Winner SF2</span>
-                                )}
-                                <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
+                            </div>
+                            {/* 3rd Place */}
+                            <div className={`rounded-md border border-[#004AD3]/30 bg-[#004AD3]/5 p-3 shadow-sm ${loading ? 'animate-pulse opacity-60' : ''}`}>
+                              <p className="text-[9px] font-extrabold tracking-[0.12em] text-[#0D47B5] uppercase">3rd Place Match • Sep 6 - 3:00 PM</p>
+                              <div className="mt-2 space-y-1.5">
+                                <div className="flex items-center justify-between text-sm text-[#004AD3]">
+                                  <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">3</span>
+                                  {loading ? (
+                                    <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
+                                  ) : (
+                                    <span className="flex-1 font-semibold truncate">Loser SF1</span>
+                                  )}
+                                  <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
+                                </div>
+                                <div className="flex items-center justify-between text-sm text-[#004AD3] border-t border-[#004AD3]/10 pt-1.5">
+                                  <span className="min-w-[28px] text-[9px] font-bold tracking-[0.08em] text-[#FF6B53] uppercase">3</span>
+                                  {loading ? (
+                                    <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
+                                  ) : (
+                                    <span className="flex-1 font-semibold truncate">Loser SF2</span>
+                                  )}
+                                  <span className="font-extrabold text-[#FF6B53] min-w-4 text-right" />
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -727,7 +756,7 @@ export default function MatchSchedulePage() {
                                   : "border-[#004AD3]/15 bg-white shadow-sm"
                               } ${loading ? 'animate-pulse opacity-60' : ''}`}
                             >
-                              <p className="text-[9px] font-extrabold tracking-[0.12em] text-[#0D47B5] uppercase">{card.id.toUpperCase()}</p>
+                              <p className="text-[9px] font-extrabold tracking-[0.12em] text-[#0D47B5] uppercase">{card.id.toUpperCase()} • {card.date}</p>
                               <div className="mt-2 space-y-1.5">
                                 {card.rows.map((row, index) => (
                                   <div
@@ -774,6 +803,7 @@ export default function MatchSchedulePage() {
 
                   {knockoutCards.map((card) => (
                     <article key={card.id} id={card.id} className={`${card.className} ${loading ? 'animate-pulse opacity-60' : ''}`} style={card.style}>
+                      <div className="text-[10px] text-[#0D47B5]/60 font-black tracking-wider uppercase text-center mb-1.5">{card.date}</div>
                       {card.rows.map((row) => (
                         <div key={`${card.id}-${row.seed}-${row.team}`} className="row">
                           <span className="seed">{row.seed}</span>
@@ -789,8 +819,8 @@ export default function MatchSchedulePage() {
                   ))}
 
                   {/* Final Card */}
-                  <article id="final" className={`match-card final-card ${loading ? 'animate-pulse opacity-60' : ''}`} style={{ left: "43%", top: "31.77%" }}>
-                    <p className="final-title font-heading text-[10px] text-[#FF6B53] tracking-widest uppercase mb-1">Final</p>
+                  <article id="final" className={`match-card final-card ${loading ? 'animate-pulse opacity-60' : ''}`} style={{ left: "43%", top: "15%" }}>
+                    <p className="final-title font-heading text-[10px] text-[#FF6B53] tracking-widest uppercase mb-0">Final • Sep 6 - 7:00 PM</p>
                     <div className="row">
                       <span className="seed">F</span>
                       {loading ? (
@@ -806,6 +836,29 @@ export default function MatchSchedulePage() {
                         <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
                       ) : (
                         <span>Winner SF2</span>
+                      )}
+                      <span className="score" />
+                    </div>
+                  </article>
+
+                  {/* 3rd Place Card */}
+                  <article id="third-place" className={`match-card final-card border-[#004AD3]/30 ${loading ? 'animate-pulse opacity-60' : ''}`} style={{ left: "43%", top: "85%", borderColor: "rgba(0,74,211,0.3)" }}>
+                    <p className="final-title font-heading text-[10px] text-[#004AD3] tracking-widest uppercase mb-0">3rd Place • Sep 6 - 3:00 PM</p>
+                    <div className="row">
+                      <span className="seed">3</span>
+                      {loading ? (
+                        <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
+                      ) : (
+                        <span>Loser SF1</span>
+                      )}
+                      <span className="score" />
+                    </div>
+                    <div className="row">
+                      <span className="seed">3</span>
+                      {loading ? (
+                        <span className="h-3.5 w-24 bg-slate-100 rounded inline-block animate-pulse" />
+                      ) : (
+                        <span>Loser SF2</span>
                       )}
                       <span className="score" />
                     </div>
