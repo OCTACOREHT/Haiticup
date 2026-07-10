@@ -43,6 +43,7 @@ import { buildBadgeId, buildTeamCode } from "@/lib/badges/utils";
 type Team = { id: string; teamName: string; logoUrl: string | null };
 type Player = { id: string; registereId: string; teamName: string; fullName: string; position: string; jerseyNumber: string; badgeId: string | null };
 type Staff = { id: string; registereId: string; teamName: string; fullName: string; role: string; badgeId: string | null };
+type Media = { id: string; fullName: string; mediaName: string; email: string; badgeId: string | null };
 type Group = { id: string; code: string; name: string; order_index: number };
 type Match = { id: string; stage: string; group_id: string | null; round_label: string | null; home_registere_id: string; away_registere_id: string; kickoff_at: string | null; venue: string | null; home_score: number | null; away_score: number | null; status: string; created_at: string };
 type Goal = { id: string; match_id: string; team_registere_id: string; scorer_player_id: string | null; minute: number | null; is_own_goal: boolean; created_at: string };
@@ -51,12 +52,12 @@ type StandingGroup = { groupId: string; groupCode: string; groupName: string; te
 type TopScorer = { playerId: string; fullName: string; teamName: string; position: string; goals: number };
 
 type TournamentResponse = {
-  teams: Team[]; players: Player[]; staff: Staff[]; groups: Group[]; matches: Match[]; goals: Goal[]; standings: StandingGroup[]; topScorers: TopScorer[];
+  teams: Team[]; players: Player[]; staff: Staff[]; media: Media[]; groups: Group[]; matches: Match[]; goals: Goal[]; standings: StandingGroup[]; topScorers: TopScorer[];
   admin?: { userId: string; email: string; fullName: string }; error?: string;
 };
 
 type AdminBadgeMember = {
-  key: string; memberType: "STAFF" | "PLAYER"; registereId: string; teamName: string;
+  key: string; memberType: "STAFF" | "PLAYER" | "MEDIA"; registereId: string; teamName: string;
   fullName: string; title: string; subtitle: string; badgeId: string;
   photoUrl?: string | null; qrCodeDataUrl?: string | null;
 };
@@ -72,7 +73,7 @@ type PlayerFull = {
 type PlayersApiResponse = { teams: Array<{ id: string; teamName: string; clubLogoUrl: string | null }>; players: PlayerFull[] };
 type StatusTone = "info" | "success" | "error";
 type GoalInputRow = { id: string; teamRegistereId: string; scorerPlayerId: string; minute: string; isOwnGoal: boolean };
-type AdminSection = "overview" | "poules" | "matches" | "results" | "teams" | "players" | "badges" | "scorers";
+type AdminSection = "overview" | "poules" | "matches" | "results" | "teams" | "players" | "media" | "badges" | "scorers";
 
 // ? Badge generation helpers ?
 
@@ -198,6 +199,7 @@ const sectionItems: Array<{ id: AdminSection; label: string; icon: React.ReactNo
   { id: "results", label: "Results", icon: <SwordsIcon className="size-4" /> },
   { id: "teams", label: "Teams", icon: <ShieldCheckIcon className="size-4" /> },
   { id: "players", label: "Players", icon: <UsersRoundIcon className="size-4" /> },
+  { id: "media", label: "Media", icon: <FileTextIcon className="size-4" /> },
   { id: "badges", label: "Badges", icon: <BadgeCheckIcon className="size-4" /> },
   { id: "scorers", label: "Top Scorers", icon: <TargetIcon className="size-4" /> },
 ];
@@ -875,6 +877,9 @@ export default function AdminPage() {
 
   const [expandedTeamIds, setExpandedTeamIds] = useState<Set<string>>(new Set());
   const [badgeModalKey, setBadgeModalKey] = useState<string | null>(null);
+  const [matchSearch, setMatchSearch] = useState("");
+
+  const [mediaSearch, setMediaSearch] = useState("");
   const [downloadingBadgeKey, setDownloadingBadgeKey] = useState<string | null>(null);
   const [downloadingRosterKey, setDownloadingRosterKey] = useState<string | null>(null);
 
@@ -2063,6 +2068,86 @@ export default function AdminPage() {
                   </table>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeSection === "media" && (
+            <div className={cardCls}>
+              <div className="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-semibold text-gray-900">Media Registrations</p>
+                  <p className="mt-0.5 text-xs text-gray-500">Manage media personnel and their badges.</p>
+                </div>
+                <div className="relative w-full sm:w-64">
+                  <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400" />
+                  <input 
+                    className={`${inputCls} pl-8`} 
+                    placeholder="Search media..." 
+                    value={mediaSearch} 
+                    onChange={(e) => setMediaSearch(e.target.value)} 
+                  />
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr>
+                      <th className={thCls}>#</th>
+                      <th className={thCls}>Full Name</th>
+                      <th className={thCls}>Media Name</th>
+                      <th className={thCls}>Email</th>
+                      <th className={thCls}>Badge ID</th>
+                      <th className={thCls}>Preview</th>
+                      <th className={thCls}>Download PDF</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {(() => {
+                      const lowerSearch = mediaSearch.toLowerCase().trim();
+                      const filtered = (tournament?.media || []).filter(m => 
+                        !lowerSearch || 
+                        m.fullName.toLowerCase().includes(lowerSearch) || 
+                        m.mediaName.toLowerCase().includes(lowerSearch) ||
+                        m.email.toLowerCase().includes(lowerSearch)
+                      );
+                      
+                      return (
+                        <>
+                          {filtered.map((member, idx) => {
+                            const badgeKey = `MEDIA-${member.id}`;
+                            const isDl = downloadingBadgeKey === badgeKey;
+                            
+                            return (
+                              <tr key={member.id} className="hover:bg-gray-50">
+                                <td className={`${tdCls} text-gray-400`}>{idx + 1}</td>
+                                <td className={`${tdCls} font-medium text-gray-900`}>{member.fullName}</td>
+                                <td className={tdCls}>{member.mediaName}</td>
+                                <td className={tdCls}>
+                                  <a href={`mailto:${member.email}`} className="text-blue-600 hover:underline">{member.email}</a>
+                                </td>
+                                <td className={`${tdCls} font-mono text-xs text-gray-400`}>{member.badgeId ?? "—"}</td>
+                                <td className={tdCls}>
+                                  <button type="button" onClick={() => setBadgeModalKey(badgeKey)} className="flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer">
+                                    <FileTextIcon className="size-3" /> View
+                                  </button>
+                                </td>
+                                <td className={tdCls}>
+                                  <button type="button" onClick={() => void handleDirectBadgeDownload(badgeKey)} disabled={isDl} className="flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 transition-colors cursor-pointer">
+                                    {isDl ? <><Spinner />Generating...</> : <><DownloadIcon className="size-3" />Download</>}
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {filtered.length === 0 && (
+                            <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-gray-400">{mediaSearch ? `No media found for "${mediaSearch}".` : "No media registered."}</td></tr>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
           {activeSection === "badges" && (

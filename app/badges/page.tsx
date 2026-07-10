@@ -13,7 +13,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 type BadgeMember = {
   key: string;
-  memberType: "STAFF" | "PLAYER";
+  memberType: "STAFF" | "PLAYER" | "MEDIA";
   registereId: string;
   teamName: string;
   badgeId: string;
@@ -28,7 +28,7 @@ type BadgeMember = {
 type MembersApiResponse = {
   members: Array<{
     key: string;
-    memberType: "STAFF" | "PLAYER";
+    memberType: "STAFF" | "PLAYER" | "MEDIA";
     registereId: string;
     teamName: string;
     badgeId: string;

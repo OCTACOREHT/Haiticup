@@ -26,6 +26,14 @@ type StaffRow = {
   badge_id: string | null;
 };
 
+type MediaRow = {
+  id: number;
+  full_name: string | null;
+  email: string | null;
+  media_name: string | null;
+  badge_id: string | null;
+};
+
 type GroupRow = {
   id: string;
   code: string;
@@ -397,11 +405,12 @@ const buildTopScorers = ({
 const readTournamentData = async () => {
   const supabase = getServiceSupabaseClient();
 
-  const [teamsResult, playersResult, staffResult, groupsResult, entriesResult, matchesResult, goalsResult, drawsResult] =
+  const [teamsResult, playersResult, staffResult, mediaResult, groupsResult, entriesResult, matchesResult, goalsResult, drawsResult] =
     await Promise.all([
     supabase.from("registere").select("id, team_name, club_logo_url"),
     supabase.from("registere_players").select("id, registere_id, full_name, position, jersey_number, badge_id"),
     supabase.from("registere_staff").select("id, registere_id, full_name, role, badge_id"),
+    supabase.from("registere_media").select("id, full_name, email, media_name, badge_id"),
     supabase.from("tournament_groups").select("id, code, name, order_index").order("order_index", { ascending: true }),
     supabase
       .from("tournament_group_entries")
@@ -429,6 +438,7 @@ const readTournamentData = async () => {
   if (teamsResult.error) throw new Error(`registere: ${teamsResult.error.message}`);
   if (playersResult.error) throw new Error(`registere_players: ${playersResult.error.message}`);
   if (staffResult.error) throw new Error(`registere_staff: ${staffResult.error.message}`);
+  if (mediaResult.error) throw new Error(`registere_media: ${mediaResult.error.message}`);
   if (groupsResult.error) throw new Error(`tournament_groups: ${groupsResult.error.message}`);
   if (entriesResult.error) throw new Error(`tournament_group_entries: ${entriesResult.error.message}`);
   if (matchesResult.error) throw new Error(`tournament_matches: ${matchesResult.error.message}`);
@@ -438,6 +448,7 @@ const readTournamentData = async () => {
   const teams = (teamsResult.data ?? []) as TeamRow[];
   const players = (playersResult.data ?? []) as PlayerRow[];
   const staff = (staffResult.data ?? []) as StaffRow[];
+  const media = (mediaResult.data ?? []) as MediaRow[];
   const groups = (groupsResult.data ?? []) as GroupRow[];
   const entries = (entriesResult.data ?? []) as GroupEntryRow[];
   const matches = (matchesResult.data ?? []) as MatchRow[];
@@ -534,6 +545,13 @@ const readTournamentData = async () => {
       teamName: teamNameById.get(member.registere_id) ?? "Unknown Team",
       fullName: toSafeText(member.full_name, "Unknown Staff"),
       role: toSafeText(member.role, "Staff"),
+      badgeId: member.badge_id,
+    })),
+    media: media.map((member) => ({
+      id: String(member.id),
+      fullName: toSafeText(member.full_name, "Unknown Media"),
+      email: toSafeText(member.email, ""),
+      mediaName: toSafeText(member.media_name, "Unknown Media"),
       badgeId: member.badge_id,
     })),
     groups,

@@ -96,7 +96,12 @@ export default function SiteNavbar({
               {contactLabel}
             </Link>
 
-
+            <Link
+              href="/register-media"
+              className="rounded-none border border-[#FF6B53] bg-[#FF6B53] px-5 py-2.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase transition-colors hover:bg-[#e55941]"
+            >
+              MEDIA REGISTRATION
+            </Link>
           </div>
 
           <button
@@ -192,7 +197,13 @@ export default function SiteNavbar({
               {contactLabel}
             </Link>
 
-
+            <Link
+              href="/register-media"
+              onClick={closeDrawer}
+              className="mt-3 flex items-center justify-center rounded-md border border-[#FF6B53] bg-[#FF6B53] px-5 py-3.5 text-xs font-extrabold tracking-[0.08em] [font-family:var(--font-nav),sans-serif] !text-white uppercase transition-colors hover:bg-[#e55941]"
+            >
+              MEDIA REGISTRATION
+            </Link>
           </div>
         </div>
       </div>

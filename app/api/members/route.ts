@@ -32,7 +32,7 @@ type RegisterePlayerRow = {
 
 type ApiMember = {
   key: string;
-  memberType: "STAFF" | "PLAYER";
+  memberType: "STAFF" | "PLAYER" | "MEDIA";
   registereId: string;
   teamName: string;
   badgeId: string;
@@ -42,6 +42,16 @@ type ApiMember = {
   photoUrl: string | null;
   qrCodeDataUrl: string | null;
   qrPayload: Record<string, unknown> | null;
+};
+
+type RegistereMediaRow = {
+  id: number;
+  badge_id: string | null;
+  full_name: string | null;
+  media_name: string | null;
+  photo_url: string | null;
+  qr_code_data_url: string | null;
+  qr_payload: Record<string, unknown> | null;
 };
 
 const toCleanText = (value: string | null | undefined, fallback: string) => {
@@ -58,7 +68,7 @@ export async function GET(request: Request) {
 
     const supabase = getServiceSupabaseClient();
 
-    const [teamsResult, staffResult, playersResult] = await Promise.all([
+    const [teamsResult, staffResult, playersResult, mediaResult] = await Promise.all([
       supabase.from("registere").select("id, team_name"),
       supabase
         .from("registere_staff")
@@ -66,6 +76,9 @@ export async function GET(request: Request) {
       supabase
         .from("registere_players")
         .select("id, registere_id, badge_id, full_name, position, photo_url, qr_code_data_url, qr_payload"),
+      supabase
+        .from("registere_media")
+        .select("id, badge_id, full_name, media_name, photo_url, qr_code_data_url, qr_payload"),
     ]);
 
     if (teamsResult.error) {
@@ -76,6 +89,9 @@ export async function GET(request: Request) {
     }
     if (playersResult.error) {
       throw new Error(`registere_players: ${playersResult.error.message}`);
+    }
+    if (mediaResult.error) {
+      throw new Error(`registere_media: ${mediaResult.error.message}`);
     }
 
     const teamMap = new Map<string, string>();
@@ -115,7 +131,23 @@ export async function GET(request: Request) {
         qrPayload: row.qr_payload,
       }));
 
-    const members = [...staffMembers, ...playerMembers].sort((a, b) => a.fullName.localeCompare(b.fullName));
+    const mediaMembers: ApiMember[] = (mediaResult.data as RegistereMediaRow[])
+      .filter((row) => Boolean(row.badge_id))
+      .map((row) => ({
+        key: `media-${row.id}`,
+        memberType: "MEDIA",
+        registereId: `media-${row.id}`, // Media don't have a team registere_id, we just use a fake one
+        teamName: toCleanText(row.media_name, "Unknown Media"),
+        badgeId: row.badge_id as string,
+        fullName: toCleanText(row.full_name, "Unknown Media"),
+        title: "MEDIA",
+        subtitle: "Media",
+        photoUrl: row.photo_url,
+        qrCodeDataUrl: row.qr_code_data_url,
+        qrPayload: row.qr_payload,
+      }));
+
+    const members = [...staffMembers, ...playerMembers, ...mediaMembers].sort((a, b) => a.fullName.localeCompare(b.fullName));
 
     return Response.json(
       {

@@ -1,4 +1,4 @@
-export type BadgeMemberType = "STAFF" | "PLAYER";
+export type BadgeMemberType = "STAFF" | "PLAYER" | "MEDIA";
 export const TOURNAMENT_YEAR = "2026";
 
 export const toUpperAlphaNumeric = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -10,6 +10,6 @@ export const buildTeamCode = (rawTeamName: string, registrationId: string) => {
 };
 
 export const buildBadgeId = (memberType: BadgeMemberType, teamCode: string, serial: number) => {
-  const prefix = memberType === "STAFF" ? "STF" : "PLY";
+  const prefix = memberType === "STAFF" ? "STF" : memberType === "MEDIA" ? "MED" : "PLY";
   return `${prefix}-${TOURNAMENT_YEAR}-${teamCode}-${String(serial).padStart(2, "0")}`;
 };
