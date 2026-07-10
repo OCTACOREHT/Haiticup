@@ -949,7 +949,7 @@ export default function AdminPage() {
     const tp = (await tr.json().catch(() => null)) as TournamentResponse | null;
     const mp = (await mr.json().catch(() => null)) as MembersApiResponse | null;
     if (!tr.ok) throw new Error(tp?.error || "Error loading data.");
-    const safe: TournamentResponse = tp ?? { teams: [], players: [], staff: [], groups: [], matches: [], goals: [], standings: [], topScorers: [] };
+    const safe: TournamentResponse = tp ?? { teams: [], players: [], staff: [], media: [], groups: [], matches: [], goals: [], standings: [], topScorers: [] };
     setTournament(safe);
     setAdminName(safe.admin?.fullName ?? safe.admin?.email ?? "Admin");
     setBadgeMembers(mp?.members ?? []);
