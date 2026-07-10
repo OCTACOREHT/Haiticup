@@ -488,6 +488,7 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+
               </div>
             </div>
           </div>
@@ -527,6 +528,31 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
+              </Reveal>
+
+              {/* Print Substitution Cards Button */}
+              <Reveal direction="up" delay={300} className="mt-16 flex justify-center">
+                <button
+                  onClick={() => {
+                    let iframe = document.getElementById("print-iframe") as HTMLIFrameElement;
+                    if (!iframe) {
+                      iframe = document.createElement("iframe");
+                      iframe.id = "print-iframe";
+                      iframe.style.display = "none";
+                      document.body.appendChild(iframe);
+                    }
+                    iframe.src = "/substitution-cards";
+                    iframe.onload = () => {
+                      setTimeout(() => {
+                        iframe.contentWindow?.print();
+                      }, 500);
+                    };
+                  }}
+                  className="group inline-flex items-center gap-2.5 px-8 py-3.5 bg-[#FF6B53] !text-white text-xs font-black tracking-widest [font-family:var(--font-nav),sans-serif] hover:bg-[#e55a43] transition-all duration-300 uppercase rounded-sm shadow-[0_8px_20px_rgba(255,107,83,0.3)] hover:-translate-y-0.5"
+                >
+                  <AppIcon name="print" className="text-sm !text-white" />
+                  <span className="!text-white">Document Substitution-Cards</span>
+                </button>
               </Reveal>
             </div>
 
