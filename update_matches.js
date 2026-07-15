@@ -20,7 +20,7 @@ const g = {
 };
 
 const matches = [
-  { round_label: 'MATCHDAY 1', home: t.A1, away: t.A2, time: '2026-07-12T23:00:00Z', group: g.A },
+  { round_label: 'MATCHDAY 1', home: t.A1, away: t.A2, time: '2026-07-26T23:00:00Z', group: g.A },
   { round_label: 'MATCHDAY 2', home: t.A3, away: t.A4, time: '2026-07-26T20:00:00Z', group: g.A },
   { round_label: 'MATCHDAY 2', home: t.B1, away: t.B2, time: '2026-07-26T22:00:00Z', group: g.B },
   { round_label: 'MATCHDAY 2', home: t.B3, away: t.B4, time: '2026-07-27T00:00:00Z', group: g.B },

@@ -146,12 +146,12 @@ const formatDateTime = (isoString: string | null) => {
 
 const getMatchdayDateFallback = (roundLabel: string | null) => {
   const label = (roundLabel || "").toUpperCase();
-  if (label.includes("MD1") || label.includes("MATCHDAY 1")) return "Sun, Jul 12";
+  if (label.includes("MD1") || label.includes("MATCHDAY 1")) return "Sun, Jul 26";
   if (label.includes("MD2") || label.includes("MATCHDAY 2")) return "Sun, Jul 26";
   if (label.includes("MD3") || label.includes("MATCHDAY 3")) return "Sun, Aug 2";
   if (label.includes("MD4") || label.includes("MATCHDAY 4")) return "Sun, Aug 16";
   if (label.includes("MD5") || label.includes("MATCHDAY 5")) return "Sun, Aug 23";
-  return "Sun, Jul 12";
+  return "Sun, Jul 26";
 };
 
 export default function MatchSchedulePage() {

@@ -30,6 +30,7 @@ import {
   UsersRoundIcon,
   UserIcon,
   XIcon,
+  CrownIcon,
 } from "lucide-react";
 import { buildBadgeScanUrl } from "@/lib/badges/scan-url";
 import { toCanvasSafeImageSrc, generateSilhouetteDataUrl } from "@/lib/badges/canvas-image";
@@ -37,6 +38,7 @@ import { clearAdminServerSession } from "@/lib/supabase/admin-session-client";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { compressImageFile, readImageAsDataUrl, uploadToStorage, validateImageUpload } from "@/lib/image-upload";
 import { buildBadgeId, buildTeamCode } from "@/lib/badges/utils";
+import VipBadges from "@/components/VipBadges";
 
 // ? Types ?
 
@@ -73,7 +75,7 @@ type PlayerFull = {
 type PlayersApiResponse = { teams: Array<{ id: string; teamName: string; clubLogoUrl: string | null }>; players: PlayerFull[] };
 type StatusTone = "info" | "success" | "error";
 type GoalInputRow = { id: string; teamRegistereId: string; scorerPlayerId: string; minute: string; isOwnGoal: boolean };
-type AdminSection = "overview" | "poules" | "matches" | "results" | "teams" | "players" | "media" | "badges" | "scorers";
+type AdminSection = "overview" | "poules" | "matches" | "results" | "teams" | "players" | "media" | "badges" | "scorers" | "vip";
 
 // ? Badge generation helpers ?
 
@@ -201,6 +203,7 @@ const sectionItems: Array<{ id: AdminSection; label: string; icon: React.ReactNo
   { id: "players", label: "Players", icon: <UsersRoundIcon className="size-4" /> },
   { id: "media", label: "Media", icon: <FileTextIcon className="size-4" /> },
   { id: "badges", label: "Badges", icon: <BadgeCheckIcon className="size-4" /> },
+  { id: "vip", label: "VIP Badges", icon: <CrownIcon className="size-4" /> },
   { id: "scorers", label: "Top Scorers", icon: <TargetIcon className="size-4" /> },
 ];
 
@@ -2223,6 +2226,11 @@ export default function AdminPage() {
                 </table>
               </div>
               </div>
+          )}
+
+          {/* ? VIP Badges ? */}
+          {activeSection === "vip" && (
+            <VipBadges />
           )}
 
           {/* ? Scorers ? */}

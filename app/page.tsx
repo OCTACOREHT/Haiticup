@@ -18,7 +18,7 @@ const navLinks = [
 ];
 
 const logistics = [
-  { icon: "calendar_month", label: "Dates", value: "July 12, 2026 - Sept 6, 2026" },
+  { icon: "calendar_month", label: "Dates", value: "July 26, 2026 - Sept 6, 2026" },
   { icon: "location_on", label: "Venue", value: "Ezell Hester Community Center" },
   { icon: "call", label: "Contact Support", value: "+1 (561) 704-4613" },
 ];
@@ -154,7 +154,7 @@ const mobileLinks = [
   { href: "/match-schedule#bracket", icon: "account_tree", label: "Bracket" },
 ];
 
-const CHAMPIONSHIP_START = "2026-07-12T18:00:00-05:00";
+const CHAMPIONSHIP_START = "2026-07-26T18:00:00-05:00";
 
 const INITIAL_COUNTDOWN = {
   isStarted: false,
@@ -270,12 +270,12 @@ const formatDateTime = (isoString: string | null) => {
 
 const getMatchdayDateFallback = (roundLabel: string | null) => {
   const label = (roundLabel || "").toUpperCase();
-  if (label.includes("MD1") || label.includes("MATCHDAY 1")) return "Sun, Jul 12";
+  if (label.includes("MD1") || label.includes("MATCHDAY 1")) return "Sun, Jul 26";
   if (label.includes("MD2") || label.includes("MATCHDAY 2")) return "Sun, Jul 19";
   if (label.includes("MD3") || label.includes("MATCHDAY 3")) return "Sun, Jul 26";
   if (label.includes("MD4") || label.includes("MATCHDAY 4")) return "Sun, Aug 2";
   if (label.includes("MD5") || label.includes("MATCHDAY 5")) return "Sun, Aug 9";
-  return "Sun, Jul 12";
+  return "Sun, Jul 26";
 };
 
 export default function Home() {
@@ -414,24 +414,29 @@ export default function Home() {
 
           <div className="relative z-10 mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-6 px-4 md:px-16 lg:grid-cols-12">
             <div className="mx-auto flex w-full max-w-[920px] flex-col items-center justify-center gap-2 text-center lg:col-span-12">
-              <Image
-                src="/G%20logo.png"
-                alt="G logo"
-                width={180}
-                height={220}
-                unoptimized
-                priority
-                className="mb-4 h-24 w-auto object-contain md:h-32"
-              />
-              <span className="text-xs font-semibold tracking-[0.16em] text-[#1AD1D7] uppercase">
-                EZELL HESTER COMMUNITY CENTER JULY 2026
-              </span>
-              <h1 className="font-heading text-3xl leading-[1.02] text-white uppercase md:text-6xl">
-                Get your team ready and{" "}
-                <span className="text-[#FF6B53]">
-                  be part of the competition
-                </span>
+              <h1 className="font-heading text-3xl leading-[1.02] text-white uppercase md:text-5xl">
+                Next <span className="text-[#FF6B53]">Match</span>
               </h1>
+              
+              <div className="mt-6 flex items-center justify-center gap-5">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="relative h-16 w-16 md:h-24 md:w-24 flex items-center justify-center">
+                    <Image src="/Logo ekip/FC des Vétéran.png" alt="FC des Vétéran" fill className="object-contain" unoptimized />
+                  </div>
+                  <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-wider">VENS</span>
+                </div>
+                <span className="text-2xl md:text-4xl font-black text-[#FF6B53]">VS</span>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="relative h-16 w-16 md:h-24 md:w-24 flex items-center justify-center">
+                    <Image src="/Logo ekip/Fc Top Notch.png" alt="Fc Top Notch" fill className="object-contain" unoptimized />
+                  </div>
+                  <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-wider">Top Notch</span>
+                </div>
+              </div>
+
+              <p className="mt-6 text-sm md:text-base font-bold text-[#1AD1D7] uppercase tracking-[0.15em] text-center">
+                This match was postponed due to rain
+              </p>
 
               <div className="mt-8 flex flex-col items-center justify-center gap-6 text-white md:flex-row">
                 <div className="flex flex-col">
@@ -457,7 +462,7 @@ export default function Home() {
                     <p className="text-xs font-semibold [font-family:var(--font-nav),sans-serif] tracking-[0.14em] text-white/70 uppercase">
                       Championship Kickoff Countdown
                     </p>
-                    <p className="text-sm [font-family:var(--font-nav),sans-serif] text-white/80">July 12, 2026</p>
+                    <p className="text-sm [font-family:var(--font-nav),sans-serif] text-white/80">July 26, 2026</p>
                   </div>
 
                   {countdownDisplay.isStarted ? (
